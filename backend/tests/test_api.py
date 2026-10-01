@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Query
 from fastapi.testclient import TestClient
 
-from app.errors import AppError, register_error_handlers
+from app.errors import AppError, register_error_handlers, title_for
 from app.main import app
 
 client = TestClient(app)
@@ -68,6 +68,10 @@ def test_app_error_code_is_uppercase() -> None:
     assert response.status_code == 404
     assert body["code"] == "MEAL_NOT_FOUND"
     assert body["detail"] == "Meal 42 not found"
+
+
+def test_title_for_unknown_status() -> None:
+    assert title_for(999) == "Error"
 
 
 def test_unexpected_error_hides_exception_text() -> None:
