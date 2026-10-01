@@ -1,0 +1,17 @@
+main {
+  margin: auto;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+pre {
+  margin: 16px 0 0;
+  text-align: left;
+}
+
+[role='alert'] {
+  color: #b42318;
+}
