@@ -22,7 +22,7 @@ function App() {
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch('/api/healtffh', { signal: controller.signal })
+    fetch('/api/health', { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) {
           const problem = (await response.json().catch(() => ({}))) as Problem

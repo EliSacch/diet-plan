@@ -12,8 +12,13 @@ Diet Plan API is build using FastAPI
   - [Live Website](#live-website)
   - [Local Deployment](#local-deployment)
 
+- [Formatting and linting](#formatting-and-linting)
+  - [Linting](#linting)
+  - [Formatting](#formatting)
+
 - [Testing](#testing)
   - [Unit Tests](#unit-test)
+  - [Coverage](#coverage)
 
 
 ## Documentation
@@ -62,10 +67,41 @@ You can also activate the virtualenv with `source .venv/bin/activate`.
 [Back to the top](#api)
 
 
+## Formatting and linting
+
+[Ruff](https://docs.astral.sh/ruff/) lints and formats the code. It is a dev dependency, installed with `uv sync`.
+
+### Linting
+
+```bash
+uv run ruff check .
+```
+
+`uv run ruff check --fix .` applies the fixes Ruff can make automatically.
+
+### Formatting
+
+```bash
+uv run ruff format .
+```
+
+[Back to the top](#api)
+
+
 ## Testing
 
 ### Unit test
 
 Run unit tests with `uv run pytest`
+
+### Coverage
+
+[pytest-cov](https://pytest-cov.readthedocs.io/) reports how much of `app` the tests exercise. It is a dev dependency, installed with `uv sync`.
+
+```bash
+uv run pytest --cov=app --cov-report=term-missing
+```
+
+`--cov-report=term-missing` prints the percentage and the lines the tests do not cover.
 
 [Back to the top](#api)
