@@ -1,17 +1,63 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The frontend is built with React + Typescript
 
-Currently, two official plugins are available:
+## Table of content
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [Accessibility](#accessibility)
+
+- [Deployment](#deployment)
+  - [Local Deployment](#local-deployment)
+
+- [Testing](#testing)
+  - [Unit Tests](#unit-tests)
+
+- [Linting and Formatting](linting-and-formatting)
+  - [Oxlint Configuration](oxlint-configuration)
+
 
 ## React Compiler
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Expanding the Oxlint configuration
+
+## Accessibility
+
+
+## Deployment
+
+### Local deployment
+
+Install the Node dependencies with yarn:
+
+```bash
+cd frontend
+yarn install
+```
+
+Then start the app:
+
+```bash
+yarn start
+```
+
+The Vite dev server proxies `/api` to `http://localhost:8000`.
+
+## Testing
+
+### Unit tests
+
+Run unit tests with
+
+```bash
+yarn test
+```
+
+
+
+## Linting and Formatting
+
+### Oxlint configuration
 
 If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
 
@@ -30,3 +76,7 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+### Formatting
+
+[Back to the top](#frontend)
