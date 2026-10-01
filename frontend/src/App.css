@@ -12,6 +12,6 @@ pre {
   text-align: left;
 }
 
-[role='alert'] {
+[role="alert"] {
   color: var(--danger);
 }

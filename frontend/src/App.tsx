@@ -1,62 +1,62 @@
-import { useEffect, useState } from 'react'
-import { messageForProblem } from './i18n'
-import './App.css'
+import { useEffect, useState } from "react";
+import { messageForProblem } from "./i18n";
+import "./App.css";
 
 type Health = {
-  status: string
-}
+  status: string;
+};
 
 type Problem = {
-  code?: string
-  detail?: string
-}
+  code?: string;
+  detail?: string;
+};
 
 type LoadState =
-  | { kind: 'loading' }
-  | { kind: 'ready'; health: Health }
-  | { kind: 'error'; message: string }
+  | { kind: "loading" }
+  | { kind: "ready"; health: Health }
+  | { kind: "error"; message: string };
 
 function App() {
-  const [state, setState] = useState<LoadState>({ kind: 'loading' })
+  const [state, setState] = useState<LoadState>({ kind: "loading" });
 
   useEffect(() => {
-    const controller = new AbortController()
+    const controller = new AbortController();
 
-    fetch('/api/health', { signal: controller.signal })
+    fetch("/api/health", { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) {
-          const problem = (await response.json().catch(() => ({}))) as Problem
-          throw new Error(messageForProblem(problem))
+          const problem = (await response.json().catch(() => ({}))) as Problem;
+          throw new Error(messageForProblem(problem));
         }
-        return (await response.json()) as Health
+        return (await response.json()) as Health;
       })
       .then((health) => {
-        setState({ kind: 'ready', health })
+        setState({ kind: "ready", health });
       })
       .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
         }
-        const message = error instanceof Error ? error.message : 'Unknown error'
-        setState({ kind: 'error', message })
-      })
+        const message = error instanceof Error ? error.message : "Unknown error";
+        setState({ kind: "error", message });
+      });
 
-    return () => controller.abort()
-  }, [])
+    return () => controller.abort();
+  }, []);
 
   return (
     <main>
       <h1>Diet plan</h1>
       <p>Backend health</p>
-      {state.kind === 'loading' && <p>Checking the API…</p>}
-      {state.kind === 'ready' && (
+      {state.kind === "loading" && <p>Checking the API…</p>}
+      {state.kind === "ready" && (
         <pre>
           <code>{JSON.stringify(state.health, null, 2)}</code>
         </pre>
       )}
-      {state.kind === 'error' && <p role="alert">{state.message}</p>}
+      {state.kind === "error" && <p role="alert">{state.message}</p>}
     </main>
-  )
+  );
 }
 
-export default App
+export default App;
