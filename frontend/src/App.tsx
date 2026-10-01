@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { messageForProblem } from './i18n'
 import './App.css'
 
 type Health = {
@@ -8,20 +9,6 @@ type Health = {
 type Problem = {
   code?: string
   detail?: string
-}
-
-const errorMessages: Record<string, string> = {
-  NOT_FOUND: 'That page or resource was not found.',
-  VALIDATION_ERROR: 'Check the fields and try again.',
-  INTERNAL_ERROR: 'Something went wrong. Try again.',
-  HTTP_ERROR: 'The request could not be completed.',
-}
-
-function messageForProblem(problem: Problem) {
-  if (problem.code && errorMessages[problem.code]) {
-    return errorMessages[problem.code]
-  }
-  return problem.detail ?? 'Something went wrong.'
 }
 
 type LoadState =
@@ -35,7 +22,7 @@ function App() {
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch('/api/health', { signal: controller.signal })
+    fetch('/api/healtffh', { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) {
           const problem = (await response.json().catch(() => ({}))) as Problem

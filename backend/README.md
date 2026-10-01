@@ -12,8 +12,6 @@ Diet Plan API is build using FastAPI
   - [Live Website](#live-website)
   - [Local Deployment](#local-deployment)
 
-- [Accessibility](#accessibility)
-
 - [Testing](#testing)
   - [Unit Tests](#unit-test)
 
