@@ -18,7 +18,7 @@ def test_home() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Diet Plan API"}
+    assert response.json() == {"message": "API Home"}
 
 
 def test_missing_route_uses_problem_response() -> None:

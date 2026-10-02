@@ -1,6 +1,6 @@
 # API
 
-Diet Plan API is build using FastAPI 
+The API is build using FastAPI 
 
 ## Table of content
 

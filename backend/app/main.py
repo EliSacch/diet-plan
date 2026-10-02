@@ -17,7 +17,7 @@ app.add_middleware(
 
 @app.get("/")
 def home():
-    return {"message": "Diet Plan API"}
+    return {"message": "API Home"}
 
 
 @app.get("/api/health")

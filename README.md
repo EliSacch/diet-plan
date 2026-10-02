@@ -1,4 +1,4 @@
-# Diet plan
+# Template Project
 
 Monorepo with a FastAPI backend and a React Vite frontend.
 

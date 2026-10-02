@@ -46,7 +46,7 @@ function App() {
 
   return (
     <main>
-      <h1>Diet plan</h1>
+      <h1>Template Project</h1>
       <p>Backend health</p>
       {state.kind === "loading" && <p>Checking the API…</p>}
       {state.kind === "ready" && (
