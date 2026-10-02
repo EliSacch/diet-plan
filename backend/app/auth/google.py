@@ -32,6 +32,7 @@ class GoogleOAuth:
                 "response_type": "code",
                 "scope": "openid email",
                 "state": state,
+                "prompt": "select_account",
             }
         )
         return f"{AUTHORIZE_URL}?{query}"
