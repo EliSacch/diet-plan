@@ -20,6 +20,8 @@ The API is build using FastAPI
   - [Unit Tests](#unit-test)
   - [Coverage](#coverage)
 
+- [Technologies](#technologies)
+
 
 ## Documentation
 
@@ -240,5 +242,18 @@ uv run pytest --cov=app --cov-report=term-missing
 ```
 
 `--cov-report=term-missing` prints the percentage and the lines the tests do not cover.
+
+[Back to the top](#api)
+
+
+## Technologies
+
+- Python 3.13
+- FastAPI and Uvicorn
+- SQLAlchemy, Alembic, and PostgreSQL through psycopg
+- Pydantic Settings
+- httpx, for the Google sign-in requests
+- uv
+- pytest and Ruff
 
 [Back to the top](#api)
