@@ -9,14 +9,14 @@ describe("messageForProblem", () => {
   });
 
   it("returns the catalog message for a known code", () => {
-    expect(messageForProblem({ code: "NOT_FOUND", detail: "Meal not found" })).toBe(
+    expect(messageForProblem({ code: "NOT_FOUND", detail: "Item not found" })).toBe(
       en.errors.NOT_FOUND,
     );
   });
 
   it("returns detail when the code is not in the catalog", () => {
-    expect(messageForProblem({ code: "MEAL_NOT_FOUND", detail: "Meal 42 not found" })).toBe(
-      "Meal 42 not found",
+    expect(messageForProblem({ code: "ITEM_NOT_FOUND", detail: "Item 42 not found" })).toBe(
+      "Item 42 not found",
     );
   });
 
