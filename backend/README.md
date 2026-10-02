@@ -39,7 +39,7 @@ An error response is a problem document with `Content-Type: application/problem+
   "title": "Not Found",
   "status": 404,
   "code": "NOT_FOUND",
-  "detail": "Meal not found"
+  "detail": "Item not found"
 }
 ```
 
@@ -153,7 +153,7 @@ brew services restart postgresql@18
 9. In `backend/.env`, set `DATABASE_URL` to the same role, password, and database. Copy `backend/.env.example` to that file first if it does not exist yet:
 
 ```
-DATABASE_URL=postgresql+psycopg2://<user_name>:<password>@localhost:5432/<db_name>
+DATABASE_URL=postgresql+psycopg://<user_name>:<password>@localhost:5432/<db_name>
 ```
 
 #### Add a role and database
@@ -182,8 +182,19 @@ CREATE DATABASE <db_name> OWNER <user_name>;
 4. In `backend/.env`, set `DATABASE_URL` to the same role, password, and database. Copy `backend/.env.example` to that file first if it does not exist yet:
 
 ```
-DATABASE_URL=postgresql+psycopg2://<user_name>:<password>@localhost:5432/<db_name>
+DATABASE_URL=postgresql+psycopg://<user_name>:<password>@localhost:5432/<db_name>
 ```
+
+#### Migrations
+
+From `backend`, apply migrations after `DATABASE_URL` points at the local database:
+
+```bash
+uv run alembic upgrade head
+uv run alembic revision --autogenerate -m "describe the change"
+```
+
+`upgrade head` does nothing until the first revision exists. Create that revision when you add a model. Postgres is required for these commands. The health check does not open a connection.
 
 [Back to the top](#api)
 
@@ -201,6 +212,11 @@ uv run ruff check .
 `uv run ruff check --fix .` applies the fixes Ruff can make automatically.
 
 ### Formatting
+
+```bash
+uv run ruff format --check
+```
+Then to apply fixes
 
 ```bash
 uv run ruff format .

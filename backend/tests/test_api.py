@@ -42,9 +42,9 @@ def _error_client() -> TestClient:
     def items(name: str = Query()) -> dict[str, str]:
         return {"name": name}
 
-    @api.get("/meals/{meal_id}")
-    def meal(meal_id: int) -> None:
-        raise AppError(404, "meal_not_found", f"Meal {meal_id} not found")
+    @api.get("/items/{item_id}")
+    def item(item_id: int) -> None:
+        raise AppError(404, "item_not_found", f"Item {item_id} not found")
 
     @api.get("/boom")
     def boom() -> None:
@@ -63,12 +63,12 @@ def test_validation_error() -> None:
 
 
 def test_app_error_code_is_uppercase() -> None:
-    response = _error_client().get("/meals/42")
+    response = _error_client().get("/items/42")
     body = response.json()
 
     assert response.status_code == 404
-    assert body["code"] == "MEAL_NOT_FOUND"
-    assert body["detail"] == "Meal 42 not found"
+    assert body["code"] == "ITEM_NOT_FOUND"
+    assert body["detail"] == "Item 42 not found"
 
 
 def test_title_for_unknown_status() -> None:
