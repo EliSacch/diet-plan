@@ -4,8 +4,10 @@ from http import HTTPStatus
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 from starlette.exceptions import HTTPException
+
+from app.core.exceptions import AppError
+from app.schemas.problem import Problem
 
 logger = logging.getLogger(__name__)
 
@@ -17,22 +19,6 @@ DEFAULT_CODES = {
     409: "CONFLICT",
     422: "VALIDATION_ERROR",
 }
-
-
-class Problem(BaseModel):
-    type: str = "about:blank"
-    title: str
-    status: int
-    code: str
-    detail: str
-
-
-class AppError(Exception):
-    def __init__(self, status_code: int, code: str, detail: str) -> None:
-        self.status_code = status_code
-        self.code = code.strip().upper()
-        self.detail = detail
-        super().__init__(detail)
 
 
 def title_for(status: int) -> str:
