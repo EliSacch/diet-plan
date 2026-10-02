@@ -15,3 +15,15 @@ pre {
 [role="alert"] {
   color: var(--danger);
 }
+
+.continue,
+.sign-out {
+  font: inherit;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 16px;
+  text-decoration: none;
+  cursor: pointer;
+}

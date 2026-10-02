@@ -6,6 +6,8 @@ The frontend is built with React + Typescript
 
 - [Accessibility](#accessibility)
 
+- [Languages](#languages)
+
 - [Deployment](#deployment)
   - [Local Deployment](#local-deployment)
 
@@ -18,11 +20,21 @@ The frontend is built with React + Typescript
   - [Oxlint Configuration](#oxlint-configuration)
   - [Formatting](#formatting)
 
+- [Technologies](#technologies)
+
 ## React Compiler
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
 ## Accessibility
+
+## Languages
+
+English in `src/i18n/locales/en.ts` is the source catalog. `MessageCatalog` is derived from its `errors` keys, so every other language file must use the same keys. Italian in `src/i18n/locales/it.ts` is checked with `satisfies MessageCatalog`.
+
+`src/i18n/index.ts` registers the catalogs. On load, the app walks `navigator.languages`, keeps the language part (`it` from `it-IT`), and uses the first catalog that exists. Anything else falls back to `en`. `messageForProblem` returns the catalog string for a known problem `code`. `UNKNOWN` is the fallback when the code is missing. An unknown code uses the response `detail` when there is one.
+
+To add a language, add a file such as `src/i18n/locales/fr.ts` with the same `errors` keys, import it in `src/i18n/index.ts`, and add it to `catalogs` under its language code (`fr`).
 
 ## Deployment
 
@@ -41,7 +53,7 @@ Then start the app:
 yarn start
 ```
 
-The Vite dev server proxies `/api` and `/auth` to `http://localhost:8000`.
+The Vite dev server proxies `/api` and `/auth` to `http://localhost:8000`. The FastAPI server has to be running on port 8000. `yarn start` only serves the UI.
 
 ## Testing
 
@@ -106,3 +118,11 @@ yarn format
 `yarn format --check` reports files that are not formatted and does not change them.
 
 [Back to the top](#frontend)
+
+## Technologies
+
+- React and TypeScript
+- Vite
+- Vitest, Testing Library, and jsdom
+- Oxlint and Oxfmt
+- Yarn
