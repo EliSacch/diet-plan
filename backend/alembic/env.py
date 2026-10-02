@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
+import app.models.user  # noqa: F401
 from alembic import context
 from app.core.config import settings
 from app.db.base import Base
@@ -16,9 +17,7 @@ config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Import models here so autogenerate sees them.
-# from app import models
-
+# Models are imported above so autogenerate sees them.
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

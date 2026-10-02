@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.handlers import register_error_handlers
+from app.routers.auth import router as auth_router
+from app.routers.profile import router as profile_router
 
 app = FastAPI(
     title="Template Project API",
@@ -21,6 +23,8 @@ app.add_middleware(
 )
 
 register_error_handlers(app)
+app.include_router(auth_router)
+app.include_router(profile_router)
 
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn

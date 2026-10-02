@@ -41,7 +41,7 @@ Then start the app:
 yarn start
 ```
 
-The Vite dev server proxies `/api` to `http://localhost:8000`.
+The Vite dev server proxies `/api` and `/auth` to `http://localhost:8000`.
 
 ## Testing
 

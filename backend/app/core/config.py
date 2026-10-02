@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     DATABASE_URL: str
     ALLOWED_ORIGINS: Annotated[list[str], NoDecode] = []
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    GOOGLE_REDIRECT_URI: str
+    SESSION_COOKIE_NAME: str = "session"
+    SESSION_TTL_SECONDS: int = 14 * 24 * 60 * 60
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
