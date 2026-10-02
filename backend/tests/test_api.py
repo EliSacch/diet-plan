@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Query
 from fastapi.testclient import TestClient
 
-from app.errors import AppError, register_error_handlers, title_for
+from app.core.exceptions import AppError
+from app.core.handlers import register_error_handlers, title_for
 from app.main import app
 
 client = TestClient(app)
