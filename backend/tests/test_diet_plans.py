@@ -17,6 +17,7 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.diet.limits import MAX_BODY_BYTES, POSTS_PER_HOUR
 from app.diet.rate_limit import diet_plan_posts
+from app.diet.service import purge_replaced_plans
 from app.main import app
 from app.models.diet import DietOption, DietPlan
 from app.models.user import User
@@ -52,7 +53,17 @@ def scripted() -> ScriptedGoogleHttp:
 
 
 @pytest.fixture
-def client(database: Session, scripted: ScriptedGoogleHttp) -> Generator[TestClient]:
+def client(
+    database: Session,
+    scripted: ScriptedGoogleHttp,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[TestClient]:
+    engine = database.get_bind()
+    monkeypatch.setattr(
+        "app.db.session.SessionLocal",
+        sessionmaker(bind=engine, autoflush=False),
+    )
+
     def override_db() -> Generator[Session]:
         yield database
 
@@ -523,48 +534,87 @@ def test_post_past_the_hourly_limit_is_rate_limited(
     assert "Over the limit" not in names
 
 
-def test_replace_keeps_only_the_two_newest_inactive_plans(
-    client: TestClient, database: Session
+def test_purge_keeps_the_previous_plan_and_clears_older_options(
+    client: TestClient, database: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("app.diet.rate_limit.POSTS_PER_HOUR", 4)
+    sign_in(client)
+    for index in range(4):
+        created = client.post("/api/diet-plans", json=one_option(f"Plan {index}"))
+        assert created.status_code == 201
+
+    database.expire_all()
+    plans = database.scalars(select(DietPlan).order_by(DietPlan.id)).all()
+    assert [plan.is_active for plan in plans] == [False, False, False, True]
+    assert [plan.extracted_json == {} for plan in plans] == [True, True, False, False]
+    option_plan_ids = set(database.scalars(select(DietOption.diet_plan_id)).all())
+    assert option_plan_ids == {plans[2].id, plans[3].id}
+
+    user = database.scalar(select(User).where(User.email == "ada@example.com"))
+    assert user is not None
+    purge_replaced_plans(user.id)
+    database.expire_all()
+    again = database.scalars(select(DietPlan).order_by(DietPlan.id)).all()
+    assert [(plan.id, plan.is_active, plan.extracted_json) for plan in again] == [
+        (plan.id, plan.is_active, plan.extracted_json) for plan in plans
+    ]
+    assert (
+        set(database.scalars(select(DietOption.diet_plan_id)).all()) == option_plan_ids
+    )
+
+
+def test_failed_purge_keeps_older_plan_options(
+    client: TestClient,
+    database: Session,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     sign_in(client)
     user = database.scalar(select(User).where(User.email == "ada@example.com"))
     assert user is not None
-    stale = DietPlan(
+    older = DietPlan(
         user_id=user.id,
-        uploaded_at=datetime(2020, 1, 1, tzinfo=UTC),
+        uploaded_at=datetime(2026, 1, 1, tzinfo=UTC),
         source_filename=None,
         is_active=False,
-        extracted_json={"days": []},
+        extracted_json={"days": [{"day": "Old"}]},
     )
-    database.add(stale)
+    previous = DietPlan(
+        user_id=user.id,
+        uploaded_at=datetime(2026, 2, 1, tzinfo=UTC),
+        source_filename=None,
+        is_active=False,
+        extracted_json={"days": [{"day": "Previous"}]},
+    )
+    database.add_all([older, previous])
     database.flush()
     database.add(
         DietOption(
-            diet_plan_id=stale.id,
+            diet_plan_id=older.id,
             day="Lunedì",
             meal="Colazione",
             category="Bevande",
-            name="Stale",
+            name="Older",
             amount=1,
             unit="ml",
             position=0,
         )
     )
     database.commit()
-    stale_id = stale.id
 
-    for index in range(POSTS_PER_HOUR):
-        created = client.post("/api/diet-plans", json=one_option(f"Plan {index}"))
-        assert created.status_code == 201
+    def fail_commit(self: Session) -> None:
+        raise RuntimeError("commit failed")
 
+    monkeypatch.setattr(Session, "commit", fail_commit)
+    with caplog.at_level("ERROR"):
+        purge_replaced_plans(user.id)
+
+    assert "Could not purge replaced diet plans" in caplog.text
     database.expire_all()
-    plans = database.scalars(select(DietPlan).order_by(DietPlan.id)).all()
-    assert stale_id not in {plan.id for plan in plans}
-    assert [plan.is_active for plan in plans] == [False, False, True]
-    option_plan_ids = set(database.scalars(select(DietOption.diet_plan_id)).all())
-    assert option_plan_ids == {plan.id for plan in plans}
-    names = database.scalars(select(DietOption.name)).all()
-    assert "Stale" not in names
+    stored = database.get(DietPlan, older.id)
+    assert stored is not None
+    assert stored.extracted_json == {"days": [{"day": "Old"}]}
+    assert database.scalars(select(DietOption.name)).all() == ["Older"]
 
 
 def test_openapi_documents_the_post_limits(client: TestClient) -> None:
