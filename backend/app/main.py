@@ -1,19 +1,22 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.config import settings
 from app.core.handlers import register_error_handlers
 from app.routers.auth import router as auth_router
+from app.routers.diet_plans import router as diet_plans_router
 from app.routers.profile import router as profile_router
 
 app = FastAPI(
-    title="Template Project API",
-    description="API for the Template Project",
-    version="0.1.0",
+    title="Diet Plan API",
+    description="API for the Diet Plan Application",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
+app.add_middleware(BodySizeLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -25,6 +28,7 @@ app.add_middleware(
 register_error_handlers(app)
 app.include_router(auth_router)
 app.include_router(profile_router)
+app.include_router(diet_plans_router)
 
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
