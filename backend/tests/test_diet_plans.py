@@ -2,8 +2,11 @@ import asyncio
 import json
 from collections.abc import Generator
 from datetime import UTC, datetime
+from io import BytesIO
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+import pymupdf
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
@@ -13,9 +16,12 @@ from sqlalchemy.pool import StaticPool
 
 from app.auth.google import GoogleOAuth, get_google_oauth
 from app.core.body_limit import BodySizeLimitMiddleware
+from app.core.exceptions import AppError
 from app.db.base import Base
 from app.db.session import get_db
+from app.diet.extract import extract
 from app.diet.limits import MAX_BODY_BYTES, POSTS_PER_HOUR
+from app.diet.plugins.progeo import ProgeoExtractor, _Line, _PlanBuilder, _wrapped_name
 from app.diet.rate_limit import diet_plan_posts
 from app.diet.service import purge_replaced_plans
 from app.main import app
@@ -217,10 +223,10 @@ def test_post_stores_the_document_and_get_returns_it(
     assert plan.extracted_json == stored
     options = database.scalars(select(DietOption).order_by(DietOption.id)).all()
     assert len(options) == 4
-    contorno = next(option for option in options if option.category == "Contorni")
-    assert contorno.amount is None
-    assert contorno.unit is None
-    assert contorno.name == "Insalata mista"
+    side_dish = next(option for option in options if option.category == "Contorni")
+    assert side_dish.amount is None
+    assert side_dish.unit is None
+    assert side_dish.name == "Insalata mista"
 
     active = client.get("/api/diet-plans/active")
 
@@ -235,9 +241,9 @@ def test_post_stores_the_document_and_get_returns_it(
     assert [
         category["category"] for category in body["days"][0]["meals"][0]["categories"]
     ] == ["Bevande", "Contorni"]
-    side = body["days"][0]["meals"][0]["categories"][1]["options"][0]
-    assert side["amount"] is None
-    assert side["unit"] is None
+    side_dish = body["days"][0]["meals"][0]["categories"][1]["options"][0]
+    assert side_dish["amount"] is None
+    assert side_dish["unit"] is None
 
 
 def test_second_post_leaves_one_active_plan(
@@ -615,6 +621,186 @@ def test_failed_purge_keeps_older_plan_options(
     assert stored is not None
     assert stored.extracted_json == {"days": [{"day": "Old"}]}
     assert database.scalars(select(DietOption.name)).all() == ["Older"]
+
+
+def test_upload_reads_the_september_plan(client: TestClient, database: Session) -> None:
+    sign_in(client)
+    pdf = Path(__file__).parent / "fixtures" / "progeo-september.pdf"
+
+    with pdf.open("rb") as handle:
+        uploaded = client.post(
+            "/api/diet-plans/upload",
+            files={"file": (pdf.name, handle, "application/pdf")},
+        )
+
+    assert uploaded.status_code == 201
+    body = uploaded.json()
+    assert [day["day"] for day in body["days"]] == [
+        "Lunedì",
+        "Martedì",
+        "Mercoledì",
+        "Giovedì",
+        "Venerdì",
+        "Sabato",
+        "Domenica",
+    ]
+    options = [
+        option
+        for day in body["days"]
+        for meal in day["meals"]
+        for category in meal["categories"]
+        for option in category["options"]
+    ]
+    assert len(options) == 1_064
+    oat = next(
+        option
+        for option in options
+        if option["name"] == "Bevanda a base di avena con calcio e vitamine agg."
+    )
+    assert oat["amount"] == 500
+    assert oat["unit"] == "g"
+    plan = database.scalars(select(DietPlan).where(DietPlan.is_active.is_(True))).one()
+    assert plan.source_filename == pdf.name
+
+
+def _pdf(
+    texts: list[tuple[str, float, float, tuple[float, float, float]]],
+    *,
+    image: bool = False,
+) -> bytes:
+    document = pymupdf.open()
+    page = document.new_page(width=595, height=842)
+    if image:
+        pixmap = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 4, 4), 1)
+        page.insert_image(pymupdf.Rect(20, 20, 40, 40), pixmap=pixmap)
+    for text, x, y, color in texts:
+        page.insert_text((x, y), text, fontsize=11, color=color)
+    payload = document.tobytes()
+    document.close()
+    return payload
+
+
+_BLUE = (0.392, 0.58, 0.929)
+_WHITE = (1.0, 1.0, 1.0)
+_GREEN = (0.0, 0.502, 0.0)
+_BLACK = (0.0, 0.0, 0.0)
+
+
+def test_extract_requires_a_registered_extractor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("app.diet.extract._extractor", None)
+
+    with pytest.raises(AppError) as raised:
+        extract(BytesIO(b""))
+
+    assert raised.value.status_code == 500
+    assert raised.value.code == "INTERNAL_ERROR"
+
+
+def test_upload_rejects_a_file_that_is_not_a_pdf(
+    client: TestClient, database: Session
+) -> None:
+    sign_in(client)
+    created = client.post("/api/diet-plans", json=sample_document())
+    assert created.status_code == 201
+
+    rejected = client.post(
+        "/api/diet-plans/upload",
+        files={"file": ("notes.txt", b"not a pdf", "text/plain")},
+    )
+
+    assert rejected.status_code == 422
+    assert rejected.headers["content-type"].startswith("application/problem+json")
+    assert rejected.json()["code"] == "VALIDATION_ERROR"
+    assert client.get("/api/diet-plans/active").json() == sample_document()
+    database.expire_all()
+    assert database.scalars(select(DietPlan)).one().source_filename is None
+
+
+def test_upload_rejects_a_pdf_that_is_not_a_diet_plan(
+    client: TestClient, database: Session
+) -> None:
+    sign_in(client)
+    created = client.post("/api/diet-plans", json=sample_document())
+    assert created.status_code == 201
+    payload = _pdf([("Hello", 72, 72, _BLACK)])
+
+    rejected = client.post(
+        "/api/diet-plans/upload",
+        files={"file": ("empty.pdf", payload, "application/pdf")},
+    )
+
+    assert rejected.status_code == 422
+    assert rejected.json()["code"] == "VALIDATION_ERROR"
+    assert client.get("/api/diet-plans/active").json() == sample_document()
+    database.expire_all()
+    plans = database.scalars(select(DietPlan)).all()
+    assert len(plans) == 1
+    assert plans[0].is_active is True
+
+
+def test_progeo_skips_chrome_and_keeps_a_wide_wrap_apart() -> None:
+    payload = _pdf(
+        [
+            ("Piano alimentare - Lunedì", 180, 80, _BLUE),
+            ("Contorni", 100, 120, _GREEN),
+            ("COLAZIONE", 120, 160, _WHITE),
+            ("Bevande", 100, 190, _GREEN),
+            ("Tè", 40, 220, _BLACK),
+            ("a piacere", 250, 220, _BLACK),
+            ("Primo", 40, 260, _BLACK),
+            ("g 10", 250, 290, _BLACK),
+            ("secondo", 40, 330, _BLACK),
+        ],
+        image=True,
+    )
+
+    document = ProgeoExtractor().extract(BytesIO(payload))
+
+    assert [day.day for day in document.days] == ["Lunedì"]
+    assert [meal.meal for meal in document.days[0].meals] == ["COLAZIONE"]
+    category = document.days[0].meals[0].categories[0]
+    assert category.category == "Bevande"
+    assert [
+        (option.name, option.amount, option.unit, option.position)
+        for option in category.options
+    ] == [
+        ("Tè", None, None, 0),
+        ("Primo", None, None, 1),
+        ("secondo", None, None, 2),
+    ]
+
+
+def test_progeo_ignores_structure_that_has_no_day_or_category() -> None:
+    builder = _PlanBuilder()
+    builder.start_meal("COLAZIONE")
+    builder.start_category("...continua Contorni")
+    builder.add_option("Pasta", "g 80")
+
+    assert builder.days == []
+    with pytest.raises(AppError) as raised:
+        builder.document()
+    assert raised.value.status_code == 422
+    assert raised.value.code == "VALIDATION_ERROR"
+
+    builder.ensure_day("Lunedì")
+    builder.start_meal("CENA")
+    builder.start_category("...continua")
+    builder.add_option("", "g 80")
+    assert builder.category is None
+    assert builder.meal is not None
+    assert builder.meal.categories == []
+
+
+def test_wrapped_name_rejects_an_amount_outside_the_two_lines() -> None:
+    lines = [
+        _Line(30, "name", "Bevanda a base di avena con calcio"),
+        _Line(10, "amount", "g 500"),
+        _Line(40, "name", "e vitamine agg."),
+    ]
+
+    assert _wrapped_name(lines, 0) is None
 
 
 def test_openapi_documents_the_post_limits(client: TestClient) -> None:
