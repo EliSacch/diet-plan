@@ -9,7 +9,7 @@ MAX_POSITION = 10_000
 MAX_OPTIONS = 2_000
 MAX_BODY_BYTES = 1_048_576
 POSTS_PER_HOUR = 3
-INACTIVE_PLANS_KEPT = 2
+INACTIVE_PLANS_KEPT = 1
 
 BODY_TOO_LARGE_DETAIL = "The request body is larger than 1 MB."
 RATE_LIMIT_DETAIL = "Too many diet plans were posted. Try again later."

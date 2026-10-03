@@ -36,11 +36,11 @@ if __name__ == "__main__":  # pragma: no cover
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def home():
     return {"message": "API Home"}
 
 
-@app.get("/api/health")
+@app.get("/api/health", include_in_schema=False)
 def health() -> dict[str, str]:
     return {"status": "ok"}

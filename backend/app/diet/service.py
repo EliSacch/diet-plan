@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
@@ -7,6 +8,8 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import AppError
 from app.diet.limits import INACTIVE_PLANS_KEPT
 from app.models.diet import DietOption, DietPlan
+
+logger = logging.getLogger(__name__)
 from app.schemas.diet_plan import (
     PlanCategory,
     PlanDay,
@@ -53,7 +56,6 @@ def replace_active_plan(
                                 position=option.position,
                             )
                         )
-        _drop_old_plans(db, user_id)
         db.commit()
     except Exception:
         db.rollback()
@@ -61,17 +63,35 @@ def replace_active_plan(
     return active_plan_document(db, user_id)
 
 
-def _drop_old_plans(db: Session, user_id: int) -> None:
-    inactive_ids = db.scalars(
-        select(DietPlan.id)
-        .where(DietPlan.user_id == user_id, DietPlan.is_active.is_(False))
-        .order_by(DietPlan.uploaded_at.desc(), DietPlan.id.desc())
-    ).all()
-    stale_ids = list(inactive_ids)[INACTIVE_PLANS_KEPT:]
+def purge_replaced_plans(user_id: int) -> None:
+    from app.db.session import SessionLocal
+
+    db = SessionLocal()
+    try:
+        _purge_replaced_plans(db, user_id)
+        db.commit()
+    except Exception:
+        db.rollback()
+        logger.exception("Could not purge replaced diet plans")
+    finally:
+        db.close()
+
+
+def _purge_replaced_plans(db: Session, user_id: int) -> None:
+    inactive_ids = list(
+        db.scalars(
+            select(DietPlan.id)
+            .where(DietPlan.user_id == user_id, DietPlan.is_active.is_(False))
+            .order_by(DietPlan.uploaded_at.desc(), DietPlan.id.desc())
+        ).all()
+    )
+    stale_ids = inactive_ids[INACTIVE_PLANS_KEPT:]
     if not stale_ids:
         return
     db.execute(delete(DietOption).where(DietOption.diet_plan_id.in_(stale_ids)))
-    db.execute(delete(DietPlan).where(DietPlan.id.in_(stale_ids)))
+    db.execute(
+        update(DietPlan).where(DietPlan.id.in_(stale_ids)).values(extracted_json={})
+    )
 
 
 def active_plan_document(db: Session, user_id: int) -> PlanDocument:

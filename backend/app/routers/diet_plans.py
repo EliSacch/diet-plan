@@ -1,10 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 from app.auth.deps import CurrentUser, DbSession
 from app.core.handlers import title_for
 from app.diet.limits import BODY_TOO_LARGE_DETAIL, RATE_LIMIT_DETAIL
 from app.diet.rate_limit import diet_plan_posts
-from app.diet.service import active_plan_document, replace_active_plan
+from app.diet.service import (
+    active_plan_document,
+    purge_replaced_plans,
+    replace_active_plan,
+)
 from app.schemas.diet_plan import PlanDocument
 from app.schemas.problem import Problem
 
@@ -52,6 +56,7 @@ def create_diet_plan(
     document: PlanDocument,
     user: CurrentUser,
     db: DbSession,
+    background_tasks: BackgroundTasks,
 ) -> PlanDocument:
     """Replace the active diet plan.
 
@@ -63,7 +68,9 @@ def create_diet_plan(
     returns 429 with code RATE_LIMITED.
     """
     diet_plan_posts.check(user.id)
-    return replace_active_plan(db, user.id, document)
+    stored = replace_active_plan(db, user.id, document)
+    background_tasks.add_task(purge_replaced_plans, user.id)
+    return stored
 
 
 @router.get("/diet-plans/active", response_model=PlanDocument)
