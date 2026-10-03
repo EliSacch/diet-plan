@@ -1,3 +1,5 @@
+import asyncio
+import json
 from collections.abc import Generator
 from datetime import UTC, datetime
 from urllib.parse import parse_qs, urlparse
@@ -10,13 +12,21 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.auth.google import GoogleOAuth, get_google_oauth
+from app.core.body_limit import BodySizeLimitMiddleware
 from app.db.base import Base
 from app.db.session import get_db
+from app.diet.limits import MAX_BODY_BYTES, POSTS_PER_HOUR
+from app.diet.rate_limit import diet_plan_posts
 from app.main import app
 from app.models.diet import DietOption, DietPlan
 from app.models.user import User
 from app.schemas.diet_plan import PlanDocument
 from tests.test_auth import ScriptedGoogleHttp
+
+
+@pytest.fixture(autouse=True)
+def _reset_post_limit() -> None:
+    diet_plan_posts.clear()
 
 
 @pytest.fixture
@@ -310,3 +320,260 @@ def _plan(user_id: int, *, active: bool) -> DietPlan:
 
 def sample_uploaded_at() -> datetime:
     return datetime(2026, 10, 3, tzinfo=UTC)
+
+
+def one_option(name: str, amount: float | None = 1) -> dict[str, object]:
+    return {
+        "days": [
+            {
+                "day": "Lunedì",
+                "meals": [
+                    {
+                        "meal": "Colazione",
+                        "categories": [
+                            {
+                                "category": "Bevande",
+                                "options": [
+                                    {
+                                        "name": name,
+                                        "amount": amount,
+                                        "unit": "ml",
+                                        "position": 0,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ]
+    }
+
+
+def many_options(count: int) -> dict[str, object]:
+    categories: list[dict[str, object]] = []
+    remaining = count
+    while remaining:
+        size = min(50, remaining)
+        categories.append(
+            {
+                "category": f"C{len(categories)}",
+                "options": [
+                    {
+                        "name": f"Food {len(categories)}-{index}",
+                        "amount": 1,
+                        "unit": "g",
+                        "position": index,
+                    }
+                    for index in range(size)
+                ],
+            }
+        )
+        remaining -= size
+    meals: list[dict[str, object]] = []
+    while categories:
+        meals.append({"meal": f"M{len(meals)}", "categories": categories[:20]})
+        categories = categories[20:]
+    days: list[dict[str, object]] = []
+    while meals:
+        days.append({"day": f"D{len(days)}", "meals": meals[:8]})
+        meals = meals[8:]
+    return {"days": days}
+
+
+def test_plan_document_rejects_values_outside_the_limits(
+    client: TestClient, database: Session
+) -> None:
+    sign_in(client)
+    long_name = one_option("n" * 301)
+    zero_amount = one_option("Tè", amount=0)
+    too_many = many_options(2_001)
+
+    for payload in (long_name, zero_amount, too_many):
+        response = client.post("/api/diet-plans", json=payload)
+        assert response.status_code == 422
+        assert response.json()["code"] == "VALIDATION_ERROR"
+
+    assert database.scalars(select(DietPlan)).all() == []
+
+
+def test_post_body_over_one_megabyte_is_rejected(client: TestClient) -> None:
+    response = client.post(
+        "/api/diet-plans",
+        content=b"x" * (MAX_BODY_BYTES + 1),
+        headers={"content-type": "application/json"},
+    )
+
+    assert response.status_code == 413
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["code"] == "PAYLOAD_TOO_LARGE"
+    assert response.json()["detail"] == "The request body is larger than 1 MB."
+
+
+def test_chunked_body_over_the_limit_is_rejected_without_content_length() -> None:
+    async def exercise(method: str) -> None:
+        chunks = [
+            {"type": "http.request", "body": b"12345", "more_body": True},
+            {"type": "http.request", "body": b"67890", "more_body": False},
+        ]
+        messages: list[dict] = []
+        called = False
+
+        async def downstream(scope: dict, receive, send) -> None:  # type: ignore[no-untyped-def]
+            nonlocal called
+            called = True
+
+        async def receive() -> dict:
+            return chunks.pop(0)
+
+        async def send(message: dict) -> None:
+            messages.append(message)
+
+        await BodySizeLimitMiddleware(downstream, max_bytes=8)(
+            {"type": "http", "method": method},
+            receive,
+            send,
+        )
+        assert called is False
+        body = json.loads(messages[1]["body"])
+        assert body["code"] == "PAYLOAD_TOO_LARGE"
+
+    for method in ("POST", "PUT", "PATCH"):
+        asyncio.run(exercise(method))
+
+
+def test_body_limit_stops_when_the_stream_is_not_a_request() -> None:
+    async def exercise() -> None:
+        called = False
+
+        async def downstream(scope: dict, receive, send) -> None:  # type: ignore[no-untyped-def]
+            nonlocal called
+            called = True
+
+        async def receive() -> dict:
+            return {"type": "http.disconnect"}
+
+        async def send(message: dict) -> None:
+            raise AssertionError(message)
+
+        await BodySizeLimitMiddleware(downstream)(
+            {"type": "http", "method": "POST"},
+            receive,
+            send,
+        )
+        assert called is False
+
+    asyncio.run(exercise())
+
+
+def test_replay_reads_the_original_stream_after_the_body() -> None:
+    async def exercise() -> None:
+        messages = [
+            {"type": "http.request", "body": b"hi", "more_body": False},
+            {"type": "http.disconnect"},
+        ]
+        seen: list[dict] = []
+
+        async def downstream(scope: dict, receive, send) -> None:  # type: ignore[no-untyped-def]
+            seen.append(await receive())
+            seen.append(await receive())
+
+        async def receive() -> dict:
+            return messages.pop(0)
+
+        async def send(message: dict) -> None:
+            return None
+
+        await BodySizeLimitMiddleware(downstream, max_bytes=8)(
+            {"type": "http", "method": "POST"},
+            receive,
+            send,
+        )
+        assert seen == [
+            {"type": "http.request", "body": b"hi", "more_body": False},
+            {"type": "http.disconnect"},
+        ]
+
+    asyncio.run(exercise())
+
+
+def test_post_past_the_hourly_limit_is_rate_limited(
+    client: TestClient, database: Session
+) -> None:
+    sign_in(client)
+    for index in range(POSTS_PER_HOUR):
+        created = client.post("/api/diet-plans", json=one_option(f"Item {index}"))
+        assert created.status_code == 201
+
+    rejected = client.post("/api/diet-plans", json=one_option("Over the limit"))
+
+    assert rejected.status_code == 429
+    assert rejected.json()["code"] == "RATE_LIMITED"
+    assert rejected.json()["detail"] == (
+        "Too many diet plans were posted. Try again later."
+    )
+    active = client.get("/api/diet-plans/active")
+    assert active.status_code == 200
+    assert (
+        active.json()["days"][0]["meals"][0]["categories"][0]["options"][0]["name"]
+        == f"Item {POSTS_PER_HOUR - 1}"
+    )
+    database.expire_all()
+    names = database.scalars(select(DietOption.name)).all()
+    assert "Over the limit" not in names
+
+
+def test_replace_keeps_only_the_two_newest_inactive_plans(
+    client: TestClient, database: Session
+) -> None:
+    sign_in(client)
+    user = database.scalar(select(User).where(User.email == "ada@example.com"))
+    assert user is not None
+    stale = DietPlan(
+        user_id=user.id,
+        uploaded_at=datetime(2020, 1, 1, tzinfo=UTC),
+        source_filename=None,
+        is_active=False,
+        extracted_json={"days": []},
+    )
+    database.add(stale)
+    database.flush()
+    database.add(
+        DietOption(
+            diet_plan_id=stale.id,
+            day="Lunedì",
+            meal="Colazione",
+            category="Bevande",
+            name="Stale",
+            amount=1,
+            unit="ml",
+            position=0,
+        )
+    )
+    database.commit()
+    stale_id = stale.id
+
+    for index in range(POSTS_PER_HOUR):
+        created = client.post("/api/diet-plans", json=one_option(f"Plan {index}"))
+        assert created.status_code == 201
+
+    database.expire_all()
+    plans = database.scalars(select(DietPlan).order_by(DietPlan.id)).all()
+    assert stale_id not in {plan.id for plan in plans}
+    assert [plan.is_active for plan in plans] == [False, False, True]
+    option_plan_ids = set(database.scalars(select(DietOption.diet_plan_id)).all())
+    assert option_plan_ids == {plan.id for plan in plans}
+    names = database.scalars(select(DietOption.name)).all()
+    assert "Stale" not in names
+
+
+def test_openapi_documents_the_post_limits(client: TestClient) -> None:
+    schema = client.get("/openapi.json").json()
+    operation = schema["paths"]["/api/diet-plans"]["post"]
+
+    assert "2,000" in operation["description"]
+    for status, code in (("413", "PAYLOAD_TOO_LARGE"), ("429", "RATE_LIMITED")):
+        example = operation["responses"][status]["content"]["application/problem+json"][
+            "example"
+        ]
+        assert example["code"] == code
