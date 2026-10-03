@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import googleSignInButton from "./assets/signin-assets/Android + Web/SVG/Dark/Theme=Dark, Show text=Yes, Shape=Pill, Platform=Android+Web.svg";
 import { messageForProblem } from "./i18n";
 import "./App.css";
+import Logo from "./components/Logo";
 
 type Profile = {
   id: number;
@@ -81,9 +83,9 @@ function App() {
       {state.kind === "loading" && <p>Checking your session…</p>}
       {state.kind === "signedOut" && (
         <>
-          <h1>Sign in</h1>
+          <Logo />
           <a className="continue" href="/auth/google">
-            Continue with Google
+            <img src={googleSignInButton} alt="Sign in with Google" width={180} height={40} />
           </a>
         </>
       )}

@@ -42,7 +42,7 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByText("Checking your session…")).toBeTruthy();
-    const link = await screen.findByRole("link", { name: "Continue with Google" });
+    const link = await screen.findByRole("link", { name: "Sign in with Google" });
     expect(link.getAttribute("href")).toBe("/auth/google");
     expect(vi.mocked(fetch).mock.calls[0]?.[1]).toMatchObject({ credentials: "include" });
   });
@@ -60,7 +60,7 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
-    expect(await screen.findByRole("link", { name: "Continue with Google" })).toBeTruthy();
+    expect(await screen.findByRole("link", { name: "Sign in with Google" })).toBeTruthy();
     expect(vi.mocked(fetch).mock.calls[1]?.[0]).toBe("/auth/logout");
     expect(vi.mocked(fetch).mock.calls[1]?.[1]).toMatchObject({
       method: "POST",
