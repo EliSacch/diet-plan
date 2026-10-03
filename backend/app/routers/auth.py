@@ -21,7 +21,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 GoogleClient = Annotated[GoogleOAuth, Depends(get_google_oauth)]
 
 
-@router.get("/google")
+@router.get("/google", include_in_schema=False)
 def google_login(google: GoogleClient) -> RedirectResponse:
     state = token_urlsafe(32)
     redirect = RedirectResponse(google.authorization_url(state), status_code=302)
@@ -29,7 +29,7 @@ def google_login(google: GoogleClient) -> RedirectResponse:
     return redirect
 
 
-@router.get("/google/callback")
+@router.get("/google/callback", include_in_schema=False)
 def google_callback(
     code: str,
     state: str,
