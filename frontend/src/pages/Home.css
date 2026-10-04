@@ -1,0 +1,38 @@
+.diet-plan {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.diet-plan-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  justify-content: center;
+}
+
+.diet-plan-switcher button {
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--off-white);
+  border-radius: var(--border-radius-xs);
+  padding: var(--padding-sm) var(--padding-md);
+  cursor: pointer;
+}
+
+.diet-plan-switcher button[aria-pressed="true"] {
+  color: var(--black);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.diet-plan section {
+  width: 100%;
+}
+
+.diet-plan ul {
+  margin: 0;
+  padding-left: 1.2em;
+}

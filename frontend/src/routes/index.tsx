@@ -1,13 +1,13 @@
 import { Route, Routes } from "react-router-dom";
 
-import Home from "./Home.tsx";
 import Profile from "./Profile.tsx";
 import RequireSession from "./RequireSession.tsx";
+import Root from "./Root.tsx";
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Root />} />
       <Route element={<RequireSession />}>
         <Route path="/profile" element={<Profile />} />
       </Route>

@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     coverage: {
+      exclude: ["src/assets/**", "**/*.css"],
       thresholds: {
         lines: 100,
         branches: 100,

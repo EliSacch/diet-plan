@@ -6,9 +6,9 @@ import { api } from "../api/client";
 import { SessionProvider } from "../context/SessionContext";
 import { setLocale } from "../i18n";
 import { axiosResponse, deferred } from "../test/http";
+import Profile from "./Profile";
 
 import App from "../App";
-import Profile from "./Profile";
 
 import type { AxiosResponse } from "axios";
 
@@ -48,6 +48,7 @@ describe("Profile", () => {
     expect(screen.getByText("Checking your session…")).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "Profile" })).toBeTruthy();
     expect(screen.getByText("ada@example.com")).toBeTruthy();
+    expect(screen.getByLabelText("Upload diet plan")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
   });
 

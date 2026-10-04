@@ -87,7 +87,7 @@ describe("SessionProvider", () => {
       "textContent",
       en.errors.INTERNAL_ERROR,
     );
-    expect(screen.queryByRole("heading", { name: "Home" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Root" })).toBeNull();
   });
 
   it("shows an unknown error when sign out rejects with a non-error", async () => {

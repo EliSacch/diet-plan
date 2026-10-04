@@ -1,0 +1,37 @@
+.upload-diet-plan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.upload-diet-plan label {
+  font: inherit;
+  color: var(--black);
+  background: var(--primary);
+  border: 0;
+  border-radius: var(--border-radius-xs);
+  padding: var(--padding-sm) var(--padding-md);
+  cursor: pointer;
+}
+
+.upload-diet-plan input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.upload-diet-plan input:disabled {
+  cursor: wait;
+}
+
+.upload-diet-plan:has(input:disabled) label {
+  opacity: 0.6;
+  cursor: wait;
+}
