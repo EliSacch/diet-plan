@@ -1,7 +1,7 @@
 import { useSessionContext } from "../hooks/useSessionContext";
 
-import SignInWithGoogleBtn from "../components/SignInWithGoogleBtn";
 import Logo from "../components/Logo";
+import SignInWithGoogleBtn from "../components/SignInWithGoogleBtn";
 
 export default function Home() {
   const session = useSessionContext();
