@@ -1,4 +1,4 @@
-import { type ChangeEvent, useRef } from "react";
+import { type ChangeEvent } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -8,7 +8,6 @@ import { activeDietPlanQueryOptions, dietPlanErrorMessage } from "../hooks/useAc
 import "./UploadDietPlan.css";
 
 export default function UploadDietPlan() {
-  const input = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const upload = useMutation({
     mutationFn: async (file: File) => {
@@ -18,28 +17,25 @@ export default function UploadDietPlan() {
   });
 
   function onChooseFile(event: ChangeEvent<HTMLInputElement>) {
-    const selected = event.currentTarget.files;
+    const file = event.currentTarget.files?.item(0) ?? null;
     event.currentTarget.value = "";
-    if (selected === null || selected.length === 0) {
+    if (file === null) {
       return;
     }
-    upload.mutate(selected[0]);
+    upload.mutate(file);
   }
 
   return (
     <div className="upload-diet-plan">
-      <input
-        ref={input}
-        className="upload-diet-plan-input"
-        type="file"
-        accept="application/pdf,.pdf"
-        aria-hidden="true"
-        tabIndex={-1}
-        onChange={onChooseFile}
-      />
-      <button type="button" disabled={upload.isPending} onClick={() => input.current!.click()}>
+      <label>
         Upload diet plan
-      </button>
+        <input
+          type="file"
+          accept="application/pdf,.pdf"
+          disabled={upload.isPending}
+          onChange={onChooseFile}
+        />
+      </label>
       {upload.isError ? <p role="alert">{dietPlanErrorMessage(upload.error)}</p> : null}
     </div>
   );

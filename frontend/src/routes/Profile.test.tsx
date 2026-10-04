@@ -48,7 +48,7 @@ describe("Profile", () => {
     expect(screen.getByText("Checking your session…")).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "Profile" })).toBeTruthy();
     expect(screen.getByText("ada@example.com")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Upload diet plan" })).toBeTruthy();
+    expect(screen.getByLabelText("Upload diet plan")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
   });
 

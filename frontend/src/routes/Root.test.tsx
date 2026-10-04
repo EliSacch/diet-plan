@@ -46,7 +46,7 @@ describe("Root", () => {
     render(<App />);
 
     expect(await screen.findByRole("heading", { name: "Diet Plan" })).toBeTruthy();
-    expect(await screen.findByRole("button", { name: "Upload diet plan" })).toBeTruthy();
+    expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Sign in with Google" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });

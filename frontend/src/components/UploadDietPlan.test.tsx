@@ -52,7 +52,20 @@ function fileInput() {
 
 function chooseFile(files: FileList | null) {
   const input = fileInput();
-  Object.defineProperty(input, "files", { configurable: true, value: files });
+  let current = files;
+  Object.defineProperty(input, "files", {
+    configurable: true,
+    get: () => current,
+  });
+  Object.defineProperty(input, "value", {
+    configurable: true,
+    get: () => "",
+    set: (next: string) => {
+      if (next === "") {
+        current = { length: 0, item: () => null } as unknown as FileList;
+      }
+    },
+  });
   fireEvent.change(input);
 }
 
@@ -60,15 +73,6 @@ describe("UploadDietPlan", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
-  });
-
-  it("opens the file input from the button", () => {
-    renderUpload();
-    const click = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => {});
-
-    fireEvent.click(screen.getByRole("button", { name: "Upload diet plan" }));
-
-    expect(click).toHaveBeenCalled();
   });
 
   it("posts the file and then loads the active plan", async () => {
@@ -81,10 +85,7 @@ describe("UploadDietPlan", () => {
     chooseFile({ 0: file, length: 1, item: () => file } as unknown as FileList);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Upload diet plan" })).toHaveProperty(
-        "disabled",
-        true,
-      );
+      expect(screen.getByLabelText("Upload diet plan")).toHaveProperty("disabled", true);
     });
     expect(get).not.toHaveBeenCalled();
 
@@ -99,10 +100,7 @@ describe("UploadDietPlan", () => {
       "/api/diet-plans/active",
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
-    expect(screen.getByRole("button", { name: "Upload diet plan" })).toHaveProperty(
-      "disabled",
-      false,
-    );
+    expect(screen.getByLabelText("Upload diet plan")).toHaveProperty("disabled", false);
     expect(screen.queryByRole("alert")).toBeNull();
   });
 

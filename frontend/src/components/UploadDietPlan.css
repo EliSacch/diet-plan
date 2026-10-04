@@ -5,7 +5,17 @@
   gap: var(--spacing-sm);
 }
 
-.upload-diet-plan-input {
+.upload-diet-plan label {
+  font: inherit;
+  color: var(--black);
+  background: var(--primary);
+  border: 0;
+  border-radius: var(--border-radius-xs);
+  padding: var(--padding-sm) var(--padding-md);
+  cursor: pointer;
+}
+
+.upload-diet-plan input {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -17,17 +27,11 @@
   border: 0;
 }
 
-.upload-diet-plan button {
-  font: inherit;
-  color: var(--black);
-  background: var(--primary);
-  border: 0;
-  border-radius: var(--border-radius-xs);
-  padding: var(--padding-sm) var(--padding-md);
-  cursor: pointer;
+.upload-diet-plan input:disabled {
+  cursor: wait;
 }
 
-.upload-diet-plan button:disabled {
+.upload-diet-plan:has(input:disabled) label {
   opacity: 0.6;
   cursor: wait;
 }

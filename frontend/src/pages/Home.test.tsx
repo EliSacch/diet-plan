@@ -96,7 +96,7 @@ describe("Home", () => {
 
     renderHome();
 
-    expect(await screen.findByRole("button", { name: "Upload diet plan" })).toBeTruthy();
+    expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
     expect(screen.queryByRole("group", { name: "Days" })).toBeNull();
   });
 
@@ -128,7 +128,7 @@ describe("Home", () => {
     expect(screen.getByText("Tè 1")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Contorni" })).toBeTruthy();
     expect(screen.getByText("Insalata mista").textContent).toBe("Insalata mista");
-    expect(screen.queryByRole("button", { name: "Upload diet plan" })).toBeNull();
+    expect(screen.queryByLabelText("Upload diet plan")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Pranzo" }));
 
