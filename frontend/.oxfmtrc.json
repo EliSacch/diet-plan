@@ -1,0 +1,60 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "sortImports": {
+    "ignoreCase": true,
+    "sortSideEffects": true,
+    "customGroups": [
+      {
+        "groupName": "framework",
+        "elementNamePattern": ["react", "react-dom", "react-dom/**"]
+      },
+      {
+        "groupName": "styles",
+        "elementNamePattern": ["**/*.css"]
+      },
+      {
+        "groupName": "assets",
+        "elementNamePattern": [
+          "**/assets/**",
+          "**/locales/**",
+          "**/*.svg",
+          "**/*.png",
+          "**/*.jpg",
+          "**/*.jpeg",
+          "**/*.gif",
+          "**/*.webp"
+        ]
+      },
+      {
+        "groupName": "components",
+        "elementNamePattern": [
+          "**/routes",
+          "**/routes/**",
+          "**/components",
+          "**/components/**",
+          "**/App",
+          "**/App.tsx",
+          "**/Home",
+          "**/Home.tsx",
+          "**/Profile",
+          "**/Profile.tsx",
+          "**/RequireSession",
+          "**/RequireSession.tsx"
+        ]
+      },
+      {
+        "groupName": "modules",
+        "elementNamePattern": ["./**", "../**"]
+      }
+    ],
+    "groups": [
+      "framework",
+      ["value-builtin", "value-external"],
+      "modules",
+      "components",
+      "styles",
+      "assets",
+      "unknown"
+    ]
+  }
+}

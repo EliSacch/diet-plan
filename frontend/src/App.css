@@ -6,24 +6,3 @@ main {
   align-items: center;
   gap: 12px;
 }
-
-pre {
-  margin: 16px 0 0;
-  text-align: left;
-}
-
-[role="alert"] {
-  color: var(--danger);
-}
-
-.continue,
-.sign-out {
-  font: inherit;
-  color: var(--text-h);
-  background: transparent;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  padding: 8px 16px;
-  text-decoration: none;
-  cursor: pointer;
-}

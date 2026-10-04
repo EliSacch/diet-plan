@@ -1,0 +1,19 @@
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo img {
+  width: 72px;
+  height: 72px;
+}
+
+.logo-diet {
+  color: white;
+}
+
+.logo-plan {
+  color: var(--green);
+}

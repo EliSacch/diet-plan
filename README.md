@@ -1,4 +1,4 @@
-# Template Project
+# DietPlan
 
 Monorepo with a FastAPI backend and a React Vite frontend.
 
@@ -22,4 +22,4 @@ Monorepo with a FastAPI backend and a React Vite frontend.
 
 Sign in with Google using the openid and email scopes. The backend stores a server session and sends it as an httpOnly cookie. The same Google account always maps to the same user.
 
-[Back to the top](#template-project)
+[Back to the top](#dietplan)
