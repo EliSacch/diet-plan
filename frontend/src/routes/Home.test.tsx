@@ -40,9 +40,9 @@ describe("Home", () => {
 
     render(<App />);
 
-    expect(await screen.findByRole("heading", { name: "Home" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Diet Plan" })).toBeTruthy();
+    expect(screen.getByText("Welcome, ada@example.com!")).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Sign in with Google" })).toBeNull();
-    expect(screen.queryByText("ada@example.com")).toBeNull();
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });
 });
