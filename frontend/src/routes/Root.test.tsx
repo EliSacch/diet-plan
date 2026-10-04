@@ -9,7 +9,7 @@ import App from "../App";
 
 import type { AxiosResponse } from "axios";
 
-describe("Home", () => {
+describe("Root", () => {
   beforeEach(() => {
     setLocale("en");
   });
@@ -35,13 +35,18 @@ describe("Home", () => {
     expect(getProfile.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
   });
 
-  it("hides the Google button on home when signed in", async () => {
-    vi.spyOn(api, "get").mockResolvedValue(axiosResponse({ id: 1, email: "ada@example.com" }));
+  it("hides the Google button on Root when signed in", async () => {
+    vi.spyOn(api, "get").mockImplementation((url: string) => {
+      if (url === "/api/diet-plans/active") {
+        return Promise.reject(axiosFailure(404, { code: "NOT_FOUND" }));
+      }
+      return Promise.resolve(axiosResponse({ id: 1, email: "ada@example.com" }));
+    });
 
     render(<App />);
 
     expect(await screen.findByRole("heading", { name: "Diet Plan" })).toBeTruthy();
-    expect(screen.getByText("Welcome, ada@example.com!")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Upload diet plan" })).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Sign in with Google" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });

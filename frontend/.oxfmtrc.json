@@ -32,14 +32,12 @@
           "**/routes/**",
           "**/components",
           "**/components/**",
+          "**/routes",
+          "**/routes/**",
+          "**/pages",
+          "**/pages/**",
           "**/App",
-          "**/App.tsx",
-          "**/Home",
-          "**/Home.tsx",
-          "**/Profile",
-          "**/Profile.tsx",
-          "**/RequireSession",
-          "**/RequireSession.tsx"
+          "**/App.tsx"
         ]
       },
       {
