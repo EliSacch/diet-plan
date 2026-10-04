@@ -1,26 +1,55 @@
 :root {
-  --green: rgb(55, 202, 123);
+  /* Colors */
+  --primary: rgb(55, 202, 123);;
+  --secondary: #f4f3ec;
+  --info: #7676f5;
+  --success: #80ea80;
+  --warning: #eacc7b;
+  --danger: rgb(233, 85, 75);
   --black: rgb(13, 22, 18);
   --white: rgb(232, 234, 233);
   --off-white: rgb(216, 225, 220);
-  --danger: rgb(233, 85, 75);
+  --bg: var(--black);
   --text: var(--off-white);
   --text-h: var(--white);
-  --bg: var(--black);
-  --accent: var(--green);
-  --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: font-family: "Mulish", sans-serif;
+  /* Fonts */
+  --sans: "Muli", sans-serif;
+  --heading: "Comfortaa", var(--sans);
 
-  --heading: "Comfortaa", sans-serif;
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 32px;
+  --spacing-xl: 64px;
 
-  color-scheme: dark;
+  /* Padding */
+  --padding-xs: 4px;
+  --padding-sm: 8px;
+  --padding-md: 16px;
+  --padding-lg: 32px;
+  --padding-xl: 64px;
+
+  /* Margin */
+  --margin-xs: 4px;
+  --margin-sm: 8px;
+  --margin-md: 16px;
+  --margin-lg: 32px;
+  --margin-xl: 64px;
+
+  /* Border radius */
+  --border-radius-xs: 4px;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
-  font-family: "Mulish", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 
   @media (max-width: 1024px) {
     font-size: 16px;
@@ -54,6 +83,7 @@ h1 {
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
@@ -63,6 +93,7 @@ h2 {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }

@@ -6,37 +6,3 @@ main {
   align-items: center;
   gap: 12px;
 }
-
-pre {
-  margin: 16px 0 0;
-  text-align: left;
-}
-
-[role="alert"] {
-  color: var(--danger);
-}
-
-.continue {
-  display: inline-block;
-  line-height: 0;
-  border-radius: 20px;
-}
-
-.continue img {
-  display: block;
-}
-
-.continue:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-.sign-out {
-  font: inherit;
-  color: var(--text-h);
-  background: transparent;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  padding: 8px 16px;
-  cursor: pointer;
-}

@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { messageForProblem, setLocale } from "./index";
+
 import { en } from "./locales/en";
 import { it as italian } from "./locales/it";
-import { messageForProblem, setLocale } from "./index";
 
 describe("messageForProblem", () => {
   beforeEach(() => {
