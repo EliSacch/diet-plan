@@ -17,6 +17,7 @@ export const it = {
   labels: {
     CHECKING_YOUR_SESSION: "Controllo della sessione…",
     DAYS: "Giorni",
+    DIET_PLAN: "Piano alimentare",
     LOADING_YOUR_DIET_PLAN: "Caricamento del piano alimentare…",
     MEALS: "Pasti",
     PROFILE: "Profilo",

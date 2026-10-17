@@ -45,7 +45,7 @@ describe("Profile", () => {
 
     render(<App />);
 
-    expect(screen.getByText("Checking your session…")).toBeTruthy();
+    expect(screen.getByRole("status", { name: "Checking your session…" })).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "Profile" })).toBeTruthy();
     expect(screen.getByText("ada@example.com")).toBeTruthy();
     expect(screen.getByLabelText("Upload diet plan")).toBeTruthy();

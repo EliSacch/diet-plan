@@ -23,7 +23,7 @@ describe("SignInWithGoogleBtn", () => {
 
   it("shows a loading state and continues to Google after it is pressed", () => {
     const assign = vi.fn();
-    vi.stubGlobal("location", { ...window.location, assign });
+    vi.stubGlobal("location", { assign });
     render(<SignInWithGoogleBtn />);
 
     fireEvent.click(screen.getByRole("link", { name: "Sign in with Google" }));
@@ -36,7 +36,7 @@ describe("SignInWithGoogleBtn", () => {
 
   it("clears the loading state when the page is restored", () => {
     const assign = vi.fn();
-    vi.stubGlobal("location", { ...window.location, assign });
+    vi.stubGlobal("location", { assign });
     render(<SignInWithGoogleBtn />);
 
     fireEvent.click(screen.getByRole("link", { name: "Sign in with Google" }));

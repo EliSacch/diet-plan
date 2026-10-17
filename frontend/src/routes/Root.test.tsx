@@ -26,8 +26,8 @@ describe("Root", () => {
 
     render(<App />);
 
-    expect(screen.getByText("Checking your session…")).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "DietPlan" })).toBeNull();
+    expect(screen.getByRole("status", { name: "Checking your session…" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DietPlan" })).toBeTruthy();
     pending.reject(axiosFailure(401, { code: "UNAUTHORIZED" }));
 
     const link = await screen.findByRole("link", { name: "Sign in with Google" });

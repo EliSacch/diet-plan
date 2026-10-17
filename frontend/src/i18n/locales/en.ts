@@ -15,6 +15,7 @@ export const en = {
   labels: {
     CHECKING_YOUR_SESSION: "Checking your session…",
     DAYS: "Days",
+    DIET_PLAN: "Diet plan",
     LOADING_YOUR_DIET_PLAN: "Loading your diet plan…",
     MEALS: "Meals",
     PROFILE: "Profile",

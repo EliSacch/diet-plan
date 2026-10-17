@@ -1,10 +1,10 @@
 import { type MouseEvent, useEffect, useState } from "react";
 
-import googlePill from "../../assets/signin-assets/Android + Web/SVG/Dark/Theme=Dark, Show text=Yes, Shape=Pill, Platform=Android+Web.svg";
-
 import { t } from "../../i18n";
 
 import "./SignInWithGoogleBtn.css";
+
+import googlePill from "../../assets/signin-assets/Android + Web/SVG/Dark/Theme=Dark, Show text=Yes, Shape=Pill, Platform=Android+Web.svg";
 
 export default function SignInWithGoogleBtn() {
   const [pending, setPending] = useState(false);

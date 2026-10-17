@@ -1,0 +1,23 @@
+.page-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: var(--padding-xl) var(--padding-lg);
+  min-width: 0;
+}
+
+.page-layout > h1 {
+  margin: 0 0 var(--spacing-lg);
+  text-align: center;
+}
+
+.page-layout > main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xl);
+}
