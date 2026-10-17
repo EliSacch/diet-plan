@@ -1,0 +1,121 @@
+.btn {
+  appearance: none;
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  height: 40px;
+  padding: 0 var(--padding-md);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 150ms ease;
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--white);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.btn:hover:not(:disabled)::after {
+  opacity: 0.16;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.btn:active:not(:disabled)::after {
+  opacity: 0.32;
+}
+
+.btn:focus {
+  outline: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn[aria-busy="true"] {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.btn[aria-busy="true"] .btn-label {
+  opacity: 0.35;
+}
+
+.btn[aria-busy="true"]::after {
+  opacity: 0.2;
+}
+
+.btn-primary {
+  color: var(--black);
+  background: var(--primary);
+}
+
+.btn-secondary {
+  color: var(--primary);
+  background: var(--black);
+  border-color: var(--primary);
+}
+
+.btn-spinner {
+  position: absolute;
+  inset: 0;
+  width: 18px;
+  height: 18px;
+  margin: auto;
+  border: 2px solid var(--off-white);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn::after {
+    transition: none;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
+
+  .btn-spinner {
+    animation: none;
+    border-right-color: var(--primary);
+  }
+}

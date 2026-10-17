@@ -49,7 +49,7 @@ describe("Profile", () => {
     expect(await screen.findByRole("heading", { name: "Profile" })).toBeTruthy();
     expect(screen.getByText("ada@example.com")).toBeTruthy();
     expect(screen.getByLabelText("Upload diet plan")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sign out" }).className).toContain("btn-secondary");
   });
 
   it("renders nothing on the profile page until the session is signed in", () => {

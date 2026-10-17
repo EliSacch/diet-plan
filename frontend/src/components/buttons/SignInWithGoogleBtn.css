@@ -42,7 +42,7 @@
 }
 
 .continue:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 
