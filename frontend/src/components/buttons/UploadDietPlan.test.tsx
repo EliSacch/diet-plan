@@ -2,14 +2,15 @@ import type { ReactNode } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { api } from "../api/client";
-import { axiosFailure, axiosResponse, deferred } from "../test/http";
-import type { PlanDocument } from "../types/diet-plan";
+import { api } from "../../api/client";
+import { setLocale } from "../../i18n";
+import { axiosFailure, axiosResponse, deferred } from "../../test/http";
+import type { PlanDocument } from "../../types/diet-plan";
 import UploadDietPlan from "./UploadDietPlan";
 
-import { en } from "../i18n/locales/en";
+import { en } from "../../i18n/locales/en";
 
 import type { AxiosResponse } from "axios";
 
@@ -70,6 +71,10 @@ function chooseFile(files: FileList | null) {
 }
 
 describe("UploadDietPlan", () => {
+  beforeEach(() => {
+    setLocale("en");
+  });
+
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();

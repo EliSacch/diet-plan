@@ -2,8 +2,9 @@ import { type ChangeEvent } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { uploadDietPlan } from "../api/diet-plan";
-import { activeDietPlanQueryOptions, dietPlanErrorMessage } from "../hooks/useActiveDietPlan";
+import { uploadDietPlan } from "../../api/diet-plan";
+import { activeDietPlanQueryOptions, dietPlanErrorMessage } from "../../hooks/useActiveDietPlan";
+import { t } from "../../i18n";
 
 import "./UploadDietPlan.css";
 
@@ -28,7 +29,7 @@ export default function UploadDietPlan() {
   return (
     <div className="upload-diet-plan">
       <label>
-        Upload diet plan
+        {t("UPLOAD_DIET_PLAN")}
         <input
           type="file"
           accept="application/pdf,.pdf"

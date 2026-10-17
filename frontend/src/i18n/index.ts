@@ -24,6 +24,12 @@ export function setLocale(next: string) {
   }
 }
 
+type LabelKey = keyof MessageCatalog["labels"];
+
+export function t(key: LabelKey) {
+  return catalogs[locale].labels[key];
+}
+
 export function messageForProblem(problem: { code?: string; detail?: string }) {
   const messages = catalogs[locale].errors;
   if (problem.code && isErrorCode(problem.code, messages)) {

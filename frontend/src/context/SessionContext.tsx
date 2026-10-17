@@ -5,7 +5,7 @@ import { isAxiosError } from "axios";
 
 import { logout } from "../api/auth";
 import { getProfile } from "../api/profile";
-import { messageForProblem } from "../i18n";
+import { messageForProblem, t } from "../i18n";
 import type { Problem } from "../types/problem";
 import type { Profile } from "../types/profile";
 
@@ -35,7 +35,7 @@ function sessionErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
   }
-  return "Unknown error";
+  return t("UNKNOWN_ERROR");
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {

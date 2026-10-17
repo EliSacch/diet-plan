@@ -3,6 +3,7 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  margin: 0;
 }
 
 .logo img {
@@ -11,7 +12,7 @@
 }
 
 .logo-diet {
-  color: white;
+  color: var(--white);
 }
 
 .logo-plan {

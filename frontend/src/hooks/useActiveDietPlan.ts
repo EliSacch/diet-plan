@@ -2,7 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 
 import { getActiveDietPlan } from "../api/diet-plan";
-import { messageForProblem } from "../i18n";
+import { messageForProblem, t } from "../i18n";
 import type { Problem } from "../types/problem";
 
 const activeDietPlanQueryKey = ["diet-plan", "active"] as const;
@@ -22,7 +22,7 @@ export function dietPlanErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
   }
-  return "Unknown error";
+  return t("UNKNOWN_ERROR");
 }
 
 export function activeDietPlanQueryOptions() {

@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 
 import { useSessionContext } from "../hooks/useSessionContext";
+import { t } from "../i18n";
 
 export default function RequireSession() {
   const session = useSessionContext();
@@ -8,7 +9,7 @@ export default function RequireSession() {
   if (session.status === "loading") {
     return (
       <main>
-        <p>Checking your session…</p>
+        <p>{t("CHECKING_YOUR_SESSION")}</p>
       </main>
     );
   }

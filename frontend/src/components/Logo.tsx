@@ -7,7 +7,7 @@ export default function Logo() {
     <h1 className="logo">
       <img src={logo} alt="" width={72} height={72} />
       <span className="logo-wordmark">
-        <span className="logo-diet">Diet</span> <span className="logo-plan">Plan</span>
+        <span className="logo-diet">Diet</span><span className="logo-plan">Plan</span>
       </span>
     </h1>
   );

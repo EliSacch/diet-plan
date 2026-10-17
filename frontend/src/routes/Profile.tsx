@@ -1,6 +1,7 @@
 import { useSessionContext } from "../hooks/useSessionContext";
+import { t } from "../i18n";
 
-import UploadDietPlan from "../components/UploadDietPlan";
+import UploadDietPlan from "../components/buttons/UploadDietPlan";
 
 export default function Profile() {
   const session = useSessionContext();
@@ -11,11 +12,11 @@ export default function Profile() {
 
   return (
     <main>
-      <h1>Profile</h1>
+      <h1>{t("PROFILE")}</h1>
       <p>{session.email}</p>
       <UploadDietPlan />
       <button className="sign-out" type="button" onClick={session.signOut}>
-        Sign out
+        {t("SIGN_OUT")}
       </button>
     </main>
   );

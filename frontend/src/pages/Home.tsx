@@ -1,9 +1,10 @@
 import { useState } from "react";
 
 import { dietPlanErrorMessage, useActiveDietPlan } from "../hooks/useActiveDietPlan";
+import { t } from "../i18n";
 import type { PlanOption } from "../types/diet-plan";
 
-import UploadDietPlan from "../components/UploadDietPlan";
+import UploadDietPlan from "../components/buttons/UploadDietPlan";
 
 import "./Home.css";
 
@@ -23,7 +24,7 @@ export default function Home() {
   const [mealIndex, setMealIndex] = useState(0);
 
   if (plan.isPending) {
-    return <p>Loading your diet plan…</p>;
+    return <p>{t("LOADING_YOUR_DIET_PLAN")}</p>;
   }
 
   if (plan.isError) {
@@ -39,7 +40,7 @@ export default function Home() {
 
   return (
     <div className="diet-plan">
-      <div className="diet-plan-switcher" role="group" aria-label="Days">
+      <div className="diet-plan-switcher" role="group" aria-label={t("DAYS")}>
         {plan.data.days.map((item, index) => (
           <button
             key={item.day}
@@ -54,7 +55,7 @@ export default function Home() {
           </button>
         ))}
       </div>
-      <div className="diet-plan-switcher" role="group" aria-label="Meals">
+      <div className="diet-plan-switcher" role="group" aria-label={t("MEALS")}>
         {day.meals.map((item, index) => (
           <button
             key={item.meal}

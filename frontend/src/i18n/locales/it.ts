@@ -14,4 +14,16 @@ export const it = {
     HTTP_ERROR: "Non è stato possibile completare la richiesta.",
     UNKNOWN: "Qualcosa è andato storto.",
   },
+  labels: {
+    CHECKING_YOUR_SESSION: "Controllo della sessione…",
+    DAYS: "Giorni",
+    LOADING_YOUR_DIET_PLAN: "Caricamento del piano alimentare…",
+    MEALS: "Pasti",
+    PROFILE: "Profilo",
+    SIGN_IN_WITH_GOOGLE: "Accedi con Google",
+    SIGNING_IN: "Accesso in corso…",
+    SIGN_OUT: "Esci",
+    UNKNOWN_ERROR: "Errore sconosciuto",
+    UPLOAD_DIET_PLAN: "Carica il piano alimentare",
+  },
 } as const satisfies MessageCatalog;

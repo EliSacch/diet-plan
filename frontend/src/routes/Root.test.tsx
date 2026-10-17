@@ -27,9 +27,11 @@ describe("Root", () => {
     render(<App />);
 
     expect(screen.getByText("Checking your session…")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "DietPlan" })).toBeNull();
     pending.reject(axiosFailure(401, { code: "UNAUTHORIZED" }));
 
     const link = await screen.findByRole("link", { name: "Sign in with Google" });
+    expect(screen.getByRole("heading", { name: "DietPlan" })).toBeTruthy();
     expect(link.getAttribute("href")).toBe("/auth/google");
     expect(getProfile.mock.calls[0]?.[0]).toBe("/api/profile");
     expect(getProfile.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
@@ -45,8 +47,8 @@ describe("Root", () => {
 
     render(<App />);
 
-    expect(await screen.findByRole("heading", { name: "Diet Plan" })).toBeTruthy();
     expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "DietPlan" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Sign in with Google" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });

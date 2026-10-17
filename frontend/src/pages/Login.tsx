@@ -1,7 +1,13 @@
-import SignInWithGoogleBtn from "../components/SignInWithGoogleBtn";
+import Logo from "../components/Logo";
+import SignInWithGoogleBtn from "../components/buttons/SignInWithGoogleBtn";
 
 const Login = () => {
-  return <SignInWithGoogleBtn />;
+  return (
+    <>
+      <Logo />
+      <SignInWithGoogleBtn />
+    </>
+  );
 };
 
 export default Login;

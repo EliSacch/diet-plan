@@ -1,0 +1,94 @@
+.continue {
+  position: relative;
+  display: inline-flex;
+  border-radius: 20px;
+  line-height: 0;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 150ms ease;
+}
+
+.continue img {
+  display: block;
+}
+
+.continue::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--white);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.continue:hover {
+  box-shadow: 0 0 0 2px var(--off-white);
+}
+
+.continue:hover::after {
+  opacity: 0.16;
+}
+
+.continue:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.continue:active::after {
+  opacity: 0.32;
+}
+
+.continue:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
+.continue[aria-busy="true"] {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.continue[aria-busy="true"] img {
+  opacity: 0.35;
+}
+
+.continue[aria-busy="true"]::after {
+  opacity: 0.2;
+}
+
+.continue-spinner {
+  position: absolute;
+  inset: 0;
+  width: 18px;
+  height: 18px;
+  margin: auto;
+  border: 2px solid var(--off-white);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: continue-spin 0.7s linear infinite;
+}
+
+@keyframes continue-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .continue,
+  .continue::after {
+    transition: none;
+  }
+
+  .continue:active {
+    transform: none;
+  }
+
+  .continue-spinner {
+    animation: none;
+    border-right-color: var(--primary);
+  }
+}

@@ -12,8 +12,21 @@ export const en = {
     HTTP_ERROR: "The request could not be completed.",
     UNKNOWN: "Something went wrong.",
   },
+  labels: {
+    CHECKING_YOUR_SESSION: "Checking your session…",
+    DAYS: "Days",
+    LOADING_YOUR_DIET_PLAN: "Loading your diet plan…",
+    MEALS: "Meals",
+    PROFILE: "Profile",
+    SIGN_IN_WITH_GOOGLE: "Sign in with Google",
+    SIGNING_IN: "Signing in…",
+    SIGN_OUT: "Sign out",
+    UNKNOWN_ERROR: "Unknown error",
+    UPLOAD_DIET_PLAN: "Upload diet plan",
+  },
 } as const;
 
 export type MessageCatalog = {
   errors: Record<keyof typeof en.errors, string>;
+  labels: Record<keyof typeof en.labels, string>;
 };
