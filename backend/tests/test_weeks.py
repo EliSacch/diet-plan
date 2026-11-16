@@ -1,35 +1,17 @@
-from collections.abc import Generator
 from datetime import date
 
 import pytest
-from sqlalchemy import create_engine, select
+from fastapi.testclient import TestClient
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.orm import Session
 
-from app.db.base import Base
 from app.models.user import User
 from app.models.week import WeeklyChoice, WeeklyPlan
+from tests.test_diet_plans import replacement_document, sample_document, sign_in
 
 MONDAY = date(2026, 11, 16)
 NEXT_MONDAY = date(2026, 11, 23)
-
-
-@pytest.fixture
-def database() -> Generator[Session]:
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    Base.metadata.create_all(engine)
-    factory = sessionmaker(bind=engine, autoflush=False)
-    db = factory()
-    try:
-        yield db
-    finally:
-        db.close()
-        engine.dispose()
 
 
 def _user(db: Session, email: str = "ada@example.com") -> User:
@@ -164,3 +146,69 @@ def test_the_same_slot_can_be_picked_in_another_day_or_week(
     database.commit()
 
     assert len(database.scalars(select(WeeklyChoice)).all()) == 4
+
+
+def _options_url(week_start: str = MONDAY.isoformat()) -> str:
+    return f"/api/weeks/{week_start}/options"
+
+
+def test_options_are_the_active_plan_grouped_in_order(client: TestClient) -> None:
+    sign_in(client)
+    assert client.post("/api/diet-plans", json=sample_document()).status_code == 201
+
+    response = client.get(_options_url())
+
+    assert response.status_code == 200
+    assert response.json() == sample_document()
+
+
+def test_options_follow_the_newly_active_plan(client: TestClient) -> None:
+    sign_in(client)
+    assert client.post("/api/diet-plans", json=sample_document()).status_code == 201
+    assert (
+        client.post("/api/diet-plans", json=replacement_document()).status_code == 201
+    )
+
+    response = client.get(_options_url())
+
+    assert response.json() == replacement_document()
+
+
+def test_options_without_an_active_plan_are_not_found(client: TestClient) -> None:
+    sign_in(client)
+
+    response = client.get(_options_url())
+
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["code"] == "NOT_FOUND"
+
+
+@pytest.mark.parametrize(
+    ("week_start", "detail"),
+    [
+        ("2026-11-17", "week_start must be a Monday"),
+        ("2026-11-22", "week_start must be a Monday"),
+        ("not-a-date", "week_start"),
+        ("2026-02-30", "week_start"),
+    ],
+)
+def test_options_reject_a_week_start_that_is_not_a_monday(
+    client: TestClient, week_start: str, detail: str
+) -> None:
+    sign_in(client)
+    assert client.post("/api/diet-plans", json=sample_document()).status_code == 201
+
+    response = client.get(_options_url(week_start))
+
+    assert response.status_code == 422
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["code"] == "VALIDATION_ERROR"
+    assert detail in response.json()["detail"]
+
+
+def test_options_require_a_session(client: TestClient) -> None:
+    response = client.get(_options_url())
+
+    assert response.status_code == 401
+    assert response.json()["code"] == "UNAUTHORIZED"
