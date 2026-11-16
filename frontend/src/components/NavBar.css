@@ -1,6 +1,4 @@
 .nav-bar {
-  --nav-bar-height: 64px;
-
   position: sticky;
   z-index: 5;
   top: 0;

@@ -42,6 +42,9 @@
   /* Border radius */
   --border-radius-xs: 4px;
 
+  /* Layout */
+  --nav-bar-height: 64px;
+
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
