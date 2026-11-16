@@ -13,8 +13,13 @@ const links = [
     icon: "M3 11l9-7 9 7M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5",
   },
   {
+    to: "/weeks",
+    label: () => t("WEEK"),
+    icon: "M7 3v4M17 3v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z",
+  },
+  {
     to: "/diet-plan",
-    label: () => t("DIET_PLAN"),
+    label: () => t("PLAN"),
     icon: "M9 4h6v3H9zM9 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-3M9 12h6M9 16h4",
   },
   {
@@ -38,7 +43,7 @@ export default function NavBar() {
         <ul>
           {links.map((link) => (
             <li key={link.to}>
-              <NavLink to={link.to} end className="nav-bar-link">
+              <NavLink to={link.to} end={link.to === "/"} className="nav-bar-link">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"

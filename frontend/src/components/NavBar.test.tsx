@@ -11,6 +11,7 @@ function renderAt(path: string) {
       <NavBar />
       <Routes>
         <Route path="/" element={<p>Home page</p>} />
+        <Route path="/weeks/*" element={<p>Week page</p>} />
         <Route path="/diet-plan" element={<p>Diet plan page</p>} />
         <Route path="/profile" element={<p>Profile page</p>} />
       </Routes>
@@ -32,20 +33,28 @@ describe("NavBar", () => {
       "page",
     );
     expect(within(nav).getByRole("link", { name: "Home" }).getAttribute("aria-current")).toBe(null);
-    expect(within(nav).getByRole("link", { name: "Diet plan" }).getAttribute("aria-current")).toBe(
-      null,
+    expect(within(nav).getByRole("link", { name: "Week" }).getAttribute("aria-current")).toBe(null);
+    expect(within(nav).getByRole("link", { name: "Plan" }).getAttribute("aria-current")).toBe(null);
+  });
+
+  it("keeps Week active on a specific week", () => {
+    renderAt("/weeks/2026-11-16");
+
+    const nav = screen.getByRole("navigation", { name: "Main navigation" });
+    expect(within(nav).getByRole("link", { name: "Week" }).getAttribute("aria-current")).toBe(
+      "page",
     );
+    expect(within(nav).getByRole("link", { name: "Week" }).getAttribute("href")).toBe("/weeks");
+    expect(within(nav).getByRole("link", { name: "Home" }).getAttribute("aria-current")).toBe(null);
   });
 
   it("navigates between pages", () => {
     renderAt("/");
 
-    fireEvent.click(screen.getByRole("link", { name: "Diet plan" }));
+    fireEvent.click(screen.getByRole("link", { name: "Plan" }));
 
     expect(screen.getByText("Diet plan page")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Diet plan" }).getAttribute("aria-current")).toBe(
-      "page",
-    );
+    expect(screen.getByRole("link", { name: "Plan" }).getAttribute("aria-current")).toBe("page");
 
     fireEvent.click(screen.getByRole("link", { name: "Profile" }));
 
@@ -65,7 +74,8 @@ describe("NavBar", () => {
 
     expect(screen.getByRole("navigation", { name: "Navigazione principale" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Piano alimentare" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Settimana" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Piano" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Profilo" })).toBeTruthy();
   });
 });

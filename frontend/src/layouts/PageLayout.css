@@ -22,7 +22,15 @@
 
 .page-layout-content > h1 {
   margin: 0 0 var(--spacing-lg);
+  font-size: 36px;
+  line-height: 1.2;
+  letter-spacing: -0.72px;
   text-align: center;
+
+  @media (max-width: 1024px) {
+    font-size: 28px;
+    letter-spacing: -0.56px;
+  }
 }
 
 .page-layout-content > main {
