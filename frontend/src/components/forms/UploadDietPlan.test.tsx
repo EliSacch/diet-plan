@@ -264,6 +264,78 @@ describe("UploadDietPlan", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
+  it("keeps the drag highlight while moving over children and clears it on leave", () => {
+    withoutActivePlan();
+    renderUpload();
+    const choose = screen.getByRole("button", { name: en.labels.CHOOSE_FILE });
+
+    function dragLeaveTo(target: Element) {
+      fireEvent(dropzone(), new MouseEvent("dragleave", { bubbles: true, relatedTarget: target }));
+    }
+
+    fireEvent.dragOver(dropzone());
+    dragLeaveTo(choose);
+    expect(dropzone().getAttribute("data-dragging")).toBe("true");
+
+    dragLeaveTo(document.body);
+    expect(dropzone().getAttribute("data-dragging")).toBe("false");
+  });
+
+  it("ignores a drop without files", () => {
+    withoutActivePlan();
+    renderUpload();
+
+    fireEvent.drop(dropzone(), { dataTransfer: { files: fileList() } });
+
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("ignores drags, drops and repeated submits while uploading", async () => {
+    withoutActivePlan();
+    const post = vi.spyOn(api, "post").mockReturnValue(deferred<AxiosResponse>().promise);
+    renderUpload();
+    const other = new File(["other"], "other.pdf", { type: "application/pdf" });
+
+    chooseFile(fileList(pdf));
+    fireEvent.click(screen.getByRole("button", { name: en.labels.UPLOAD_DIET_PLAN }));
+    await waitFor(() => expect(fileInput().disabled).toBe(true));
+
+    fireEvent.dragOver(dropzone());
+    expect(dropzone().getAttribute("data-dragging")).toBe("false");
+
+    fireEvent.drop(dropzone(), { dataTransfer: { files: fileList(other) } });
+    expect(screen.queryByText("other.pdf")).toBeNull();
+    expect(screen.getByText("plan.pdf")).toBeTruthy();
+
+    fireEvent.submit(dropzone().closest("form")!);
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not submit without a selected file", () => {
+    withoutActivePlan();
+    const post = vi.spyOn(api, "post");
+    renderUpload();
+
+    fireEvent.submit(dropzone().closest("form")!);
+
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("shows sizes in KB below 1 MB and in MB at the limit", () => {
+    withoutActivePlan();
+    renderUpload();
+
+    chooseFile(fileList(pdf));
+    expect(screen.getByText(/^1 KB ·/)).toBeTruthy();
+
+    const atLimit = new File([new Uint8Array(MAX_FILE_BYTES)], "limit.pdf", {
+      type: "application/pdf",
+    });
+    chooseFile(fileList(atLimit));
+    expect(screen.getByText(/^1\.0 MB ·/)).toBeTruthy();
+  });
+
   it("ignores an empty file selection", () => {
     withoutActivePlan();
     renderUpload();
