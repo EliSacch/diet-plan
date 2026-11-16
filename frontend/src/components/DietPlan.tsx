@@ -1,20 +1,11 @@
 import { useState } from "react";
 
-import type { PlanDocument, PlanOption } from "../types/diet-plan";
+import type { PlanDocument } from "../types/diet-plan";
+import { optionLabel } from "../utils/plan";
 import DayPicker from "./DayPicker";
 
 import "../styles/plan-sections.css";
 import "./DietPlan.css";
-
-function optionLabel(option: PlanOption) {
-  if (option.amount === null) {
-    return option.name;
-  }
-  if (option.unit === null) {
-    return `${option.name} ${option.amount}`;
-  }
-  return `${option.name} ${option.amount} ${option.unit}`;
-}
 
 export default function DietPlan({ plan }: { plan: PlanDocument }) {
   const [selectedIndex, setDayIndex] = useState(0);

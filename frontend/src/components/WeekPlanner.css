@@ -1,0 +1,127 @@
+.week-planner-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--padding-sm);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+  cursor: pointer;
+  scroll-margin-top: calc(
+    var(--sticky-top) + var(--day-picker-height) + var(--meal-heading-height)
+  );
+  scroll-margin-bottom: calc(40px + 2 * var(--padding-md));
+
+  @media (max-width: 768px) {
+    scroll-margin-bottom: calc(
+      40px + 2 * var(--padding-md) + var(--nav-bar-height) + env(safe-area-inset-bottom)
+    );
+  }
+}
+
+.week-planner-toggle:hover {
+  color: var(--primary);
+}
+
+.week-planner-pick {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
+  color: var(--primary);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.week-planner-toggle svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  transition: transform 150ms ease;
+}
+
+.week-planner-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.week-planner-toggle[aria-expanded="true"] .week-planner-pick {
+  visibility: hidden;
+}
+
+.week-planner-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding-top: var(--padding-sm);
+}
+
+.week-planner-options[hidden] {
+  display: none;
+}
+
+.week-planner-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 44px;
+  padding: 0 var(--padding-sm);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.week-planner-option:hover {
+  background: color-mix(in srgb, var(--white) 6%, transparent);
+}
+
+.week-planner-option:has(input:checked) {
+  color: var(--text-h);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.week-planner-option input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.week-planner-actions {
+  position: sticky;
+  z-index: 4;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--padding-md) 0;
+  background: var(--bg);
+  border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+
+  @media (max-width: 1024px) {
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    bottom: calc(var(--nav-bar-height) + env(safe-area-inset-bottom));
+  }
+}
+
+.week-planner-actions .btn {
+  min-width: 160px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-planner-option,
+  .week-planner-toggle svg {
+    transition: none;
+  }
+}

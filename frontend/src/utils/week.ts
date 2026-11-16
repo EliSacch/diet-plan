@@ -37,6 +37,14 @@ export function addWeeks(isoMonday: string, weeks: number) {
   return toIsoDate(addDays(date, weeks * 7));
 }
 
+export function weekDates(isoMonday: string) {
+  const monday = parseIsoDate(isoMonday);
+  if (monday === null) {
+    throw new RangeError(`Not an ISO date: ${isoMonday}`);
+  }
+  return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
+}
+
 export function currentMonday() {
   return toIsoDate(mondayOf(new Date()));
 }

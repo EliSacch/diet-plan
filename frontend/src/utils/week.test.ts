@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { addDays, addWeeks, currentMonday, mondayOf, parseIsoDate, toIsoDate } from "./week";
+import {
+  addDays,
+  addWeeks,
+  currentMonday,
+  mondayOf,
+  parseIsoDate,
+  toIsoDate,
+  weekDates,
+} from "./week";
 
 describe("toIsoDate", () => {
   it("formats the local calendar date with padding", () => {
@@ -63,6 +71,24 @@ describe("addWeeks", () => {
 
   it("throws for a value that is not an ISO date", () => {
     expect(() => addWeeks("next week", 1)).toThrow(RangeError);
+  });
+});
+
+describe("weekDates", () => {
+  it("returns the seven local dates from Monday to Sunday", () => {
+    expect(weekDates("2026-12-28").map(toIsoDate)).toEqual([
+      "2026-12-28",
+      "2026-12-29",
+      "2026-12-30",
+      "2026-12-31",
+      "2027-01-01",
+      "2027-01-02",
+      "2027-01-03",
+    ]);
+  });
+
+  it("throws for a value that is not an ISO date", () => {
+    expect(() => weekDates("this week")).toThrow(RangeError);
   });
 });
 
