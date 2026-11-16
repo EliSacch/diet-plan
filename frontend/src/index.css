@@ -10,6 +10,7 @@
   --white: rgb(232, 234, 233);
   --off-white: rgb(216, 225, 220);
   --bg: var(--black);
+  --focus: #f4f3ec;
   --text: var(--off-white);
   --text-h: var(--white);
 
@@ -65,6 +66,11 @@
 
 body {
   margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
 }
 
 h1,

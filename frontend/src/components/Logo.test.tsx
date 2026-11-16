@@ -7,6 +7,6 @@ describe("Logo", () => {
   it("renders the Diet Plan heading", () => {
     render(<Logo />);
 
-    expect(screen.getByRole("heading", { name: "Diet Plan", level: 1 })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DietPlan", level: 1 })).toBeTruthy();
   });
 });

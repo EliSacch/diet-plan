@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { messageForProblem, setLocale } from "./index";
+import { messageForProblem, setLocale, t } from "./index";
 
 import { en } from "./locales/en";
 import { it as italian } from "./locales/it";
@@ -36,6 +36,18 @@ describe("messageForProblem", () => {
     setLocale("it");
     setLocale("fr");
     expect(messageForProblem({ code: "NOT_FOUND" })).toBe(italian.errors.NOT_FOUND);
+  });
+});
+
+describe("t", () => {
+  beforeEach(() => {
+    setLocale("en");
+  });
+
+  it("returns the label for the current locale", () => {
+    expect(t("UPLOAD_DIET_PLAN")).toBe(en.labels.UPLOAD_DIET_PLAN);
+    setLocale("it");
+    expect(t("UPLOAD_DIET_PLAN")).toBe(italian.labels.UPLOAD_DIET_PLAN);
   });
 });
 

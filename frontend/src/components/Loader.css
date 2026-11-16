@@ -1,0 +1,80 @@
+.loader {
+  display: inline-flex;
+}
+
+.loader-spinner {
+  --size: 1px;
+
+  width: calc(48 * var(--size));
+  height: calc(48 * var(--size));
+  display: block;
+  margin: calc(15 * var(--size)) auto;
+  position: relative;
+  color: var(--off-white);
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+.loader-spinner::after,
+.loader-spinner::before {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  width: calc(24 * var(--size));
+  height: calc(24 * var(--size));
+  top: 0;
+  background-color: var(--off-white);
+  border-radius: 50%;
+  animation: scale50 1s infinite ease-in-out;
+}
+.loader-spinner::before {
+  top: auto;
+  bottom: 0;
+  background-color: var(--primary);
+  animation-delay: 0.5s;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes scale50 {
+  0%,
+  100% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+.loader-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-spinner {
+    display: none;
+  }
+
+  .loader-label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}

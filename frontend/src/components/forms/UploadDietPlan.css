@@ -1,0 +1,181 @@
+.upload-diet-plan {
+  --upload-surface: color-mix(in srgb, var(--white) 6%, var(--black));
+  --upload-muted: color-mix(in srgb, var(--off-white) 65%, transparent);
+
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--padding-lg);
+  background: color-mix(in srgb, var(--white) 3%, var(--black));
+  border: 1px solid color-mix(in srgb, var(--white) 8%, transparent);
+  border-radius: 24px;
+}
+
+.upload-diet-plan h2 {
+  margin: 0;
+  text-align: center;
+}
+
+.upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--padding-lg) var(--padding-md);
+  text-align: center;
+  background: var(--upload-surface);
+  border: 2px dashed color-mix(in srgb, var(--off-white) 35%, transparent);
+  border-radius: 16px;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.upload-dropzone[data-dragging="true"] {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--black));
+}
+
+.upload-dropzone[aria-disabled="true"] {
+  opacity: 0.6;
+}
+
+.upload-dropzone-icon {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  color: var(--upload-muted);
+}
+
+.upload-dropzone-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-choose {
+  appearance: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--primary);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.upload-choose:disabled {
+  cursor: wait;
+}
+
+.upload-hint {
+  font-size: 0.8em;
+  color: var(--upload-muted);
+}
+
+.upload-dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.upload-file {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--padding-md);
+  background: var(--upload-surface);
+  border-radius: 16px;
+}
+
+.upload-file-icon,
+.upload-file-check {
+  flex: none;
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  color: var(--upload-muted);
+}
+
+.upload-file[data-complete="true"] .upload-file-icon,
+.upload-file-check {
+  color: var(--primary);
+}
+
+.upload-file-icon svg,
+.upload-file-check svg {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-file-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.upload-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-h);
+}
+
+.upload-file-meta {
+  font-size: 0.8em;
+  color: var(--upload-muted);
+}
+
+.upload-file[data-complete="true"] .upload-file-meta [role="status"] {
+  color: var(--primary);
+}
+
+.upload-progress {
+  height: 6px;
+  margin-top: var(--spacing-xs);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--off-white) 20%, transparent);
+  border-radius: 3px;
+}
+
+.upload-progress span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  border-radius: inherit;
+  transition: width 200ms ease;
+}
+
+.upload-warning {
+  font-size: 0.9em;
+  color: var(--warning);
+}
+
+.upload-diet-plan [role="alert"] {
+  color: var(--danger);
+}
+
+.upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-dropzone,
+  .upload-progress span {
+    transition: none;
+  }
+}

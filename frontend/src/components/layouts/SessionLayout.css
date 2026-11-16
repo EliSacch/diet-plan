@@ -1,0 +1,10 @@
+.session-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  box-sizing: border-box;
+  padding: var(--padding-xl) var(--padding-lg);
+}

@@ -7,8 +7,6 @@ import { SessionProvider } from "./context/SessionContext";
 
 import AppRoutes from "./routes";
 
-import "./App.css";
-
 export default function App() {
   const [queryClient] = useState(() => new QueryClient());
 
