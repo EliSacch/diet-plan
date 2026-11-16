@@ -1,0 +1,51 @@
+.week-navigator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+}
+
+.week-navigator-range {
+  min-width: 14em;
+  font-weight: 600;
+  color: var(--text-h);
+  text-align: center;
+}
+
+.week-navigator-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.week-navigator-arrow:hover {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+
+.week-navigator-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 768px) {
+  .week-navigator-range {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-navigator-arrow {
+    transition: none;
+  }
+}

@@ -18,6 +18,10 @@ let locale = localeFromBrowser();
 
 type ErrorCode = Exclude<keyof MessageCatalog["errors"], "UNKNOWN">;
 
+export function getLocale() {
+  return locale;
+}
+
 export function setLocale(next: string) {
   if (catalogs[next]) {
     locale = next;
