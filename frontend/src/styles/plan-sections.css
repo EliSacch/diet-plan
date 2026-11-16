@@ -1,0 +1,47 @@
+/* The heading offsets add up the heights of the sticky layers above them. */
+.plan-sections {
+  --sticky-top: var(--nav-bar-height);
+  --day-picker-height: calc(62px + 2 * var(--padding-md));
+  --meal-heading-height: 44px;
+
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+
+  @media (max-width: 768px) {
+    --sticky-top: 0px;
+    --day-picker-height: calc(62px + 2 * var(--padding-md) + env(safe-area-inset-top));
+  }
+}
+
+.plan-sections-meal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.plan-sections h2 {
+  position: sticky;
+  z-index: 3;
+  top: calc(var(--sticky-top) + var(--day-picker-height));
+  box-sizing: border-box;
+  height: var(--meal-heading-height);
+  margin: 0;
+  padding: var(--padding-sm) 0;
+  line-height: 28px;
+  background: var(--bg);
+}
+
+.plan-sections h3 {
+  position: sticky;
+  z-index: 2;
+  top: calc(var(--sticky-top) + var(--day-picker-height) + var(--meal-heading-height));
+  margin: 0;
+  padding: var(--padding-xs) 0;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--text-h);
+  background: var(--bg);
+}
