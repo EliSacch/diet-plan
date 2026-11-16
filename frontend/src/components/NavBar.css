@@ -1,0 +1,128 @@
+.nav-bar {
+  --nav-bar-height: 64px;
+
+  position: sticky;
+  z-index: 5;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--nav-bar-height);
+  padding: 0 var(--padding-lg);
+  background: var(--bg);
+  border-bottom: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+}
+
+.nav-bar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-family: var(--heading);
+  font-size: 20px;
+  text-decoration: none;
+}
+
+.nav-bar-diet {
+  color: var(--white);
+}
+
+.nav-bar-plan {
+  color: var(--primary);
+}
+
+.nav-bar ul {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-bar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 44px;
+  padding: 0 var(--padding-md);
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 22px;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.nav-bar-link svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.nav-bar-link:hover {
+  color: var(--text-h);
+  background: color-mix(in srgb, var(--white) 8%, transparent);
+}
+
+.nav-bar-link[aria-current="page"] {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+@media (max-width: 768px) {
+  .nav-bar {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    height: auto;
+    padding: 0 0 env(safe-area-inset-bottom);
+    border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+    border-bottom: 0;
+  }
+
+  .nav-bar-brand {
+    display: none;
+  }
+
+  .nav-bar nav {
+    flex: 1;
+  }
+
+  .nav-bar ul {
+    gap: 0;
+  }
+
+  .nav-bar li {
+    flex: 1;
+  }
+
+  .nav-bar-link {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    height: var(--nav-bar-height);
+    padding: 0 var(--padding-sm);
+    font-size: 12px;
+    line-height: 1.2;
+    border-radius: 0;
+  }
+
+  .nav-bar-link:hover,
+  .nav-bar-link[aria-current="page"] {
+    background: none;
+  }
+
+  body:has(.nav-bar) .toast-viewport {
+    bottom: calc(64px + env(safe-area-inset-bottom) + var(--spacing-md));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-bar-link {
+    transition: none;
+  }
+}

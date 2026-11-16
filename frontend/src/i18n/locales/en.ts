@@ -24,6 +24,7 @@ export const en = {
     FILE_NOT_PDF: "Only PDF files are accepted.",
     FILE_TOO_LARGE: "The file is larger than 1 MB.",
     LOADING_YOUR_DIET_PLAN: "Loading your diet plan…",
+    MAIN_NAVIGATION: "Main navigation",
     MEALS: "Meals",
     NO_DIET_PLAN_YET: "You haven't uploaded a diet plan yet.",
     NOTIFICATIONS: "Notifications",
