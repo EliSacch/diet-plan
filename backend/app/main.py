@@ -12,6 +12,7 @@ from app.diet.plugins.progeo import ProgeoExtractor
 from app.routers.auth import router as auth_router
 from app.routers.diet_plans import router as diet_plans_router
 from app.routers.profile import router as profile_router
+from app.routers.weeks import router as weeks_router
 
 
 @asynccontextmanager
@@ -42,6 +43,7 @@ register_error_handlers(app)
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(diet_plans_router)
+app.include_router(weeks_router)
 
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
