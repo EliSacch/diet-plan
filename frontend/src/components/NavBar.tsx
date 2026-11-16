@@ -9,6 +9,11 @@ import logo from "../assets/logo.png";
 const links = [
   {
     to: "/",
+    label: () => t("HOME"),
+    icon: "M3 11l9-7 9 7M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5",
+  },
+  {
+    to: "/diet-plan",
     label: () => t("DIET_PLAN"),
     icon: "M9 4h6v3H9zM9 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-3M9 12h6M9 16h4",
   },

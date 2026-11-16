@@ -11,6 +11,7 @@ function renderAt(path: string) {
       <NavBar />
       <Routes>
         <Route path="/" element={<p>Home page</p>} />
+        <Route path="/diet-plan" element={<p>Diet plan page</p>} />
         <Route path="/profile" element={<p>Profile page</p>} />
       </Routes>
     </MemoryRouter>,
@@ -30,6 +31,7 @@ describe("NavBar", () => {
     expect(within(nav).getByRole("link", { name: "Profile" }).getAttribute("aria-current")).toBe(
       "page",
     );
+    expect(within(nav).getByRole("link", { name: "Home" }).getAttribute("aria-current")).toBe(null);
     expect(within(nav).getByRole("link", { name: "Diet plan" }).getAttribute("aria-current")).toBe(
       null,
     );
@@ -37,6 +39,13 @@ describe("NavBar", () => {
 
   it("navigates between pages", () => {
     renderAt("/");
+
+    fireEvent.click(screen.getByRole("link", { name: "Diet plan" }));
+
+    expect(screen.getByText("Diet plan page")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Diet plan" }).getAttribute("aria-current")).toBe(
+      "page",
+    );
 
     fireEvent.click(screen.getByRole("link", { name: "Profile" }));
 
@@ -46,6 +55,7 @@ describe("NavBar", () => {
     fireEvent.click(screen.getByRole("link", { name: "DietPlan" }));
 
     expect(screen.getByText("Home page")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Home" }).getAttribute("aria-current")).toBe("page");
   });
 
   it("uses the current locale for the labels", () => {
@@ -54,6 +64,7 @@ describe("NavBar", () => {
     renderAt("/");
 
     expect(screen.getByRole("navigation", { name: "Navigazione principale" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Piano alimentare" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Profilo" })).toBeTruthy();
   });

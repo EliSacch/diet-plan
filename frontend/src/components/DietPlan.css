@@ -1,0 +1,130 @@
+.diet-plan {
+  --sticky-top: var(--nav-bar-height);
+  --day-picker-height: calc(62px + 2 * var(--padding-md));
+  --meal-heading-height: 44px;
+
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+
+  @media (max-width: 768px) {
+    --sticky-top: 0px;
+    --day-picker-height: calc(62px + 2 * var(--padding-md) + env(safe-area-inset-top));
+  }
+}
+
+.diet-plan-day-picker {
+  position: sticky;
+  z-index: 4;
+  top: var(--sticky-top);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  height: var(--day-picker-height);
+  background: var(--bg);
+
+  @media (max-width: 1024px) {
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+.diet-plan-day-picker label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.diet-plan-select {
+  position: relative;
+  display: inline-flex;
+  min-width: 240px;
+}
+
+.diet-plan-select select {
+  appearance: none;
+  flex: 1;
+  font: inherit;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, var(--black));
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent);
+  padding: var(--padding-md) calc(var(--padding-md) * 2 + 20px) var(--padding-md) var(--padding-md);
+  cursor: pointer;
+  transition: box-shadow 150ms ease;
+}
+
+.diet-plan-select select:hover,
+.diet-plan-select select:focus-visible {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 75%, transparent);
+}
+
+.diet-plan-select select option {
+  color: var(--text);
+  background: var(--black);
+}
+
+.diet-plan-select svg {
+  position: absolute;
+  top: 50%;
+  right: var(--padding-md);
+  width: 20px;
+  height: 20px;
+  color: var(--white);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-plan-select select {
+    transition: none;
+  }
+}
+
+.diet-plan-meal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.diet-plan h2 {
+  position: sticky;
+  z-index: 3;
+  top: calc(var(--sticky-top) + var(--day-picker-height));
+  box-sizing: border-box;
+  height: var(--meal-heading-height);
+  margin: 0;
+  padding: var(--padding-sm) 0;
+  line-height: 28px;
+  background: var(--bg);
+}
+
+.diet-plan h3 {
+  position: sticky;
+  z-index: 2;
+  top: calc(var(--sticky-top) + var(--day-picker-height) + var(--meal-heading-height));
+  margin: 0;
+  padding: var(--padding-xs) 0;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--text-h);
+  background: var(--bg);
+}
+
+.diet-plan ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
