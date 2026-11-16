@@ -2,14 +2,15 @@ import { type ChangeEvent, type DragEvent, type FormEvent, useRef, useState } fr
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { uploadDietPlan } from "../../api/diet-plan";
+import { uploadDietPlan } from "../api/diet-plan";
 import {
   activeDietPlanQueryOptions,
   dietPlanErrorMessage,
   useActiveDietPlan,
-} from "../../hooks/useActiveDietPlan";
-import { t } from "../../i18n";
-import Button from "../buttons/Button";
+} from "../hooks/useActiveDietPlan";
+import { useToast } from "../hooks/useToast";
+import { t } from "../i18n";
+import Button from "./Button";
 
 import "./UploadDietPlan.css";
 
@@ -48,6 +49,7 @@ function CheckIcon() {
 export default function UploadDietPlan() {
   const queryClient = useQueryClient();
   const activePlan = useActiveDietPlan();
+  const showToast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -61,6 +63,9 @@ export default function UploadDietPlan() {
       abortRef.current = controller;
       await uploadDietPlan(selected, { signal: controller.signal, onProgress: setProgress });
       return queryClient.fetchQuery(activeDietPlanQueryOptions());
+    },
+    onSuccess: () => {
+      showToast({ message: t("DIET_PLAN_UPLOADED") });
     },
   });
 

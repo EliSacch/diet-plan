@@ -1,7 +1,7 @@
 import { useSessionContext } from "../hooks/useSessionContext";
 import { t } from "../i18n";
+import SessionLayout from "../layouts/SessionLayout";
 
-import SessionLayout from "../components/layouts/SessionLayout";
 import Loader from "../components/Loader";
 import Home from "../pages/Home";
 import Login from "../pages/Login";

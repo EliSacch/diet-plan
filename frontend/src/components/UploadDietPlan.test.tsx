@@ -1,16 +1,17 @@
 import type { ReactNode } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { api } from "../../api/client";
-import { setLocale } from "../../i18n";
-import { axiosFailure, axiosResponse, deferred } from "../../test/http";
-import type { PlanDocument } from "../../types/diet-plan";
+import { api } from "../api/client";
+import { ToastProvider } from "../context/ToastContext";
+import { setLocale } from "../i18n";
+import { axiosFailure, axiosResponse, deferred } from "../test/http";
+import type { PlanDocument } from "../types/diet-plan";
 import UploadDietPlan, { MAX_FILE_BYTES } from "./UploadDietPlan";
 
-import { en } from "../../i18n/locales/en";
+import { en } from "../i18n/locales/en";
 
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 
@@ -47,7 +48,11 @@ function renderUpload() {
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={client}>
+        <ToastProvider>{children}</ToastProvider>
+      </QueryClientProvider>
+    );
   }
   return render(<UploadDietPlan />, { wrapper: Wrapper });
 }
@@ -168,6 +173,11 @@ describe("UploadDietPlan", () => {
     expect(screen.queryByRole("button", { name: en.labels.CANCEL })).toBeNull();
     expect(fileInput().disabled).toBe(false);
     expect(screen.queryByRole("alert")).toBeNull();
+    expect(
+      within(screen.getByRole("region", { name: en.labels.NOTIFICATIONS })).getByText(
+        en.labels.DIET_PLAN_UPLOADED,
+      ),
+    ).toBeTruthy();
   });
 
   it("asks to replace the plan when one is already active", async () => {

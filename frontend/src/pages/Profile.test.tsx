@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../api/client";
 import { SessionProvider } from "../context/SessionContext";
+import { ToastProvider } from "../context/ToastContext";
 import { setLocale } from "../i18n";
 import { axiosResponse, deferred } from "../test/http";
 import Profile from "./Profile";
@@ -35,8 +36,33 @@ describe("Profile", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
+    const dialog = screen.getByRole("dialog", { name: "Sign out?" });
+    expect(logout).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sign out" }));
+
     expect(await screen.findByRole("link", { name: "Sign in with Google" })).toBeTruthy();
     expect(logout.mock.calls[0]?.[0]).toBe("/auth/logout");
+    expect(
+      within(screen.getByRole("region", { name: "Notifications" })).getByText(
+        "You've been signed out.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("stays signed in when sign out is cancelled", async () => {
+    window.history.pushState({}, "", "/profile");
+    vi.spyOn(api, "get").mockResolvedValue(axiosResponse({ id: 1, email: "ada@example.com" }));
+    const logout = vi.spyOn(api, "post");
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sign out" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByText("ada@example.com")).toBeTruthy();
+    expect(logout).not.toHaveBeenCalled();
   });
 
   it("shows the profile page when signed in", async () => {
@@ -58,9 +84,11 @@ describe("Profile", () => {
 
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <SessionProvider>
-          <Profile />
-        </SessionProvider>
+        <ToastProvider>
+          <SessionProvider>
+            <Profile />
+          </SessionProvider>
+        </ToastProvider>
       </QueryClientProvider>,
     );
 

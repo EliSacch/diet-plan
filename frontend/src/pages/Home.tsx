@@ -2,11 +2,11 @@ import { useState } from "react";
 
 import { dietPlanErrorMessage, useActiveDietPlan } from "../hooks/useActiveDietPlan";
 import { t } from "../i18n";
+import PageLayout from "../layouts/PageLayout";
 import type { PlanOption } from "../types/diet-plan";
 
-import UploadDietPlan from "../components/forms/UploadDietPlan";
-import PageLayout from "../components/layouts/PageLayout";
 import Loader from "../components/Loader";
+import UploadDietPlan from "../components/UploadDietPlan";
 
 import "./Home.css";
 

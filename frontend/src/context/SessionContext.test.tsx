@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { AxiosError } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -9,6 +9,11 @@ import { axiosFailure, axiosResponse } from "../test/http";
 import App from "../App";
 
 import { en } from "../i18n/locales/en";
+
+async function confirmSignOut() {
+  fireEvent.click(await screen.findByRole("button", { name: "Sign out" }));
+  fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
+}
 
 describe("SessionProvider", () => {
   beforeEach(() => {
@@ -81,13 +86,13 @@ describe("SessionProvider", () => {
     vi.spyOn(api, "post").mockRejectedValue(axiosFailure(500, { code: "INTERNAL_ERROR" }));
 
     render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: "Sign out" }));
+    await confirmSignOut();
 
-    expect(await screen.findByRole("alert")).toHaveProperty(
-      "textContent",
-      en.errors.INTERNAL_ERROR,
-    );
-    expect(screen.queryByRole("heading", { name: "Root" })).toBeNull();
+    const toast = await screen.findByRole("alert");
+    expect(toast.textContent).toBe(en.errors.INTERNAL_ERROR);
+    expect(toast.getAttribute("data-variant")).toBe("error");
+    expect(screen.getByRole("heading", { name: "Profile" })).toBeTruthy();
+    expect(screen.getByText("ada@example.com")).toBeTruthy();
   });
 
   it("shows an unknown error when sign out rejects with a non-error", async () => {
@@ -96,8 +101,9 @@ describe("SessionProvider", () => {
     vi.spyOn(api, "post").mockRejectedValue("nope");
 
     render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: "Sign out" }));
+    await confirmSignOut();
 
     expect(await screen.findByRole("alert")).toHaveProperty("textContent", "Unknown error");
+    expect(screen.getByText("ada@example.com")).toBeTruthy();
   });
 });

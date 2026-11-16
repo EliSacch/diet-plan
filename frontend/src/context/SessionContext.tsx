@@ -5,6 +5,7 @@ import { isAxiosError } from "axios";
 
 import { logout } from "../api/auth";
 import { getProfile } from "../api/profile";
+import { useToast } from "../hooks/useToast";
 import { messageForProblem, t } from "../i18n";
 import type { Problem } from "../types/problem";
 import type { Profile } from "../types/profile";
@@ -40,6 +41,7 @@ function sessionErrorMessage(error: unknown) {
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const showToast = useToast();
   const profileQuery = useQuery({
     queryKey: profileQueryKey,
     retry: false,
@@ -58,13 +60,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     mutationFn: logout,
     onSuccess: () => {
       queryClient.setQueryData<Profile | null>(profileQueryKey, null);
+      showToast({ message: t("SIGNED_OUT") });
+    },
+    onError: (error) => {
+      showToast({ message: sessionErrorMessage(error), variant: "error" });
     },
   });
 
   let session: Session;
-  if (signOutMutation.isError) {
-    session = { status: "error", message: sessionErrorMessage(signOutMutation.error) };
-  } else if (profileQuery.isPending) {
+  if (profileQuery.isPending) {
     session = { status: "loading" };
   } else if (profileQuery.isError) {
     session = { status: "error", message: sessionErrorMessage(profileQuery.error) };

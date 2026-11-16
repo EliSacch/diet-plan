@@ -1,8 +1,9 @@
 import { Route, Routes } from "react-router-dom";
 
-import Profile from "./Profile.tsx";
 import RequireSession from "./RequireSession.tsx";
 import Root from "./Root.tsx";
+
+import Profile from "../pages/Profile.tsx";
 
 export default function AppRoutes() {
   return (

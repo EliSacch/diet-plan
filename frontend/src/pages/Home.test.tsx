@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../api/client";
+import { ToastProvider } from "../context/ToastContext";
 import { setLocale } from "../i18n";
 import { axiosFailure, axiosResponse, deferred } from "../test/http";
 import type { PlanDocument } from "../types/diet-plan";
@@ -71,7 +72,11 @@ const plan: PlanDocument = {
 function renderHome() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={client}>
+        <ToastProvider>{children}</ToastProvider>
+      </QueryClientProvider>
+    );
   }
   return render(<Home />, { wrapper: Wrapper });
 }
