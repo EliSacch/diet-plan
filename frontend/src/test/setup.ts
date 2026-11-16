@@ -6,3 +6,6 @@ HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogEleme
 HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
   this.open = false;
 };
+
+// jsdom does not implement scrolling.
+Element.prototype.scrollIntoView = function scrollIntoView() {};
