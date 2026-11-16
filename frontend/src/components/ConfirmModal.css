@@ -1,0 +1,37 @@
+.confirm-modal {
+  box-sizing: border-box;
+  width: calc(100% - 2 * var(--margin-md));
+  max-width: 400px;
+  padding: 0;
+  color: var(--text);
+  background: color-mix(in srgb, var(--white) 3%, var(--black));
+  border: 1px solid color-mix(in srgb, var(--white) 8%, transparent);
+  border-radius: 24px;
+}
+
+.confirm-modal::backdrop {
+  background: color-mix(in srgb, var(--black) 70%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.confirm-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--padding-lg);
+}
+
+.confirm-modal h2 {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.confirm-modal-message p {
+  margin: 0;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}

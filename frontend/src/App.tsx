@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 
 import { SessionProvider } from "./context/SessionContext";
+import { ToastProvider } from "./context/ToastContext";
 
 import AppRoutes from "./routes";
 
@@ -12,11 +13,13 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </SessionProvider>
+      <ToastProvider>
+        <SessionProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </SessionProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

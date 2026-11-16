@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setLocale } from "../../i18n";
+import { setLocale } from "../i18n";
 import SignInWithGoogleBtn from "./SignInWithGoogleBtn";
 
 describe("SignInWithGoogleBtn", () => {

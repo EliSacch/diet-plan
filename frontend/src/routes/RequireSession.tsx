@@ -2,8 +2,8 @@ import { Navigate, Outlet } from "react-router-dom";
 
 import { useSessionContext } from "../hooks/useSessionContext";
 import { t } from "../i18n";
+import SessionLayout from "../layouts/SessionLayout";
 
-import SessionLayout from "../components/layouts/SessionLayout";
 import Loader from "../components/Loader";
 
 export default function RequireSession() {
