@@ -26,6 +26,7 @@ export const it = {
     FILE_NOT_PDF: "Sono accettati solo file PDF.",
     FILE_TOO_LARGE: "Il file supera 1 MB.",
     LOADING_YOUR_DIET_PLAN: "Caricamento del piano alimentare…",
+    MAIN_NAVIGATION: "Navigazione principale",
     MEALS: "Pasti",
     NO_DIET_PLAN_YET: "Non hai ancora caricato un piano alimentare.",
     NOTIFICATIONS: "Notifiche",
