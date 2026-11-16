@@ -1,8 +1,9 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 
-import { t } from "../i18n";
 import type { PlanDocument, PlanOption } from "../types/diet-plan";
+import DayPicker from "./DayPicker";
 
+import "../styles/plan-sections.css";
 import "./DietPlan.css";
 
 function optionLabel(option: PlanOption) {
@@ -16,7 +17,6 @@ function optionLabel(option: PlanOption) {
 }
 
 export default function DietPlan({ plan }: { plan: PlanDocument }) {
-  const selectId = useId();
   const [selectedIndex, setDayIndex] = useState(0);
   const dayIndex = selectedIndex < plan.days.length ? selectedIndex : 0;
   const day = plan.days[dayIndex];
@@ -26,36 +26,10 @@ export default function DietPlan({ plan }: { plan: PlanDocument }) {
   }
 
   return (
-    <div className="diet-plan">
-      <div className="diet-plan-day-picker">
-        <label htmlFor={selectId}>{t("DAY")}</label>
-        <div className="diet-plan-select">
-          <select
-            id={selectId}
-            value={dayIndex}
-            onChange={(event) => setDayIndex(Number(event.target.value))}
-          >
-            {plan.days.map((item, index) => (
-              <option key={item.day} value={index}>
-                {item.day}
-              </option>
-            ))}
-          </select>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </div>
-      </div>
+    <div className="plan-sections diet-plan">
+      <DayPicker days={plan.days.map((item) => item.day)} value={dayIndex} onChange={setDayIndex} />
       {day.meals.map((meal) => (
-        <section key={meal.meal} className="diet-plan-meal">
+        <section key={meal.meal} className="plan-sections-meal">
           <h2>{meal.meal}</h2>
           {meal.categories.map((category) => (
             <section key={category.category}>
