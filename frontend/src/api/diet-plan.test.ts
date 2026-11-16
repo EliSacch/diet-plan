@@ -41,8 +41,33 @@ describe("uploadDietPlan", () => {
 
     await expect(uploadDietPlan(file)).resolves.toEqual(plan);
 
-    expect(post).toHaveBeenCalledWith("/api/diet-plans/upload", expect.any(FormData));
+    expect(post).toHaveBeenCalledWith(
+      "/api/diet-plans/upload",
+      expect.any(FormData),
+      expect.objectContaining({ signal: undefined }),
+    );
     const body = post.mock.calls[0]?.[1] as FormData;
     expect(body.get("file")).toBe(file);
+  });
+
+  it("passes the signal and reports upload progress as a fraction", async () => {
+    const file = new File(["plan"], "plan.pdf", { type: "application/pdf" });
+    const signal = new AbortController().signal;
+    const onProgress = vi.fn();
+    const post = vi.spyOn(api, "post").mockResolvedValue(axiosResponse(plan));
+
+    await uploadDietPlan(file, { signal, onProgress });
+
+    const config = post.mock.calls[0]?.[2];
+    expect(config?.signal).toBe(signal);
+    config?.onUploadProgress?.({ loaded: 25, total: 100, bytes: 25, lengthComputable: true });
+    config?.onUploadProgress?.({
+      loaded: 25,
+      total: undefined,
+      bytes: 25,
+      lengthComputable: false,
+    });
+    expect(onProgress).toHaveBeenCalledTimes(1);
+    expect(onProgress).toHaveBeenCalledWith(0.25);
   });
 });

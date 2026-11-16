@@ -2,7 +2,7 @@ import { useSessionContext } from "../hooks/useSessionContext";
 import { t } from "../i18n";
 
 import Button from "../components/buttons/Button";
-import UploadDietPlan from "../components/buttons/UploadDietPlan";
+import UploadDietPlan from "../components/forms/UploadDietPlan";
 import PageLayout from "../components/layouts/PageLayout";
 
 export default function Profile() {

@@ -4,7 +4,7 @@ import { dietPlanErrorMessage, useActiveDietPlan } from "../hooks/useActiveDietP
 import { t } from "../i18n";
 import type { PlanOption } from "../types/diet-plan";
 
-import UploadDietPlan from "../components/buttons/UploadDietPlan";
+import UploadDietPlan from "../components/forms/UploadDietPlan";
 import PageLayout from "../components/layouts/PageLayout";
 import Loader from "../components/Loader";
 
@@ -31,7 +31,12 @@ export default function Home() {
   } else if (plan.isError) {
     content = <p role="alert">{dietPlanErrorMessage(plan.error)}</p>;
   } else if (plan.data === null) {
-    content = <UploadDietPlan />;
+    content = (
+      <div className="diet-plan-empty">
+        <p>{t("NO_DIET_PLAN_YET")}</p>
+        <UploadDietPlan />
+      </div>
+    );
   } else {
     const day = plan.data.days[dayIndex];
     const meal = day.meals[mealIndex];

@@ -97,6 +97,7 @@ describe("Home", () => {
     renderHome();
 
     expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
+    expect(screen.getByText(en.labels.NO_DIET_PLAN_YET)).toBeTruthy();
     expect(screen.queryByRole("group", { name: "Days" })).toBeNull();
   });
 
@@ -129,6 +130,7 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { name: "Contorni" })).toBeTruthy();
     expect(screen.getByText("Insalata mista").textContent).toBe("Insalata mista");
     expect(screen.queryByLabelText("Upload diet plan")).toBeNull();
+    expect(screen.queryByText(en.labels.NO_DIET_PLAN_YET)).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Pranzo" }));
 

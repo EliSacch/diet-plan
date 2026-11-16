@@ -5,6 +5,15 @@
   gap: var(--spacing-md);
 }
 
+.diet-plan-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  width: 100%;
+  text-align: center;
+}
+
 .diet-plan-switcher {
   display: flex;
   flex-wrap: wrap;
