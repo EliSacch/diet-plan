@@ -3,92 +3,103 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { dietPlanErrorMessage, useActiveDietPlan } from "../hooks/useActiveDietPlan";
+import { useDay, useSaveDay } from "../hooks/useDay";
 import { useToast } from "../hooks/useToast";
-import { useSaveWeek, useWeek } from "../hooks/useWeek";
 import { t } from "../i18n";
 import PageLayout from "../layouts/PageLayout";
+import type { DayChoice } from "../types/day";
 import type { PlanDocument } from "../types/diet-plan";
-import type { WeekChoice } from "../types/week";
-import { currentMonday, mondayOf, parseIsoDate, todayIndex, toIsoDate } from "../utils/week";
+import { addDays, parseIsoDate, todayIso, toIsoDate, weekdayIndex } from "../utils/date";
 
 import DailyChoices from "../components/DailyChoices";
+import DateStrip from "../components/DateStrip";
+import DayPlannerDrawer from "../components/DayPlannerDrawer";
 import Loader from "../components/Loader";
 import NoDietPlan from "../components/NoDietPlan";
-import WeekDayPicker from "../components/WeekDayPicker";
-import WeekPlannerDrawer from "../components/WeekPlannerDrawer";
 
 import "../styles/plan-sections.css";
 
-function resolveWeekStart(param: string | null) {
-  const date = param === null ? null : parseIsoDate(param);
-  return date === null ? currentMonday() : toIsoDate(mondayOf(date));
+function resolveSelectedDate(param: string | null, dayCount: number) {
+  let candidate = (param === null ? null : parseIsoDate(param)) ?? parseIsoDate(todayIso())!;
+  if (dayCount > 0) {
+    while (weekdayIndex(candidate) >= dayCount) {
+      candidate = addDays(candidate, -1);
+    }
+  }
+  return toIsoDate(candidate);
 }
 
-function homeWeekHref(weekStart: string) {
-  return `/?week=${weekStart}`;
-}
-
-function HomeWeek({ weekStart, plan }: { weekStart: string; plan: PlanDocument }) {
-  const week = useWeek(weekStart);
-  const save = useSaveWeek(weekStart);
+function HomeDay({
+  selectedDate,
+  onSelectDate,
+  plan,
+}: {
+  selectedDate: string;
+  onSelectDate: (isoDate: string) => void;
+  plan: PlanDocument;
+}) {
+  const day = useDay(selectedDate);
+  const save = useSaveDay(selectedDate);
   const showToast = useToast();
-  const [dayIndex, setDayIndex] = useState(() => todayIndex(weekStart));
   const [plannerOpen, setPlannerOpen] = useState(false);
-  const dayCount = plan.days.length;
-  const selectedDay = dayIndex < dayCount ? dayIndex : 0;
-  const day = plan.days[selectedDay];
 
-  function onSave(choices: WeekChoice[]) {
+  const dayCount = plan.days.length;
+  const isDateDisabled = (candidate: Date) => weekdayIndex(candidate) >= dayCount;
+  const parsed = parseIsoDate(selectedDate)!;
+  const planDay = plan.days[weekdayIndex(parsed)];
+
+  function onSave(choices: DayChoice[]) {
     save.mutate(choices, {
-      onSuccess: () => showToast({ message: t("WEEK_SAVED") }),
+      onSuccess: () => showToast({ message: t("DAY_SAVED") }),
       onError: (error) => showToast({ message: dietPlanErrorMessage(error), variant: "error" }),
     });
   }
 
   let content;
-  if (week.isError) {
-    content = <p role="alert">{dietPlanErrorMessage(week.error)}</p>;
-  } else if (week.isPending) {
-    content = <Loader label={t("LOADING_YOUR_WEEK")} />;
-  } else if (day === undefined) {
+  if (day.isError) {
+    content = <p role="alert">{dietPlanErrorMessage(day.error)}</p>;
+  } else if (day.isPending) {
+    content = <Loader label={t("LOADING_YOUR_DAY")} />;
+  } else if (planDay === undefined) {
     content = null;
   } else {
     content = (
-      <DailyChoices day={day} choices={week.data.choices} onPlan={() => setPlannerOpen(true)} />
+      <DailyChoices day={planDay} choices={day.data.choices} onPlan={() => setPlannerOpen(true)} />
     );
   }
 
   return (
     <div className="plan-sections">
-      <WeekDayPicker
-        weekStart={weekStart}
-        value={selectedDay}
-        onChange={setDayIndex}
-        weekHref={homeWeekHref}
-        isDayDisabled={(index) => index >= dayCount}
-      />
+      <DateStrip value={selectedDate} onChange={onSelectDate} isDateDisabled={isDateDisabled} />
       {content}
-      {week.data !== undefined ? (
-        <WeekPlannerDrawer
-          open={plannerOpen}
-          weekStart={weekStart}
-          options={plan}
-          choices={week.data.choices}
-          dayIndex={selectedDay}
-          onDayChange={setDayIndex}
-          onSave={onSave}
-          saving={save.isPending}
-          onClose={() => setPlannerOpen(false)}
-        />
-      ) : null}
+      <DayPlannerDrawer
+        open={plannerOpen}
+        date={selectedDate}
+        day={planDay}
+        choices={day.data?.choices}
+        loading={day.isPending}
+        error={day.isError ? dietPlanErrorMessage(day.error) : null}
+        onDateChange={onSelectDate}
+        isDateDisabled={isDateDisabled}
+        onSave={onSave}
+        saving={save.isPending}
+        onClose={() => setPlannerOpen(false)}
+      />
     </div>
   );
 }
 
 export default function Home() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const plan = useActiveDietPlan();
-  const weekStart = resolveWeekStart(searchParams.get("week"));
+
+  function selectDate(isoDate: string) {
+    if (isoDate === todayIso()) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ date: isoDate });
+    }
+  }
 
   let content;
   if (plan.isPending) {
@@ -98,7 +109,8 @@ export default function Home() {
   } else if (plan.data === null) {
     content = <NoDietPlan />;
   } else {
-    content = <HomeWeek key={weekStart} weekStart={weekStart} plan={plan.data} />;
+    const selectedDate = resolveSelectedDate(searchParams.get("date"), plan.data.days.length);
+    content = <HomeDay selectedDate={selectedDate} onSelectDate={selectDate} plan={plan.data} />;
   }
 
   return <PageLayout>{content}</PageLayout>;

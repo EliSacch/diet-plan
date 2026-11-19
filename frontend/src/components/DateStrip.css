@@ -1,4 +1,4 @@
-.week-day-picker {
+.date-strip {
   position: sticky;
   z-index: 4;
   top: var(--sticky-top, 0px);
@@ -16,7 +16,7 @@
   }
 }
 
-.week-day-picker-month {
+.date-strip-month {
   font-weight: 600;
   line-height: 24px;
   color: var(--text-h);
@@ -24,24 +24,28 @@
   text-transform: capitalize;
 }
 
-.week-day-picker-row {
+.date-strip-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
 }
 
-.week-day-picker-arrow {
+.date-strip-arrow {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: none;
   width: 44px;
   height: 44px;
+  padding: 0;
   color: var(--primary);
+  background: none;
   border: 2px solid var(--primary);
   border-radius: 50%;
   box-sizing: border-box;
+  cursor: pointer;
   transition:
     background-color 150ms ease,
     box-shadow 150ms ease;
@@ -52,30 +56,44 @@
   }
 }
 
-.week-day-picker-arrow:hover {
+.date-strip-arrow:hover:not(:disabled) {
   background: color-mix(in srgb, var(--primary) 12%, transparent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
-.week-day-picker-arrow svg {
+.date-strip-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.date-strip-arrow svg {
   width: 20px;
   height: 20px;
 }
 
-.week-day-picker-days {
-  display: grid;
+.date-strip-days {
+  display: flex;
   flex: 1;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: var(--spacing-xs);
   max-width: 420px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
 }
 
-.week-day-picker-day {
+.date-strip-days::-webkit-scrollbar {
+  display: none;
+}
+
+.date-strip-day {
+  flex: 0 0 calc((100% - 6 * var(--spacing-xs)) / 7);
+  scroll-snap-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-xs);
-  min-width: 0;
+  min-width: 40px;
   padding: 0;
   font: inherit;
   color: var(--text);
@@ -84,7 +102,7 @@
   cursor: pointer;
 }
 
-.week-day-picker-circle {
+.date-strip-circle {
   display: grid;
   place-items: center;
   box-sizing: border-box;
@@ -100,49 +118,49 @@
     box-shadow 150ms ease;
 }
 
-.week-day-picker-weekday {
+.date-strip-weekday {
   font-size: 13px;
   line-height: 18px;
   text-transform: capitalize;
 }
 
-.week-day-picker-day[aria-current="date"] .week-day-picker-circle {
+.date-strip-day[aria-current="date"] .date-strip-circle {
   color: var(--primary);
   border-color: color-mix(in srgb, var(--primary) 50%, transparent);
 }
 
-.week-day-picker-day:hover:not(:disabled) .week-day-picker-circle {
+.date-strip-day:hover:not(:disabled) .date-strip-circle {
   border-color: var(--primary);
 }
 
-.week-day-picker-day[aria-pressed="true"] {
+.date-strip-day[aria-pressed="true"] {
   color: var(--primary);
 }
 
-.week-day-picker-day[aria-pressed="true"] .week-day-picker-circle {
+.date-strip-day[aria-pressed="true"] .date-strip-circle {
   color: var(--primary);
   background: color-mix(in srgb, var(--primary) 16%, var(--black));
   border-color: var(--primary);
   box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
-.week-day-picker-day:disabled {
+.date-strip-day:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-.week-day-picker-day:focus-visible {
+.date-strip-day:focus-visible {
   outline: none;
 }
 
-.week-day-picker-day:focus-visible .week-day-picker-circle {
+.date-strip-day:focus-visible .date-strip-circle {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .week-day-picker-arrow,
-  .week-day-picker-circle {
+  .date-strip-arrow,
+  .date-strip-circle {
     transition: none;
   }
 }

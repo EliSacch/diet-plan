@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { setLocale } from "../i18n";
+import type { DayChoice } from "../types/day";
 import type { PlanDay } from "../types/diet-plan";
-import type { WeekChoice } from "../types/week";
 import DailyChoices from "./DailyChoices";
 
 import { en } from "../i18n/locales/en";
@@ -50,7 +50,7 @@ const monday: PlanDay = {
   ],
 };
 
-function renderChoices(choices: WeekChoice[], { day = monday, onPlan = vi.fn() } = {}) {
+function renderChoices(choices: DayChoice[], { day = monday, onPlan = vi.fn() } = {}) {
   return { onPlan, ...render(<DailyChoices day={day} choices={choices} onPlan={onPlan} />) };
 }
 
@@ -60,18 +60,9 @@ describe("DailyChoices", () => {
     setLocale("en");
   });
 
-  it("shows only the selected day's picked options without categories, in plan order, and omits empty meals", () => {
+  it("shows picked options without categories, in plan order, and omits empty meals", () => {
     const { onPlan } = renderChoices([
       {
-        day: "Martedì",
-        meal: "Cena",
-        category: "Secondi",
-        name: "Pollo",
-        amount: 120,
-        unit: "g",
-      },
-      {
-        day: "Lunedì",
         meal: "Pranzo",
         category: "Contorni",
         name: "Insalata mista",
@@ -79,7 +70,6 @@ describe("DailyChoices", () => {
         unit: null,
       },
       {
-        day: "Lunedì",
         meal: "Pranzo",
         category: "Primi",
         name: "Pasta",
@@ -87,7 +77,6 @@ describe("DailyChoices", () => {
         unit: "g",
       },
       {
-        day: "Lunedì",
         meal: "Colazione",
         category: "Cereali",
         name: "Fette biscottate",
@@ -105,7 +94,6 @@ describe("DailyChoices", () => {
     expect(screen.queryByText("Cereali")).toBeNull();
     expect(screen.queryByText("Primi")).toBeNull();
     expect(screen.queryByText("Contorni")).toBeNull();
-    expect(screen.queryByText("Pollo 120 g")).toBeNull();
 
     const items = screen.getAllByRole("listitem").map((el) => el.textContent);
     expect(items).toEqual(["Fette biscottate 4", "Pasta 80 g", "Insalata mista"]);
@@ -117,7 +105,6 @@ describe("DailyChoices", () => {
   it("keeps saved picks whose category or meal is no longer in the active plan", () => {
     renderChoices([
       {
-        day: "Lunedì",
         meal: "Pranzo",
         category: "Dolci",
         name: "Yogurt",
@@ -125,7 +112,6 @@ describe("DailyChoices", () => {
         unit: "g",
       },
       {
-        day: "Lunedì",
         meal: "Spuntino",
         category: "Frutta",
         name: "Mela",
@@ -133,7 +119,6 @@ describe("DailyChoices", () => {
         unit: "g",
       },
       {
-        day: "Lunedì",
         meal: "Spuntino",
         category: "Frutta secca",
         name: "Mandorle",
@@ -152,21 +137,12 @@ describe("DailyChoices", () => {
   });
 
   it("shows an empty state button when nothing is picked for the day", () => {
-    const { onPlan } = renderChoices([
-      {
-        day: "Martedì",
-        meal: "Cena",
-        category: "Secondi",
-        name: "Pesce",
-        amount: 150,
-        unit: "g",
-      },
-    ]);
+    const { onPlan } = renderChoices([]);
 
     expect(screen.getByText(en.labels.NO_CHOICES_FOR_DAY)).toBeTruthy();
     expect(screen.queryByRole("button", { name: en.labels.EDIT })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: en.labels.PLAN_THIS_WEEK }));
+    fireEvent.click(screen.getByRole("button", { name: en.labels.PLAN_THIS_DAY }));
     expect(onPlan).toHaveBeenCalledOnce();
   });
 
@@ -175,12 +151,11 @@ describe("DailyChoices", () => {
     renderChoices([]);
 
     expect(screen.getByText(italian.labels.NO_CHOICES_FOR_DAY)).toBeTruthy();
-    expect(screen.getByRole("button", { name: italian.labels.PLAN_THIS_WEEK })).toBeTruthy();
+    expect(screen.getByRole("button", { name: italian.labels.PLAN_THIS_DAY })).toBeTruthy();
 
     cleanup();
     renderChoices([
       {
-        day: "Lunedì",
         meal: "Pranzo",
         category: "Primi",
         name: "Pasta",

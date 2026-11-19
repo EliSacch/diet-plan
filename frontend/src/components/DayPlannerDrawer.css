@@ -1,11 +1,11 @@
-.week-planner-drawer-stepper {
+.day-planner-drawer-stepper {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-sm);
 }
 
-.week-planner-drawer-arrow {
+.day-planner-drawer-arrow {
   appearance: none;
   flex: none;
   display: inline-flex;
@@ -25,22 +25,22 @@
     box-shadow 150ms ease;
 }
 
-.week-planner-drawer-arrow:hover:not(:disabled) {
+.day-planner-drawer-arrow:hover:not(:disabled) {
   background: color-mix(in srgb, var(--primary) 12%, transparent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
-.week-planner-drawer-arrow:disabled {
+.day-planner-drawer-arrow:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-.week-planner-drawer-arrow svg {
+.day-planner-drawer-arrow svg {
   width: 18px;
   height: 18px;
 }
 
-.week-planner-drawer-date {
+.day-planner-drawer-date {
   flex: 1;
   font-weight: 600;
   color: var(--text-h);
@@ -49,7 +49,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .week-planner-drawer-arrow {
+  .day-planner-drawer-arrow {
     transition: none;
   }
 }
