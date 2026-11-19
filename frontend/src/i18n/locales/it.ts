@@ -37,7 +37,7 @@ export const it = {
     NO_DIET_PLAN_YET: "Non hai ancora caricato un piano alimentare.",
     NOTIFICATIONS: "Notifiche",
     ONLY_ONE_FILE: "Trascina un solo file alla volta.",
-    PLAN: "Piano",
+    PLAN: "Il mio piano",
     PLAN_THIS_DAY: "Pianifica questo giorno",
     PREVIOUS_DAY: "Giorno precedente",
     PROFILE: "Profilo",
@@ -61,5 +61,6 @@ export const it = {
     UPLOAD_FORMAT_HINT: "Solo PDF · Max 1 MB",
     UPLOAD_PROGRESS: "Avanzamento del caricamento",
     UPLOADED: "caricato",
+    WELCOME_UPLOAD_MEAL_PLAN: "Ti diamo il benvenuto. Carica un piano alimentare per iniziare.",
   },
 } as const satisfies MessageCatalog;

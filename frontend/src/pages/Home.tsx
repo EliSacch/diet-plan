@@ -107,7 +107,7 @@ export default function Home() {
   } else if (plan.isError) {
     content = <p role="alert">{dietPlanErrorMessage(plan.error)}</p>;
   } else if (plan.data === null) {
-    content = <NoDietPlan />;
+    content = <NoDietPlan welcome />;
   } else {
     const selectedDate = resolveSelectedDate(searchParams.get("date"), plan.data.days.length);
     content = <HomeDay selectedDate={selectedDate} onSelectDate={selectDate} plan={plan.data} />;

@@ -4,5 +4,10 @@
   align-items: center;
   gap: var(--spacing-lg);
   width: 100%;
+  max-width: 480px;
   text-align: center;
+}
+
+.no-diet-plan p {
+  max-width: 28ch;
 }

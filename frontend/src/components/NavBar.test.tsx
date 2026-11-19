@@ -32,16 +32,18 @@ describe("NavBar", () => {
       "page",
     );
     expect(within(nav).getByRole("link", { name: "Home" }).getAttribute("aria-current")).toBe(null);
-    expect(within(nav).getByRole("link", { name: "Plan" }).getAttribute("aria-current")).toBe(null);
+    expect(within(nav).getByRole("link", { name: "My plan" }).getAttribute("aria-current")).toBe(
+      null,
+    );
   });
 
   it("navigates between pages", () => {
     renderAt("/");
 
-    fireEvent.click(screen.getByRole("link", { name: "Plan" }));
+    fireEvent.click(screen.getByRole("link", { name: "My plan" }));
 
     expect(screen.getByText("Diet plan page")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Plan" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: "My plan" }).getAttribute("aria-current")).toBe("page");
 
     fireEvent.click(screen.getByRole("link", { name: "Profile" }));
 
@@ -61,7 +63,7 @@ describe("NavBar", () => {
 
     expect(screen.getByRole("navigation", { name: "Navigazione principale" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Piano" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Il mio piano" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Profilo" })).toBeTruthy();
   });
 });

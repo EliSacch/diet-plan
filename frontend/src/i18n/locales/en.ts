@@ -35,7 +35,7 @@ export const en = {
     NO_DIET_PLAN_YET: "You haven't uploaded a diet plan yet.",
     NOTIFICATIONS: "Notifications",
     ONLY_ONE_FILE: "Drop one file at a time.",
-    PLAN: "Plan",
+    PLAN: "My plan",
     PLAN_THIS_DAY: "Plan this day",
     PREVIOUS_DAY: "Previous day",
     PROFILE: "Profile",
@@ -59,6 +59,7 @@ export const en = {
     UPLOAD_FORMAT_HINT: "PDF only · Max 1 MB",
     UPLOAD_PROGRESS: "Upload progress",
     UPLOADED: "uploaded",
+    WELCOME_UPLOAD_MEAL_PLAN: "Welcome. Upload a meal plan to get started.",
   },
 } as const;
 

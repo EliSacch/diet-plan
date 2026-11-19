@@ -16,6 +16,12 @@
   text-align: center;
 }
 
+.daily-choices-illustration {
+  width: min(240px, 70%);
+  height: auto;
+  margin-bottom: var(--spacing-lg);
+}
+
 .daily-choices-empty .btn {
   min-width: 160px;
 }

@@ -6,6 +6,8 @@ import Button from "./Button";
 
 import "./DailyChoices.css";
 
+import noData from "../assets/illustrations/no-data.svg";
+
 type DailyChoicesProps = {
   day: PlanDay;
   choices: DayChoice[];
@@ -69,6 +71,7 @@ export default function DailyChoices({ day, choices, onPlan }: DailyChoicesProps
     return (
       <div className="daily-choices daily-choices-empty">
         <p>{t("NO_CHOICES_FOR_DAY")}</p>
+        <img className="daily-choices-illustration" src={noData} alt="" width={240} height={234} />
         <Button onClick={onPlan}>{t("PLAN_THIS_DAY")}</Button>
       </div>
     );
