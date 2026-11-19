@@ -179,7 +179,8 @@ describe("Home", () => {
     renderHome();
 
     expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
-    expect(screen.getByText(en.labels.NO_DIET_PLAN_YET)).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DietPlan", level: 1 })).toBeTruthy();
+    expect(screen.getByText(en.labels.WELCOME_UPLOAD_MEAL_PLAN)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Next day" })).toBeNull();
     expect(get).not.toHaveBeenCalledWith(
       expect.stringMatching(/^\/api\/days\//),

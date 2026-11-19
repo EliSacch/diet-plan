@@ -97,6 +97,7 @@ describe("DailyChoices", () => {
 
     const items = screen.getAllByRole("listitem").map((el) => el.textContent);
     expect(items).toEqual(["Fette biscottate 4", "Pasta 80 g", "Insalata mista"]);
+    expect(document.querySelector(".daily-choices-illustration")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: en.labels.EDIT }));
     expect(onPlan).toHaveBeenCalledOnce();
@@ -139,10 +140,22 @@ describe("DailyChoices", () => {
   it("shows an empty state button when nothing is picked for the day", () => {
     const { onPlan } = renderChoices([]);
 
-    expect(screen.getByText(en.labels.NO_CHOICES_FOR_DAY)).toBeTruthy();
+    const message = screen.getByText(en.labels.NO_CHOICES_FOR_DAY);
+    const illustration = document.querySelector<HTMLImageElement>(".daily-choices-illustration");
+    const button = screen.getByRole("button", { name: en.labels.PLAN_THIS_DAY });
+
+    expect(illustration).toBeTruthy();
+    expect(illustration?.getAttribute("alt")).toBe("");
+    expect(screen.queryByRole("img")).toBeNull();
+    expect(message.compareDocumentPosition(illustration as HTMLImageElement)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect((illustration as HTMLImageElement).compareDocumentPosition(button)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
     expect(screen.queryByRole("button", { name: en.labels.EDIT })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+    fireEvent.click(button);
     expect(onPlan).toHaveBeenCalledOnce();
   });
 

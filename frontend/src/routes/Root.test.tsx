@@ -7,6 +7,8 @@ import { axiosFailure, axiosResponse, deferred } from "../test/http";
 
 import App from "../App";
 
+import { en } from "../i18n/locales/en";
+
 import type { AxiosResponse } from "axios";
 
 describe("Root", () => {
@@ -48,7 +50,8 @@ describe("Root", () => {
     render(<App />);
 
     expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "DietPlan" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "DietPlan" })).toBeTruthy();
+    expect(screen.getByText(en.labels.WELCOME_UPLOAD_MEAL_PLAN)).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Sign in with Google" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });
