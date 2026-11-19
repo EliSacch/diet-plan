@@ -4,56 +4,34 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { setLocale } from "../i18n";
-import type { PlanDocument } from "../types/diet-plan";
-import type { WeekChoice } from "../types/week";
-import WeekPlanner from "./WeekPlanner";
+import type { DayChoice } from "../types/day";
+import type { PlanDay } from "../types/diet-plan";
+import DayPlanner from "./DayPlanner";
 
-const plan: PlanDocument = {
-  days: [
+const monday: PlanDay = {
+  day: "Lunedì",
+  meals: [
     {
-      day: "Lunedì",
-      meals: [
+      meal: "Pranzo",
+      categories: [
         {
-          meal: "Pranzo",
-          categories: [
-            {
-              category: "Primi",
-              options: [
-                { name: "Pasta", amount: 80, unit: "g", position: 0 },
-                { name: "Pasta", amount: 100, unit: "g", position: 1 },
-                { name: "Riso", amount: 70, unit: "g", position: 2 },
-              ],
-            },
-            {
-              category: "Contorni",
-              options: [{ name: "Insalata mista", amount: null, unit: null, position: 0 }],
-            },
+          category: "Primi",
+          options: [
+            { name: "Pasta", amount: 80, unit: "g", position: 0 },
+            { name: "Pasta", amount: 100, unit: "g", position: 1 },
+            { name: "Riso", amount: 70, unit: "g", position: 2 },
           ],
         },
-      ],
-    },
-    {
-      day: "Martedì",
-      meals: [
         {
-          meal: "Cena",
-          categories: [
-            {
-              category: "Secondi",
-              options: [
-                { name: "Pesce", amount: 150, unit: "g", position: 0 },
-                { name: "Uova", amount: 2, unit: null, position: 1 },
-              ],
-            },
-          ],
+          category: "Contorni",
+          options: [{ name: "Insalata mista", amount: null, unit: null, position: 0 }],
         },
       ],
     },
   ],
 };
 
-const pasta80: WeekChoice = {
-  day: "Lunedì",
+const pasta80: DayChoice = {
   meal: "Pranzo",
   category: "Primi",
   name: "Pasta",
@@ -61,33 +39,31 @@ const pasta80: WeekChoice = {
   unit: "g",
 };
 
-const uova: WeekChoice = {
-  day: "Martedì",
-  meal: "Cena",
-  category: "Secondi",
-  name: "Uova",
-  amount: 2,
+const insalata: DayChoice = {
+  meal: "Pranzo",
+  category: "Contorni",
+  name: "Insalata mista",
+  amount: null,
   unit: null,
 };
 
-type PlannerProps = ComponentProps<typeof WeekPlanner>;
+type PlannerProps = ComponentProps<typeof DayPlanner>;
 
 let updatePlanner: (changes: Partial<PlannerProps>) => void;
 
 function renderPlanner(initial: Partial<PlannerProps> = {}) {
   const onSave = vi.fn();
   let props: PlannerProps = {
-    options: plan,
+    day: monday,
     choices: [],
-    dayIndex: 0,
     onSave,
     saving: false,
     ...initial,
   };
-  const rendered = render(<WeekPlanner {...props} />);
+  const rendered = render(<DayPlanner {...props} />);
   updatePlanner = (changes) => {
     props = { ...props, ...changes };
-    rendered.rerender(<WeekPlanner {...props} />);
+    rendered.rerender(<DayPlanner {...props} />);
   };
   return { onSave, ...rendered };
 }
@@ -100,10 +76,6 @@ function radio(groupName: string, label: string) {
   return group(groupName).getByRole<HTMLInputElement>("radio", { name: label });
 }
 
-function chooseDay(day: string) {
-  updatePlanner({ dayIndex: plan.days.findIndex((item) => item.day === day) });
-}
-
 function toggle(category: string) {
   return screen.getByRole<HTMLButtonElement>("button", { name: new RegExp(`^${category}`) });
 }
@@ -112,13 +84,13 @@ function saveButton() {
   return screen.getByRole<HTMLButtonElement>("button", { name: "Save" });
 }
 
-describe("WeekPlanner", () => {
+describe("DayPlanner", () => {
   afterEach(() => {
     cleanup();
     setLocale("en");
   });
 
-  it("shows the selected day with all categories collapsed and nothing picked", () => {
+  it("shows the day with all categories collapsed and nothing picked", () => {
     renderPlanner();
 
     expect(screen.getByRole("heading", { level: 2, name: "Pranzo" })).toBeTruthy();
@@ -139,14 +111,12 @@ describe("WeekPlanner", () => {
     fireEvent.click(toggle("Contorni"));
     expect(toggle("Primi").getAttribute("aria-expanded")).toBe("true");
     expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("true");
-    expect(group("Primi").getAllByRole("radio")).toHaveLength(3);
     expect(radio("Contorni", "Insalata mista")).toBeTruthy();
 
     fireEvent.click(toggle("Primi"));
     expect(toggle("Primi").getAttribute("aria-expanded")).toBe("false");
     expect(screen.queryByRole("radiogroup", { name: "Primi" })).toBeNull();
     expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("true");
-    expect(radio("Contorni", "Insalata mista")).toBeTruthy();
   });
 
   it("shows the pick in a collapsed heading", () => {
@@ -156,39 +126,21 @@ describe("WeekPlanner", () => {
     expect(toggle("Contorni").textContent).toBe("Contorni");
   });
 
-  it("starts with all categories collapsed when switching day", () => {
-    renderPlanner();
-
-    fireEvent.click(toggle("Primi"));
-    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("true");
-
-    chooseDay("Martedì");
-    expect(toggle("Secondi").getAttribute("aria-expanded")).toBe("false");
-    expect(screen.queryByRole("radiogroup")).toBeNull();
-
-    chooseDay("Lunedì");
-    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("false");
-    expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("false");
-  });
-
   it.each([
     ["no meals", []],
     ["a meal without categories", [{ meal: "Pranzo", categories: [] }]],
   ])("handles a day with %s", (_label, meals) => {
-    renderPlanner({ options: { days: [{ day: "Lunedì", meals }] } });
+    renderPlanner({ day: { day: "Lunedì", meals } });
 
     expect(screen.queryByRole("radiogroup")).toBeNull();
     expect(saveButton().disabled).toBe(true);
   });
 
-  it("keeps picks across days and saves a partial week in plan order", () => {
+  it("saves picks in plan order", () => {
     const { onSave } = renderPlanner();
 
-    chooseDay("Martedì");
-    fireEvent.click(toggle("Secondi"));
-    fireEvent.click(radio("Secondi", "Uova 2"));
-
-    chooseDay("Lunedì");
+    fireEvent.click(toggle("Contorni"));
+    fireEvent.click(radio("Contorni", "Insalata mista"));
     fireEvent.click(toggle("Primi"));
     fireEvent.click(radio("Primi", "Riso 70 g"));
     fireEvent.click(radio("Primi", "Pasta 80 g"));
@@ -196,13 +148,9 @@ describe("WeekPlanner", () => {
     expect(radio("Primi", "Pasta 80 g").checked).toBe(true);
     expect(radio("Primi", "Riso 70 g").checked).toBe(false);
 
-    chooseDay("Martedì");
-    fireEvent.click(toggle("Secondi"));
-    expect(radio("Secondi", "Uova 2").checked).toBe(true);
-
     fireEvent.click(saveButton());
 
-    expect(onSave).toHaveBeenCalledWith([pasta80, uova]);
+    expect(onSave).toHaveBeenCalledWith([pasta80, insalata]);
   });
 
   it("preselects saved choices by name, amount and unit", () => {
@@ -215,7 +163,7 @@ describe("WeekPlanner", () => {
     expect(saveButton().disabled).toBe(true);
   });
 
-  it("enables Save only while the picks differ from the saved week", () => {
+  it("enables Save only while the picks differ from the saved day", () => {
     renderPlanner({ choices: [pasta80] });
 
     fireEvent.click(toggle("Primi"));
@@ -230,7 +178,7 @@ describe("WeekPlanner", () => {
     expect(saveButton().disabled).toBe(false);
   });
 
-  it("disables Save once the saved week catches up with the picks", () => {
+  it("disables Save once the saved day catches up with the picks", () => {
     renderPlanner();
 
     fireEvent.click(toggle("Primi"));
@@ -243,8 +191,7 @@ describe("WeekPlanner", () => {
   });
 
   it("keeps saved picks that are no longer in the plan when saving", () => {
-    const removed: WeekChoice = {
-      day: "Domenica",
+    const removed: DayChoice = {
       meal: "Cena",
       category: "Pizza",
       name: "Margherita",
@@ -269,15 +216,6 @@ describe("WeekPlanner", () => {
     const button = screen.getByRole<HTMLButtonElement>("button", { name: "Saving…" });
     expect(button.disabled).toBe(true);
     expect(button.getAttribute("aria-busy")).toBe("true");
-  });
-
-  it.each([
-    ["a plan without days", { options: { days: [] } }],
-    ["a day outside the plan", { dayIndex: 5 }],
-  ])("renders nothing for %s", (_label, props) => {
-    const { container } = renderPlanner(props);
-
-    expect(container.innerHTML).toBe("");
   });
 
   it("uses the current locale for the button", () => {

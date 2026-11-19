@@ -9,8 +9,8 @@ import { api } from "../api/client";
 import { ToastProvider } from "../context/ToastContext";
 import { setLocale } from "../i18n";
 import { axiosFailure, axiosResponse, deferred } from "../test/http";
+import type { Day, DayChoice } from "../types/day";
 import type { PlanDocument } from "../types/diet-plan";
-import type { Week, WeekChoice } from "../types/week";
 import Home from "./Home";
 
 import { en } from "../i18n/locales/en";
@@ -72,8 +72,7 @@ const fullWeekPlan: PlanDocument = {
   ),
 };
 
-const riso: WeekChoice = {
-  day: "Lunedì",
+const riso: DayChoice = {
   meal: "Pranzo",
   category: "Primi",
   name: "Riso",
@@ -81,8 +80,7 @@ const riso: WeekChoice = {
   unit: "g",
 };
 
-const pesce: WeekChoice = {
-  day: "Martedì",
+const pesce: DayChoice = {
   meal: "Cena",
   category: "Secondi",
   name: "Pesce",
@@ -90,8 +88,7 @@ const pesce: WeekChoice = {
   unit: "g",
 };
 
-const thursdayPasta: WeekChoice = {
-  day: "Giovedì",
+const pasta: DayChoice = {
   meal: "Pranzo",
   category: "Primi",
   name: "Pasta",
@@ -101,18 +98,17 @@ const thursdayPasta: WeekChoice = {
 
 function mockGet({
   activePlan = () => Promise.resolve(axiosResponse<PlanDocument>(plan)),
-  week = (weekStart: string) =>
-    Promise.resolve(axiosResponse<Week>({ week_start: weekStart, choices: [] })),
+  day = (date: string) => Promise.resolve(axiosResponse<Day>({ date, choices: [] })),
 }: {
   activePlan?: () => Promise<AxiosResponse>;
-  week?: (weekStart: string) => Promise<AxiosResponse>;
+  day?: (date: string) => Promise<AxiosResponse>;
 } = {}) {
   return vi.spyOn(api, "get").mockImplementation((url: string) => {
     if (url === "/api/diet-plans/active") {
       return activePlan();
     }
-    const [, weekStart = ""] = /^\/api\/weeks\/([^/]+)$/.exec(url) ?? [];
-    return week(weekStart);
+    const [, date = ""] = /^\/api\/days\/([^/]+)$/.exec(url) ?? [];
+    return day(date);
   });
 }
 
@@ -184,9 +180,9 @@ describe("Home", () => {
 
     expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
     expect(screen.getByText(en.labels.NO_DIET_PLAN_YET)).toBeTruthy();
-    expect(screen.queryByRole("link", { name: "Next week" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Next day" })).toBeNull();
     expect(get).not.toHaveBeenCalledWith(
-      expect.stringMatching(/^\/api\/weeks\//),
+      expect.stringMatching(/^\/api\/days\//),
       expect.anything(),
     );
   });
@@ -207,8 +203,7 @@ describe("Home", () => {
   it("selects today and shows today's picked options", async () => {
     mockGet({
       activePlan: () => Promise.resolve(axiosResponse(fullWeekPlan)),
-      week: (weekStart) =>
-        Promise.resolve(axiosResponse<Week>({ week_start: weekStart, choices: [thursdayPasta] })),
+      day: (date) => Promise.resolve(axiosResponse<Day>({ date, choices: [pasta] })),
     });
 
     renderHome();
@@ -221,55 +216,83 @@ describe("Home", () => {
     expect(screen.getByRole("button", { name: en.labels.EDIT })).toBeTruthy();
   });
 
-  it("disables unavailable days, falls back to Monday, and switches days", async () => {
-    mockGet({
-      week: (weekStart) =>
-        Promise.resolve(axiosResponse<Week>({ week_start: weekStart, choices: [riso, pesce] })),
+  it("disables unavailable weekdays, falls back to the latest available day, and switches days fluidly", async () => {
+    const get = mockGet({
+      day: (date) =>
+        Promise.resolve(
+          axiosResponse<Day>({
+            date,
+            choices: date === "2026-11-17" ? [pesce] : [riso],
+          }),
+        ),
     });
 
     renderHome();
 
-    expect(await screen.findByText("Riso 70 g")).toBeTruthy();
-    expect(pressedDay()).toBe("Monday, November 16");
-    expect(dayButton("Tuesday, November 17").disabled).toBe(false);
-    expect(dayButton("Wednesday, November 18").disabled).toBe(true);
-    expect(screen.queryByText("Pesce 150 g")).toBeNull();
-
-    fireEvent.click(dayButton("Tuesday, November 17"));
-
+    expect(await screen.findByText("Pesce 150 g")).toBeTruthy();
     expect(pressedDay()).toBe("Tuesday, November 17");
-    expect(screen.getByRole("heading", { level: 2, name: "Cena" })).toBeTruthy();
-    expect(screen.getByText("Pesce 150 g")).toBeTruthy();
-    expect(screen.queryByText("Riso 70 g")).toBeNull();
+    expect(dayButton("Monday, November 16").disabled).toBe(false);
+    expect(dayButton("Wednesday, November 18").disabled).toBe(true);
+    expect(get).toHaveBeenCalledWith("/api/days/2026-11-17", expect.anything());
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous day" }));
+
+    expect(currentUrl()).toBe("/?date=2026-11-16");
+    expect(pressedDay()).toBe("Monday, November 16");
+    expect(await screen.findByText("Riso 70 g")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next day" }));
+    expect(currentUrl()).toBe("/?date=2026-11-17");
   });
 
-  it("opens the planner drawer on the selected day, steps days, saves and keeps it open", async () => {
-    const saved: Week = { week_start: "2026-11-16", choices: [riso, pesce] };
+  it("clears the date query param when returning to today", async () => {
     mockGet({
-      week: (weekStart) =>
-        Promise.resolve(axiosResponse<Week>({ week_start: weekStart, choices: [riso] })),
+      activePlan: () => Promise.resolve(axiosResponse(fullWeekPlan)),
+      day: (date) =>
+        Promise.resolve(
+          axiosResponse<Day>({ date, choices: date === "2026-11-20" ? [riso] : [pasta] }),
+        ),
+    });
+
+    renderHome();
+
+    expect(await screen.findByText("Pasta 80 g")).toBeTruthy();
+    expect(currentUrl()).toBe("/");
+
+    fireEvent.click(screen.getByRole("button", { name: "Next day" }));
+    expect(currentUrl()).toBe("/?date=2026-11-20");
+    expect(await screen.findByText("Riso 70 g")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous day" }));
+    expect(currentUrl()).toBe("/");
+    expect(await screen.findByText("Pasta 80 g")).toBeTruthy();
+  });
+
+  it("opens the planner drawer, saves the day, keeps it open, and steps days", async () => {
+    const saved: Day = { date: "2026-11-17", choices: [pesce] };
+    mockGet({
+      day: (date) =>
+        Promise.resolve(axiosResponse<Day>({ date, choices: date === "2026-11-16" ? [riso] : [] })),
     });
     const put = vi.spyOn(api, "put").mockResolvedValue(axiosResponse(saved));
 
     renderHome();
 
-    expect(await screen.findByText("Riso 70 g")).toBeTruthy();
+    expect(await screen.findByText(en.labels.NO_CHOICES_FOR_DAY)).toBeTruthy();
+    expect(pressedDay()).toBe("Tuesday, November 17");
 
-    fireEvent.click(dayButton("Tuesday, November 17"));
-    expect(screen.getByText(en.labels.NO_CHOICES_FOR_DAY)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: en.labels.PLAN_THIS_DAY }));
 
-    fireEvent.click(screen.getByRole("button", { name: en.labels.PLAN_THIS_WEEK }));
-
-    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_WEEK });
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
     expect(within(drawer).getByText("Tuesday, November 17")).toBeTruthy();
 
     fireEvent.click(within(drawer).getByRole("button", { name: /^Secondi/ }));
     fireEvent.click(within(drawer).getByRole("radio", { name: "Pesce 150 g" }));
     fireEvent.click(within(drawer).getByRole("button", { name: "Save" }));
 
-    expect(await screen.findByText(en.labels.WEEK_SAVED)).toBeTruthy();
-    expect(put).toHaveBeenCalledWith("/api/weeks/2026-11-16", { choices: [riso, pesce] });
-    expect(screen.getByRole("dialog", { name: en.labels.PLAN_THIS_WEEK })).toBeTruthy();
+    expect(await screen.findByText(en.labels.DAY_SAVED)).toBeTruthy();
+    expect(put).toHaveBeenCalledWith("/api/days/2026-11-17", { choices: [pesce] });
+    expect(screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY })).toBeTruthy();
     await waitFor(() =>
       expect(within(drawer).getByRole<HTMLButtonElement>("button", { name: "Save" }).disabled).toBe(
         true,
@@ -282,58 +305,69 @@ describe("Home", () => {
 
     fireEvent.click(within(drawer).getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByText("Riso 70 g")).toBeTruthy();
-
-    fireEvent.click(dayButton("Tuesday, November 17"));
-    expect(screen.getByText("Pesce 150 g")).toBeTruthy();
+    expect(await screen.findByText("Riso 70 g")).toBeTruthy();
   });
 
   it("opens the planner drawer from Edit and shows an error toast when saving fails", async () => {
     mockGet({
-      week: (weekStart) =>
-        Promise.resolve(axiosResponse<Week>({ week_start: weekStart, choices: [riso] })),
+      day: (date) => Promise.resolve(axiosResponse<Day>({ date, choices: [pesce] })),
     });
     vi.spyOn(api, "put").mockRejectedValue(axiosFailure(422, { code: "VALIDATION_ERROR" }));
 
     renderHome();
 
-    expect(await screen.findByText("Riso 70 g")).toBeTruthy();
+    expect(await screen.findByText("Pesce 150 g")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: en.labels.EDIT }));
 
-    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_WEEK });
-    fireEvent.click(within(drawer).getByRole("button", { name: /^Primi/ }));
-    fireEvent.click(within(drawer).getByRole("radio", { name: "Pasta 80 g" }));
-    fireEvent.click(within(drawer).getByRole("button", { name: "Save" }));
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(within(drawer).getByRole("button", { name: /^Secondi/ }));
+    fireEvent.click(within(drawer).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    cleanup();
+    mockGet({
+      day: (date) => Promise.resolve(axiosResponse<Day>({ date, choices: [riso] })),
+    });
+    vi.spyOn(api, "put").mockRejectedValue(axiosFailure(422, { code: "VALIDATION_ERROR" }));
+
+    renderHome("/?date=2026-11-16");
+    expect(await screen.findByText("Riso 70 g")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: en.labels.EDIT }));
+    const mondayDrawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(within(mondayDrawer).getByRole("button", { name: /^Primi/ }));
+    fireEvent.click(within(mondayDrawer).getByRole("radio", { name: "Pasta 80 g" }));
+    fireEvent.click(within(mondayDrawer).getByRole("button", { name: "Save" }));
 
     expect(await screen.findByRole("alert")).toHaveProperty(
       "textContent",
       en.errors.VALIDATION_ERROR,
     );
     expect(
-      within(drawer).getByRole<HTMLInputElement>("radio", { name: "Pasta 80 g" }).checked,
+      within(mondayDrawer).getByRole<HTMLInputElement>("radio", { name: "Pasta 80 g" }).checked,
     ).toBe(true);
-    expect(within(drawer).getByRole<HTMLButtonElement>("button", { name: "Save" }).disabled).toBe(
-      false,
-    );
+    expect(
+      within(mondayDrawer).getByRole<HTMLButtonElement>("button", { name: "Save" }).disabled,
+    ).toBe(false);
   });
 
-  it("shows the day picker and a loading indicator while the week is loading", async () => {
+  it("shows the date strip and a loading indicator while the day is loading", async () => {
     mockGet({
       activePlan: () => Promise.resolve(axiosResponse(fullWeekPlan)),
-      week: () => deferred<AxiosResponse>().promise,
+      day: () => deferred<AxiosResponse>().promise,
     });
 
     renderHome();
 
-    expect(await screen.findByRole("status", { name: "Loading your week…" })).toBeTruthy();
+    expect(await screen.findByRole("status", { name: "Loading your day…" })).toBeTruthy();
     expect(pressedDay()).toBe("Thursday, November 19");
-    expect(screen.getByRole("link", { name: "Next week" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Next day" })).toBeTruthy();
   });
 
-  it("shows the catalog message when the week request fails", async () => {
+  it("shows the catalog message when the day request fails", async () => {
     mockGet({
-      week: () => Promise.reject(axiosFailure(500, { code: "INTERNAL_ERROR" })),
+      day: () => Promise.reject(axiosFailure(500, { code: "INTERNAL_ERROR" })),
     });
 
     renderHome();
@@ -342,83 +376,33 @@ describe("Home", () => {
       "textContent",
       en.errors.INTERNAL_ERROR,
     );
-    expect(screen.getByRole("link", { name: "Next week" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Next day" })).toBeTruthy();
   });
 
-  it("moves between weeks with the arrows and loads each week's choices", async () => {
-    const get = mockGet({
-      activePlan: () => Promise.resolve(axiosResponse(fullWeekPlan)),
-      week: (weekStart) =>
-        Promise.resolve(
-          axiosResponse<Week>({
-            week_start: weekStart,
-            choices:
-              weekStart === "2026-11-23"
-                ? [
-                    {
-                      day: "Lunedì",
-                      meal: "Pranzo",
-                      category: "Primi",
-                      name: "Riso",
-                      amount: 70,
-                      unit: "g",
-                    },
-                  ]
-                : [thursdayPasta],
-          }),
-        ),
-    });
-
-    renderHome();
-
-    expect(await screen.findByText("Pasta 80 g")).toBeTruthy();
-    expect(pressedDay()).toBe("Thursday, November 19");
-
-    fireEvent.click(screen.getByRole("link", { name: "Next week" }));
-
-    expect(currentUrl()).toBe("/?week=2026-11-23");
-    expect(await screen.findByText("Riso 70 g")).toBeTruthy();
-    expect(pressedDay()).toBe("Monday, November 23");
-    expect(get).toHaveBeenCalledWith("/api/weeks/2026-11-23", expect.anything());
-
-    fireEvent.click(screen.getByRole("link", { name: "Previous week" }));
-
-    expect(currentUrl()).toBe("/?week=2026-11-16");
-    expect(await screen.findByText("Pasta 80 g")).toBeTruthy();
-    expect(pressedDay()).toBe("Thursday, November 19");
-  });
-
-  it("normalizes non-Monday week query params and ignores invalid ones", async () => {
+  it("falls back to today when the date query param is invalid", async () => {
     const get = mockGet({
       activePlan: () => Promise.resolve(axiosResponse(fullWeekPlan)),
     });
 
-    renderHome("/?week=2026-11-25");
-
-    expect(await screen.findByText(en.labels.NO_CHOICES_FOR_DAY)).toBeTruthy();
-    expect(pressedDay()).toBe("Monday, November 23");
-    expect(get).toHaveBeenCalledWith("/api/weeks/2026-11-23", expect.anything());
-
-    cleanup();
-    renderHome("/?week=not-a-date");
+    renderHome("/?date=not-a-date");
 
     expect(await screen.findByText(en.labels.NO_CHOICES_FOR_DAY)).toBeTruthy();
     expect(pressedDay()).toBe("Thursday, November 19");
-    expect(get).toHaveBeenCalledWith("/api/weeks/2026-11-16", expect.anything());
+    expect(get).toHaveBeenCalledWith("/api/days/2026-11-19", expect.anything());
   });
 
-  it("renders only the disabled day picker when the active plan has no days", async () => {
+  it("renders only the disabled date strip when the active plan has no days", async () => {
     mockGet({
       activePlan: () => Promise.resolve(axiosResponse<PlanDocument>({ days: [] })),
     });
 
     renderHome();
 
-    expect(await screen.findByRole("link", { name: "Next week" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Next day" })).toBeTruthy();
     await waitFor(() =>
-      expect(screen.queryByRole("status", { name: "Loading your week…" })).toBeNull(),
+      expect(screen.queryByRole("status", { name: "Loading your day…" })).toBeNull(),
     );
-    expect(dayButton("Monday, November 16").disabled).toBe(true);
+    expect(dayButton("Thursday, November 19").disabled).toBe(true);
     expect(screen.queryByText(en.labels.NO_CHOICES_FOR_DAY)).toBeNull();
     expect(screen.queryByRole("button", { name: en.labels.EDIT })).toBeNull();
   });

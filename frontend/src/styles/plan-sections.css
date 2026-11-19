@@ -15,7 +15,7 @@
   }
 }
 
-.plan-sections:has(> .week-day-picker) {
+.plan-sections:has(> .date-strip) {
   --day-picker-height: calc(98px + 2 * var(--padding-sm));
 
   @media (max-width: 768px) {

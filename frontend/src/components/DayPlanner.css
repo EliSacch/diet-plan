@@ -1,4 +1,4 @@
-.week-planner-toggle {
+.day-planner-toggle {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -15,11 +15,11 @@
   cursor: pointer;
 }
 
-.week-planner-toggle:hover {
+.day-planner-toggle:hover {
   color: var(--primary);
 }
 
-.week-planner-pick {
+.day-planner-pick {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -30,7 +30,7 @@
   white-space: nowrap;
 }
 
-.week-planner-toggle svg {
+.day-planner-toggle svg {
   flex: none;
   width: 20px;
   height: 20px;
@@ -38,26 +38,26 @@
   transition: transform 150ms ease;
 }
 
-.week-planner-toggle[aria-expanded="true"] svg {
+.day-planner-toggle[aria-expanded="true"] svg {
   transform: rotate(180deg);
 }
 
-.week-planner-toggle[aria-expanded="true"] .week-planner-pick {
+.day-planner-toggle[aria-expanded="true"] .day-planner-pick {
   visibility: hidden;
 }
 
-.week-planner-options {
+.day-planner-options {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
   padding-top: var(--padding-sm);
 }
 
-.week-planner-options[hidden] {
+.day-planner-options[hidden] {
   display: none;
 }
 
-.week-planner-option {
+.day-planner-option {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -68,16 +68,16 @@
   transition: background-color 150ms ease;
 }
 
-.week-planner-option:hover {
+.day-planner-option:hover {
   background: color-mix(in srgb, var(--white) 6%, transparent);
 }
 
-.week-planner-option:has(input:checked) {
+.day-planner-option:has(input:checked) {
   color: var(--text-h);
   background: color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
-.week-planner-option input {
+.day-planner-option input {
   flex: none;
   width: 20px;
   height: 20px;
@@ -86,7 +86,7 @@
   cursor: pointer;
 }
 
-.week-planner-actions {
+.day-planner-actions {
   position: sticky;
   z-index: 4;
   bottom: 0;
@@ -105,13 +105,13 @@
   }
 }
 
-.week-planner-actions .btn {
+.day-planner-actions .btn {
   min-width: 160px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .week-planner-option,
-  .week-planner-toggle svg {
+  .day-planner-option,
+  .day-planner-toggle svg {
     transition: none;
   }
 }
