@@ -178,6 +178,22 @@ describe("WeekPlannerDrawer", () => {
     expect(document.body.style.overflow).toBe("");
   });
 
+  it("falls back to the plan day label or an empty label when dayIndex is beyond the 7-day calendar", () => {
+    const eightDayPlan: PlanDocument = {
+      days: Array.from({ length: 8 }, (_, index) => ({
+        day: `Giorno ${index + 1}`,
+        meals: [],
+      })),
+    };
+    const { update } = renderDrawer({ options: eightDayPlan, dayIndex: 7 });
+
+    const dialog = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_WEEK });
+    expect(within(dialog).getByText("Giorno 8")).toBeTruthy();
+
+    update({ dayIndex: 8 });
+    expect(document.querySelector(".week-planner-drawer-date")?.textContent).toBe("");
+  });
+
   it("uses the current locale", () => {
     setLocale("it");
     renderDrawer({ dayIndex: 0 });

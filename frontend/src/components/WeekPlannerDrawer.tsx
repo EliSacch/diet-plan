@@ -61,9 +61,7 @@ function OpenWeekPlannerDrawer({
   }
 
   useEffect(() => {
-    if (bodyRef.current !== null) {
-      bodyRef.current.scrollTop = 0;
-    }
+    (bodyRef.current as HTMLDivElement).scrollTop = 0;
   }, [dayIndex]);
 
   const dates = weekDates(weekStart);

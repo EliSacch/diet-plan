@@ -406,4 +406,20 @@ describe("Home", () => {
     expect(pressedDay()).toBe("Thursday, November 19");
     expect(get).toHaveBeenCalledWith("/api/weeks/2026-11-16", expect.anything());
   });
+
+  it("renders only the disabled day picker when the active plan has no days", async () => {
+    mockGet({
+      activePlan: () => Promise.resolve(axiosResponse<PlanDocument>({ days: [] })),
+    });
+
+    renderHome();
+
+    expect(await screen.findByRole("link", { name: "Next week" })).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.queryByRole("status", { name: "Loading your week…" })).toBeNull(),
+    );
+    expect(dayButton("Monday, November 16").disabled).toBe(true);
+    expect(screen.queryByText(en.labels.NO_CHOICES_FOR_DAY)).toBeNull();
+    expect(screen.queryByRole("button", { name: en.labels.EDIT })).toBeNull();
+  });
 });

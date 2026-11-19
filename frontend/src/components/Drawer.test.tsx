@@ -71,6 +71,7 @@ describe("Drawer", () => {
     const { onClose } = renderDrawer();
 
     fireEvent.click(screen.getByText("Drawer content"));
+    fireEvent.keyDown(window, { key: "Enter" });
     expect(onClose).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
