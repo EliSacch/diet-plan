@@ -1,0 +1,55 @@
+.week-planner-drawer-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.week-planner-drawer-arrow {
+  appearance: none;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--primary);
+  background: none;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.week-planner-drawer-arrow:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+
+.week-planner-drawer-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.week-planner-drawer-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.week-planner-drawer-date {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text-h);
+  text-align: center;
+  text-transform: capitalize;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-planner-drawer-arrow {
+    transition: none;
+  }
+}

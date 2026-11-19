@@ -1,8 +1,7 @@
-import { useId, useMemo, useState } from "react";
-import { flushSync } from "react-dom";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import { t } from "../i18n";
-import type { PlanDay, PlanDocument, PlanOption } from "../types/diet-plan";
+import type { PlanDocument, PlanOption } from "../types/diet-plan";
 import type { WeekChoice } from "../types/week";
 import { optionLabel } from "../utils/plan";
 import Button from "./Button";
@@ -18,6 +17,7 @@ type WeekPlannerProps = {
   dayIndex: number;
   onSave: (choices: WeekChoice[]) => void;
   saving: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 function slotKey(day: string, meal: string, category: string) {
@@ -46,15 +46,6 @@ function samePicks(a: Map<string, WeekChoice>, b: Map<string, WeekChoice>) {
   return true;
 }
 
-function firstSlotKey(day: PlanDay) {
-  const meal = day.meals[0];
-  const category = meal?.categories[0];
-  if (meal === undefined || category === undefined) {
-    return null;
-  }
-  return slotKey(day.day, meal.meal, category.category);
-}
-
 // Saved picks whose slot is no longer in the plan are sent back so a save doesn't drop them.
 function orderedChoices(options: PlanDocument, picks: Map<string, WeekChoice>) {
   const rest = new Map(picks);
@@ -80,39 +71,43 @@ export default function WeekPlanner({
   dayIndex,
   onSave,
   saving,
+  onDirtyChange,
 }: WeekPlannerProps) {
   const baseId = useId();
   const [picks, setPicks] = useState(() => toPicks(choices));
-  // undefined opens the day's first category; null means everything is collapsed.
-  const [expanded, setExpanded] = useState<string | null | undefined>(undefined);
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [shownDayIndex, setShownDayIndex] = useState(dayIndex);
   const saved = useMemo(() => toPicks(choices), [choices]);
   const dirty = !samePicks(picks, saved);
   const day = options.days[dayIndex];
 
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+
   if (shownDayIndex !== dayIndex) {
     setShownDayIndex(dayIndex);
-    setExpanded(undefined);
+    setExpanded(new Set());
   }
 
   if (day === undefined) {
     return null;
   }
 
-  const expandedKey = expanded === undefined ? firstSlotKey(day) : expanded;
-
   function select(key: string, choice: WeekChoice) {
     setPicks((current) => new Map(current).set(key, choice));
   }
 
-  // Collapsing a longer section above can push the opened heading out of view.
-  function toggle(key: string, heading: HTMLElement) {
-    if (key === expandedKey) {
-      setExpanded(null);
-      return;
-    }
-    flushSync(() => setExpanded(key));
-    heading.scrollIntoView({ block: "nearest" });
+  function toggle(key: string) {
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
   }
 
   return (
@@ -124,7 +119,7 @@ export default function WeekPlanner({
             const key = slotKey(day.day, meal.meal, category.category);
             const groupId = `${baseId}-${dayIndex}-${mealIndex}-${categoryIndex}`;
             const pick = picks.get(key);
-            const open = key === expandedKey;
+            const open = expanded.has(key);
             return (
               <section key={category.category}>
                 <h3>
@@ -133,7 +128,7 @@ export default function WeekPlanner({
                     className="week-planner-toggle"
                     aria-expanded={open}
                     aria-controls={groupId}
-                    onClick={(event) => toggle(key, event.currentTarget)}
+                    onClick={() => toggle(key)}
                   >
                     <span>{category.category}</span>
                     {pick !== undefined ? (
