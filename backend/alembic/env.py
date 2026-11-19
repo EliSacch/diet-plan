@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
+import app.models.custom_option
 import app.models.day
 import app.models.diet
 import app.models.user  # noqa: F401
