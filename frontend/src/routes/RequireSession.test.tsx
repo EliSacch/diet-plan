@@ -25,6 +25,6 @@ describe("RequireSession", () => {
     render(<App />);
 
     expect(await screen.findByRole("link", { name: "Sign in with Google" })).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "Profile" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });
 });

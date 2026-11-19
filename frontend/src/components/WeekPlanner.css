@@ -13,16 +13,6 @@
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
   cursor: pointer;
-  scroll-margin-top: calc(
-    var(--sticky-top) + var(--day-picker-height) + var(--meal-heading-height)
-  );
-  scroll-margin-bottom: calc(40px + 2 * var(--padding-md));
-
-  @media (max-width: 768px) {
-    scroll-margin-bottom: calc(
-      40px + 2 * var(--padding-md) + var(--nav-bar-height) + env(safe-area-inset-bottom)
-    );
-  }
 }
 
 .week-planner-toggle:hover {
@@ -111,7 +101,7 @@
   }
 
   @media (max-width: 768px) {
-    bottom: calc(var(--nav-bar-height) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--padding-md) + env(safe-area-inset-bottom));
   }
 }
 

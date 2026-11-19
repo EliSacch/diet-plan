@@ -20,5 +20,5 @@ export default function ActiveDietPlan() {
     content = <DietPlan plan={plan.data} />;
   }
 
-  return <PageLayout title={t("DIET_PLAN")}>{content}</PageLayout>;
+  return <PageLayout>{content}</PageLayout>;
 }

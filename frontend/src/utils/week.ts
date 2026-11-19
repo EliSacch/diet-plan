@@ -48,3 +48,8 @@ export function weekDates(isoMonday: string) {
 export function currentMonday() {
   return toIsoDate(mondayOf(new Date()));
 }
+
+export function todayIndex(weekStart: string) {
+  const today = toIsoDate(new Date());
+  return Math.max(0, weekDates(weekStart).map(toIsoDate).indexOf(today));
+}

@@ -24,7 +24,7 @@ export default function Profile() {
   }
 
   return (
-    <PageLayout title={t("PROFILE")}>
+    <PageLayout>
       <p>{session.email}</p>
       <UploadDietPlan />
       <Button variant="secondary" onClick={() => setConfirmingSignOut(true)}>

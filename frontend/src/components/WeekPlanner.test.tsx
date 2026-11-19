@@ -118,64 +118,56 @@ describe("WeekPlanner", () => {
     setLocale("en");
   });
 
-  it("shows the selected day with only its first category open and nothing picked", () => {
+  it("shows the selected day with all categories collapsed and nothing picked", () => {
     renderPlanner();
 
     expect(screen.getByRole("heading", { level: 2, name: "Pranzo" })).toBeTruthy();
-    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("true");
-    expect(group("Primi").getAllByRole("radio")).toHaveLength(3);
-    expect(radio("Primi", "Pasta 80 g").checked).toBe(false);
+    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("false");
     expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("false");
-    expect(screen.queryByRole("radiogroup", { name: "Contorni" })).toBeNull();
-    expect(screen.queryByRole("radiogroup", { name: "Secondi" })).toBeNull();
+    expect(screen.queryByRole("radiogroup")).toBeNull();
     expect(saveButton().disabled).toBe(true);
   });
 
-  it("opens one category at a time and scrolls the opened heading into view", () => {
-    const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
-    renderPlanner();
-
-    fireEvent.click(toggle("Contorni"));
-
-    expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("true");
-    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("false");
-    expect(screen.queryByRole("radiogroup", { name: "Primi" })).toBeNull();
-    expect(radio("Contorni", "Insalata mista")).toBeTruthy();
-    expect(scroll).toHaveBeenCalledTimes(1);
-    expect(scroll.mock.contexts[0]).toBe(toggle("Contorni"));
-    scroll.mockRestore();
-  });
-
-  it("collapses the open category when its heading is clicked again", () => {
-    const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+  it("expands multiple categories independently without auto-collapsing others", () => {
     renderPlanner();
 
     fireEvent.click(toggle("Primi"));
+    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("true");
+    expect(group("Primi").getAllByRole("radio")).toHaveLength(3);
+    expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("false");
 
+    fireEvent.click(toggle("Contorni"));
+    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("true");
+    expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("true");
+    expect(group("Primi").getAllByRole("radio")).toHaveLength(3);
+    expect(radio("Contorni", "Insalata mista")).toBeTruthy();
+
+    fireEvent.click(toggle("Primi"));
     expect(toggle("Primi").getAttribute("aria-expanded")).toBe("false");
-    expect(screen.queryByRole("radiogroup")).toBeNull();
-    expect(scroll).not.toHaveBeenCalled();
-    scroll.mockRestore();
+    expect(screen.queryByRole("radiogroup", { name: "Primi" })).toBeNull();
+    expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("true");
+    expect(radio("Contorni", "Insalata mista")).toBeTruthy();
   });
 
   it("shows the pick in a collapsed heading", () => {
     renderPlanner({ choices: [pasta80] });
 
-    fireEvent.click(toggle("Contorni"));
-
     expect(toggle("Primi").textContent).toBe("PrimiPasta 80 g");
     expect(toggle("Contorni").textContent).toBe("Contorni");
   });
 
-  it("opens the first category of a day when switching day", () => {
+  it("starts with all categories collapsed when switching day", () => {
     renderPlanner();
 
-    fireEvent.click(toggle("Contorni"));
+    fireEvent.click(toggle("Primi"));
+    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("true");
+
     chooseDay("Martedì");
-    expect(toggle("Secondi").getAttribute("aria-expanded")).toBe("true");
+    expect(toggle("Secondi").getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("radiogroup")).toBeNull();
 
     chooseDay("Lunedì");
-    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("true");
+    expect(toggle("Primi").getAttribute("aria-expanded")).toBe("false");
     expect(toggle("Contorni").getAttribute("aria-expanded")).toBe("false");
   });
 
@@ -193,14 +185,19 @@ describe("WeekPlanner", () => {
     const { onSave } = renderPlanner();
 
     chooseDay("Martedì");
+    fireEvent.click(toggle("Secondi"));
     fireEvent.click(radio("Secondi", "Uova 2"));
+
     chooseDay("Lunedì");
+    fireEvent.click(toggle("Primi"));
     fireEvent.click(radio("Primi", "Riso 70 g"));
     fireEvent.click(radio("Primi", "Pasta 80 g"));
 
     expect(radio("Primi", "Pasta 80 g").checked).toBe(true);
     expect(radio("Primi", "Riso 70 g").checked).toBe(false);
+
     chooseDay("Martedì");
+    fireEvent.click(toggle("Secondi"));
     expect(radio("Secondi", "Uova 2").checked).toBe(true);
 
     fireEvent.click(saveButton());
@@ -211,6 +208,8 @@ describe("WeekPlanner", () => {
   it("preselects saved choices by name, amount and unit", () => {
     renderPlanner({ choices: [pasta80] });
 
+    fireEvent.click(toggle("Primi"));
+
     expect(radio("Primi", "Pasta 80 g").checked).toBe(true);
     expect(radio("Primi", "Pasta 100 g").checked).toBe(false);
     expect(saveButton().disabled).toBe(true);
@@ -219,6 +218,7 @@ describe("WeekPlanner", () => {
   it("enables Save only while the picks differ from the saved week", () => {
     renderPlanner({ choices: [pasta80] });
 
+    fireEvent.click(toggle("Primi"));
     fireEvent.click(radio("Primi", "Riso 70 g"));
     expect(saveButton().disabled).toBe(false);
 
@@ -233,6 +233,7 @@ describe("WeekPlanner", () => {
   it("disables Save once the saved week catches up with the picks", () => {
     renderPlanner();
 
+    fireEvent.click(toggle("Primi"));
     fireEvent.click(radio("Primi", "Pasta 80 g"));
     fireEvent.click(saveButton());
     updatePlanner({ choices: [pasta80] });
@@ -252,6 +253,7 @@ describe("WeekPlanner", () => {
     };
     const { onSave } = renderPlanner({ choices: [removed] });
 
+    fireEvent.click(toggle("Primi"));
     fireEvent.click(radio("Primi", "Pasta 80 g"));
     fireEvent.click(saveButton());
 
@@ -261,6 +263,7 @@ describe("WeekPlanner", () => {
   it("shows a busy, disabled button while saving", () => {
     renderPlanner({ choices: [pasta80], saving: true });
 
+    fireEvent.click(toggle("Primi"));
     fireEvent.click(radio("Primi", "Riso 70 g"));
 
     const button = screen.getByRole<HTMLButtonElement>("button", { name: "Saving…" });

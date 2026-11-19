@@ -1,0 +1,85 @@
+.daily-choices {
+  align-self: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 600px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.daily-choices-empty {
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--padding-lg) 0;
+  text-align: center;
+}
+
+.daily-choices-empty .btn {
+  min-width: 160px;
+}
+
+.daily-choices-meal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.daily-choices .daily-choices-meal-title {
+  position: static;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  font-family: var(--sans);
+  font-size: 0.85em;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--off-white) 65%, transparent);
+  background: none;
+}
+
+.daily-choices-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.daily-choices-item {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--padding-md);
+  color: var(--text-h);
+  background: color-mix(in srgb, var(--white) 6%, var(--black));
+  border: 1px solid color-mix(in srgb, var(--white) 8%, transparent);
+  border-radius: 12px;
+  overflow-wrap: break-word;
+}
+
+.daily-choices-actions {
+  position: sticky;
+  z-index: 4;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--padding-md) 0;
+  background: var(--bg);
+  border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+
+  @media (max-width: 1024px) {
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    bottom: calc(var(--nav-bar-height) + env(safe-area-inset-bottom));
+  }
+}
+
+.daily-choices-actions .btn {
+  min-width: 160px;
+}

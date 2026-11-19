@@ -91,7 +91,7 @@ describe("SessionProvider", () => {
     const toast = await screen.findByRole("alert");
     expect(toast.textContent).toBe(en.errors.INTERNAL_ERROR);
     expect(toast.getAttribute("data-variant")).toBe("error");
-    expect(screen.getByRole("heading", { name: "Profile" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Profile" }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByText("ada@example.com")).toBeTruthy();
   });
 

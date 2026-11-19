@@ -6,6 +6,7 @@ import {
   currentMonday,
   mondayOf,
   parseIsoDate,
+  todayIndex,
   toIsoDate,
   weekDates,
 } from "./week";
@@ -102,5 +103,19 @@ describe("currentMonday", () => {
     vi.setSystemTime(new Date(2026, 10, 22, 23, 30));
 
     expect(currentMonday()).toBe("2026-11-16");
+  });
+});
+
+describe("todayIndex", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("returns today's index in the current week and Monday in another week", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 19, 10, 0));
+
+    expect(todayIndex("2026-11-16")).toBe(3);
+    expect(todayIndex("2026-11-23")).toBe(0);
   });
 });

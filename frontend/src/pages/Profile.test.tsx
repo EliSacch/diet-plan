@@ -31,8 +31,8 @@ describe("Profile", () => {
 
     render(<App />);
 
-    expect(await screen.findByRole("heading", { name: "Profile" })).toBeTruthy();
-    expect(screen.getByText("ada@example.com")).toBeTruthy();
+    expect(await screen.findByText("ada@example.com")).toBeTruthy();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
@@ -72,8 +72,7 @@ describe("Profile", () => {
     render(<App />);
 
     expect(screen.getByRole("status", { name: "Checking your session…" })).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "Profile" })).toBeTruthy();
-    expect(screen.getByText("ada@example.com")).toBeTruthy();
+    expect(await screen.findByText("ada@example.com")).toBeTruthy();
     expect(screen.getByLabelText("Upload diet plan")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Sign out" }).className).toContain("btn-secondary");
   });
@@ -92,6 +91,6 @@ describe("Profile", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.queryByRole("heading", { name: "Profile" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });
 });

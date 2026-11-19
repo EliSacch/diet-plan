@@ -91,7 +91,7 @@ describe("ActiveDietPlan", () => {
     renderPage();
 
     expect(await screen.findByText("Pasta 80 g")).toBeTruthy();
-    expect(screen.getByRole("heading", { level: 1, name: "Diet plan" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
     expect(screen.queryByLabelText("Upload diet plan")).toBeNull();
   });
 });
