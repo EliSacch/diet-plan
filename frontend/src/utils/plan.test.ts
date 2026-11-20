@@ -1,6 +1,31 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_AMOUNT, MAX_NAME_LENGTH, optionLabel, parseOptionFields } from "./plan";
+import {
+  MAX_AMOUNT,
+  MAX_NAME_LENGTH,
+  MAX_UNIT_LENGTH,
+  optionLabel,
+  parseOptionFields,
+  parseUnit,
+} from "./plan";
+
+describe("parseUnit", () => {
+  it.each([
+    [" g ", "g"],
+    ["", null],
+    ["   ", null],
+    ["x".repeat(MAX_UNIT_LENGTH), "x".repeat(MAX_UNIT_LENGTH)],
+  ])("parses %j", (text, unit) => {
+    expect(parseUnit(text)).toEqual({ ok: true, unit });
+  });
+
+  it("rejects a unit that is too long", () => {
+    expect(parseUnit("x".repeat(MAX_UNIT_LENGTH + 1))).toEqual({
+      ok: false,
+      error: "UNIT_TOO_LONG",
+    });
+  });
+});
 
 describe("optionLabel", () => {
   it.each([

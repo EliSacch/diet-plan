@@ -1,9 +1,10 @@
 import type { ComponentProps } from "react";
 
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { setLocale } from "../i18n";
+import type { CustomOption } from "../types/custom-option";
 import type { CustomOptionValues, DayChoice, DayOptions, OptionValues } from "../types/day";
 import DayPlanner from "./DayPlanner";
 
@@ -76,12 +77,14 @@ let updatePlanner: (changes: Partial<PlannerProps>) => void;
 function renderPlanner(initial: Partial<PlannerProps> = {}) {
   const onSave = vi.fn();
   const onDeleteCustomOption = vi.fn();
+  const onAddCustomOption = vi.fn<PlannerProps["onAddCustomOption"]>();
   let props: PlannerProps = {
     day: monday,
     choices: [],
     onSave,
     saving: false,
     onDeleteCustomOption,
+    onAddCustomOption,
     ...initial,
   };
   const rendered = render(<DayPlanner {...props} />);
@@ -89,7 +92,7 @@ function renderPlanner(initial: Partial<PlannerProps> = {}) {
     props = { ...props, ...changes };
     rendered.rerender(<DayPlanner {...props} />);
   };
-  return { onSave, onDeleteCustomOption, ...rendered };
+  return { onSave, onDeleteCustomOption, onAddCustomOption, ...rendered };
 }
 
 function group(name: string) {
@@ -297,7 +300,7 @@ describe("DayPlanner", () => {
 
     fireEvent.click(toggle("Primi"));
 
-    expect(group("Primi").getAllByRole("button")).toHaveLength(1);
+    expect(group("Primi").getAllByRole("button", { name: /^Delete/ })).toHaveLength(1);
   });
 
   it("shows the current saved pick as an extra selected entry", () => {
@@ -469,6 +472,94 @@ describe("DayPlanner", () => {
 
     expect(group("Primi").getAllByRole("radio")).toHaveLength(3);
     expect(radio("Primi", "Pasta 100 g").checked).toBe(true);
+  });
+
+  it("offers to add a custom option in every category", () => {
+    renderPlanner();
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(toggle("Contorni"));
+
+    expect(group("Primi").getByRole("button", { name: "Add custom option" })).toBeTruthy();
+    expect(group("Contorni").getByRole("button", { name: "Add custom option" })).toBeTruthy();
+  });
+
+  it("adds a custom option to the category and selects it", async () => {
+    const created: CustomOption = { id: 9, ...farroChoice };
+    const { onAddCustomOption, onSave } = renderPlanner({ choices: [pasta80] });
+    onAddCustomOption.mockResolvedValue(created);
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Add custom option" }));
+    expect(group("Primi").queryByRole("button", { name: "Add custom option" })).toBeNull();
+    fireEvent.change(group("Primi").getByLabelText("Name"), {
+      target: { value: "Pasta di farro" },
+    });
+    fireEvent.change(group("Primi").getByLabelText("Amount"), { target: { value: "70" } });
+    fireEvent.change(group("Primi").getByLabelText("Unit"), { target: { value: "g" } });
+    await act(async () => {
+      fireEvent.click(group("Primi").getByRole("button", { name: "Add" }));
+    });
+
+    expect(onAddCustomOption).toHaveBeenCalledWith({
+      meal: "Pranzo",
+      category: "Primi",
+      name: "Pasta di farro",
+      amount: 70,
+      unit: "g",
+    });
+    expect(group("Primi").queryByRole("form")).toBeNull();
+    expect(radio("Primi", "Pasta di farro 70 g").checked).toBe(true);
+
+    updatePlanner({ day: mondayWith({ custom_options: [created] }) });
+    expect(radio("Primi", "Pasta di farro 70 g Custom option").checked).toBe(true);
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([farroChoice]);
+  });
+
+  it("keeps the form open when adding fails", async () => {
+    const { onAddCustomOption } = renderPlanner();
+    onAddCustomOption.mockRejectedValue(new Error("conflict"));
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Add custom option" }));
+    fireEvent.change(group("Primi").getByLabelText("Name"), { target: { value: "Pasta" } });
+    fireEvent.change(group("Primi").getByLabelText("Amount"), { target: { value: "80" } });
+    fireEvent.change(group("Primi").getByLabelText("Unit"), { target: { value: "g" } });
+    await act(async () => {
+      fireEvent.click(group("Primi").getByRole("button", { name: "Add" }));
+    });
+
+    expect(group("Primi").getByRole("form", { name: "Add custom option" })).toBeTruthy();
+    expect(saveButton().disabled).toBe(true);
+  });
+
+  it("shows one form at a time between editing and adding", () => {
+    renderPlanner({ choices: [pasta80] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Add custom option" }));
+
+    expect(group("Primi").getAllByRole("form")).toHaveLength(1);
+    expect(group("Primi").getByRole("form", { name: "Add custom option" })).toBeTruthy();
+
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    expect(group("Primi").getAllByRole("form")).toHaveLength(1);
+    expect(group("Primi").getByRole("form", { name: "Edit selection" })).toBeTruthy();
+    expect(group("Primi").getByRole("button", { name: "Add custom option" })).toBeTruthy();
+  });
+
+  it("closes the add form on cancel", () => {
+    renderPlanner();
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Add custom option" }));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Cancel" }));
+
+    expect(group("Primi").queryByRole("form")).toBeNull();
+    expect(group("Primi").getByRole("button", { name: "Add custom option" })).toBeTruthy();
   });
 
   it("uses the current locale for the button", () => {

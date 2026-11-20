@@ -73,6 +73,7 @@ function renderDrawer(initial: Partial<DrawerProps> = {}) {
     saving: false,
     onClose,
     onDeleteCustomOption,
+    onAddCustomOption: vi.fn(),
     ...initial,
   };
   const rendered = render(<DayPlannerDrawer {...props} />);

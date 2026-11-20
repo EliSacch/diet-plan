@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useState } from "react";
 
 import { t } from "../i18n";
+import type { CustomOption, CustomOptionInput } from "../types/custom-option";
 import type {
   CustomOptionValues,
   DayChoice,
@@ -10,6 +11,7 @@ import type {
 } from "../types/day";
 import { optionLabel } from "../utils/plan";
 import Button from "./Button";
+import CustomOptionForm from "./CustomOptionForm";
 import PickEditor from "./PickEditor";
 
 import "./DayPlanner.css";
@@ -22,6 +24,7 @@ type DayPlannerProps = {
   saving: boolean;
   onDirtyChange?: (dirty: boolean) => void;
   onDeleteCustomOption: (option: CustomOptionValues) => void;
+  onAddCustomOption: (option: CustomOptionInput) => Promise<CustomOption>;
 };
 
 function slotKey(meal: string, category: string) {
@@ -109,6 +112,21 @@ function TrashIcon() {
   );
 }
 
+function PlusIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
 // Saved picks whose slot is no longer in the plan are sent back so a save doesn't drop them.
 function orderedChoices(day: DayOptions, picks: Map<string, DayChoice>) {
   const rest = new Map(picks);
@@ -133,11 +151,13 @@ export default function DayPlanner({
   saving,
   onDirtyChange,
   onDeleteCustomOption,
+  onAddCustomOption,
 }: DayPlannerProps) {
   const baseId = useId();
   const [picks, setPicks] = useState(() => toPicks(choices));
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [editing, setEditing] = useState<string | null>(null);
+  const [adding, setAdding] = useState<string | null>(null);
   const saved = useMemo(() => toPicks(choices), [choices]);
   const dirty = !samePicks(picks, saved);
 
@@ -264,14 +284,44 @@ export default function DayPlanner({
                       onCancel={() => setEditing(null)}
                     />
                   ) : null}
+                  {adding === key ? (
+                    <CustomOptionForm
+                      onSubmit={async (values) => {
+                        const created = await onAddCustomOption({
+                          meal: meal.meal,
+                          category: category.category,
+                          ...values,
+                        });
+                        choose(created);
+                        setAdding(null);
+                      }}
+                      onCancel={() => setAdding(null)}
+                    />
+                  ) : null}
                   {pick !== undefined && editing !== key ? (
                     <button
                       type="button"
                       className="day-planner-edit"
-                      onClick={() => setEditing(key)}
+                      onClick={() => {
+                        setEditing(key);
+                        setAdding(null);
+                      }}
                     >
                       <PencilIcon />
                       <span>{t("EDIT_PICK")}</span>
+                    </button>
+                  ) : null}
+                  {adding !== key ? (
+                    <button
+                      type="button"
+                      className="day-planner-edit"
+                      onClick={() => {
+                        setAdding(key);
+                        setEditing(null);
+                      }}
+                    >
+                      <PlusIcon />
+                      <span>{t("ADD_CUSTOM_OPTION")}</span>
                     </button>
                   ) : null}
                 </div>

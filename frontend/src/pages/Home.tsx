@@ -1,13 +1,15 @@
 import { useState } from "react";
 
+import { isAxiosError } from "axios";
 import { useSearchParams } from "react-router-dom";
 
 import { dietPlanErrorMessage, useActiveDietPlan } from "../hooks/useActiveDietPlan";
-import { useDeleteCustomOption } from "../hooks/useCustomOptions";
+import { useCreateCustomOption, useDeleteCustomOption } from "../hooks/useCustomOptions";
 import { useDay, useDayOptions, useSaveDay } from "../hooks/useDay";
 import { useToast } from "../hooks/useToast";
 import { t } from "../i18n";
 import PageLayout from "../layouts/PageLayout";
+import type { CustomOptionInput } from "../types/custom-option";
 import type { DayChoice } from "../types/day";
 import type { PlanDocument } from "../types/diet-plan";
 import { addDays, parseIsoDate, todayIso, toIsoDate, weekdayIndex } from "../utils/date";
@@ -42,6 +44,7 @@ function HomeDay({
   const day = useDay(selectedDate);
   const save = useSaveDay(selectedDate);
   const deleteCustomOption = useDeleteCustomOption();
+  const createCustomOption = useCreateCustomOption();
   const showToast = useToast();
   const [plannerOpen, setPlannerOpen] = useState(false);
   const options = useDayOptions(selectedDate, { enabled: plannerOpen });
@@ -63,6 +66,21 @@ function HomeDay({
       onSuccess: () => showToast({ message: t("CUSTOM_OPTION_DELETED") }),
       onError: (error) => showToast({ message: dietPlanErrorMessage(error), variant: "error" }),
     });
+  }
+
+  async function onAddCustomOption(option: CustomOptionInput) {
+    try {
+      const created = await createCustomOption.mutateAsync(option);
+      showToast({ message: t("CUSTOM_OPTION_ADDED") });
+      return created;
+    } catch (error) {
+      const message =
+        isAxiosError(error) && error.response?.status === 409
+          ? t("CUSTOM_OPTION_EXISTS")
+          : dietPlanErrorMessage(error);
+      showToast({ message, variant: "error" });
+      throw error;
+    }
   }
 
   let plannerError = null;
@@ -102,6 +120,7 @@ function HomeDay({
         saving={save.isPending}
         onClose={() => setPlannerOpen(false)}
         onDeleteCustomOption={onDeleteCustomOption}
+        onAddCustomOption={onAddCustomOption}
       />
     </div>
   );
