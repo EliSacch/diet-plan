@@ -622,6 +622,51 @@ describe("Home", () => {
     expect(within(drawer).getByRole("radio", { name: "Salmone 120 g Custom option" })).toBeTruthy();
   });
 
+  it("saves a multi-select preference from the planner switch", async () => {
+    mockGet();
+    const put = vi
+      .spyOn(api, "put")
+      .mockResolvedValue(axiosResponse({ category: "Primi", multi_select: true }));
+
+    renderHome("/?date=2026-11-16");
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(
+      await within(drawer).findByRole("switch", {
+        name: `${en.labels.ALLOW_MULTIPLE_CHOICES}: Primi`,
+      }),
+    );
+
+    await waitFor(() =>
+      expect(put).toHaveBeenCalledWith("/api/category-preferences", {
+        category: "Primi",
+        multi_select: true,
+      }),
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("shows an error toast when saving a multi-select preference fails", async () => {
+    mockGet();
+    vi.spyOn(api, "put").mockRejectedValue(axiosFailure(422, { code: "VALIDATION_ERROR" }));
+
+    renderHome("/?date=2026-11-16");
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(
+      await within(drawer).findByRole("switch", {
+        name: `${en.labels.ALLOW_MULTIPLE_CHOICES}: Primi`,
+      }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveProperty(
+      "textContent",
+      en.errors.VALIDATION_ERROR,
+    );
+  });
+
   it("shows a message in the planner when the plan has no options for the day", async () => {
     mockGet({ options: () => Promise.reject(axiosFailure(404, { code: "NOT_FOUND" })) });
 

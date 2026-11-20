@@ -471,6 +471,112 @@ describe("DayPlanner", () => {
     ]);
   });
 
+  it("edits one of several picks from its row", () => {
+    const riso: DayChoice = {
+      meal: "Pranzo",
+      category: "Primi",
+      name: "Riso",
+      amount: 70,
+      unit: "g",
+    };
+    const { onSave } = renderPlanner({
+      day: mondayWith({ multi_select: true }),
+      choices: [pasta80, riso],
+    });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection Pasta 80 g" }));
+    fireEvent.change(group("Primi").getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: "90" },
+    });
+    fireEvent.click(group("Primi").getByRole("button", { name: "Apply" }));
+
+    expect(option("Primi", "Pasta 90 g").checked).toBe(true);
+    expect(option("Primi", "Riso 70 g").checked).toBe(true);
+    expect(group("Primi").queryByRole("button", { name: "Edit selection" })).toBeNull();
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([{ ...pasta80, amount: 90 }, riso]);
+  });
+
+  it("keeps the pick when adding a custom option that matches it", async () => {
+    const { onAddCustomOption, onSave } = renderPlanner({
+      day: mondayWith({ multi_select: true }),
+      choices: [pasta80],
+    });
+    onAddCustomOption.mockResolvedValue({ id: 9, ...pasta80 });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Add custom option" }));
+    fireEvent.change(group("Primi").getByLabelText("Name"), { target: { value: "Pasta" } });
+    fireEvent.change(group("Primi").getByLabelText("Amount"), { target: { value: "80" } });
+    fireEvent.change(group("Primi").getByLabelText("Unit"), { target: { value: "g" } });
+    await act(async () => {
+      fireEvent.click(group("Primi").getByRole("button", { name: "Add" }));
+    });
+
+    expect(option("Primi", "Pasta 80 g").checked).toBe(true);
+    expect(saveButton().disabled).toBe(true);
+    fireEvent.click(saveButton());
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("adds a custom option alongside the current picks when multi-select is on", async () => {
+    const created: CustomOption = { id: 9, ...farroChoice };
+    const { onAddCustomOption, onSave } = renderPlanner({
+      day: mondayWith({ multi_select: true }),
+      choices: [pasta80],
+    });
+    onAddCustomOption.mockResolvedValue(created);
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Add custom option" }));
+    fireEvent.change(group("Primi").getByLabelText("Name"), {
+      target: { value: "Pasta di farro" },
+    });
+    fireEvent.change(group("Primi").getByLabelText("Amount"), { target: { value: "70" } });
+    fireEvent.change(group("Primi").getByLabelText("Unit"), { target: { value: "g" } });
+    await act(async () => {
+      fireEvent.click(group("Primi").getByRole("button", { name: "Add" }));
+    });
+
+    expect(option("Primi", "Pasta 80 g").checked).toBe(true);
+    expect(option("Primi", "Pasta di farro 70 g").checked).toBe(true);
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([pasta80, farroChoice]);
+  });
+
+  it("drops a pick when an edit matches another selected option", () => {
+    const riso: DayChoice = {
+      meal: "Pranzo",
+      category: "Primi",
+      name: "Riso",
+      amount: 70,
+      unit: "g",
+    };
+    const { onSave } = renderPlanner({
+      day: mondayWith({ multi_select: true }),
+      choices: [pasta80, riso],
+    });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection Pasta 80 g" }));
+    fireEvent.change(group("Primi").getByRole("textbox", { name: "Name" }), {
+      target: { value: "Riso" },
+    });
+    fireEvent.change(group("Primi").getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: "70" },
+    });
+    fireEvent.click(group("Primi").getByRole("button", { name: "Apply" }));
+
+    expect(option("Primi", "Riso 70 g").checked).toBe(true);
+    expect(option("Primi", "Pasta 80 g").checked).toBe(false);
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([riso]);
+  });
+
   it("labels custom options in the current locale", () => {
     setLocale("it");
     renderPlanner({ day: mondayWith({ custom_options: [farro] }) });
