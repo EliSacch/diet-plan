@@ -75,7 +75,6 @@ The requirements above are the bar. These files do not meet them yet. A change t
 | Toasts disappear after 5 seconds, and errors are nested in a polite live region | `src/components/Toast.tsx`, `src/context/ToastContext.tsx`                                   |
 | Invalid fields are not focused on submit                                        | `src/components/CustomOptionForm.tsx`, `src/components/PickEditor.tsx`                       |
 | The amount unit is not associated with the field                                | `src/components/PickEditor.tsx`                                                              |
-| The switch name omits the visible word “Multiple”                               | `src/components/DayPlanner.tsx`                                                              |
 | The current nav item is color alone below 768px                                 | `src/components/NavBar.css`                                                                  |
 | Every route shares the title DietPlan                                           | `index.html`, `src/routes/`                                                                  |
 | Sticky headings and the save bar can cover focus                                | `src/styles/plan-sections.css`, `src/components/DayPlanner.css`, `src/components/Drawer.css` |

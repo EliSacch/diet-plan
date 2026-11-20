@@ -4,7 +4,6 @@ import { isAxiosError } from "axios";
 import { useSearchParams } from "react-router-dom";
 
 import { dietPlanErrorMessage, useActiveDietPlan } from "../hooks/useActiveDietPlan";
-import { useSetCategoryPreference } from "../hooks/useCategoryPreferences";
 import { useCreateCustomOption, useDeleteCustomOption } from "../hooks/useCustomOptions";
 import { useDay, useDayOptions, useSaveDay } from "../hooks/useDay";
 import { useToast } from "../hooks/useToast";
@@ -46,7 +45,6 @@ function HomeDay({
   const save = useSaveDay(selectedDate);
   const deleteCustomOption = useDeleteCustomOption();
   const createCustomOption = useCreateCustomOption();
-  const setCategoryPreference = useSetCategoryPreference();
   const showToast = useToast();
   const [plannerOpen, setPlannerOpen] = useState(false);
   const options = useDayOptions(selectedDate, { enabled: plannerOpen });
@@ -83,15 +81,6 @@ function HomeDay({
       showToast({ message, variant: "error" });
       throw error;
     }
-  }
-
-  function onMultiSelectChange(category: string, multiSelect: boolean) {
-    setCategoryPreference.mutate(
-      { category, multi_select: multiSelect },
-      {
-        onError: (error) => showToast({ message: dietPlanErrorMessage(error), variant: "error" }),
-      },
-    );
   }
 
   let plannerError = null;
@@ -132,7 +121,6 @@ function HomeDay({
         onClose={() => setPlannerOpen(false)}
         onDeleteCustomOption={onDeleteCustomOption}
         onAddCustomOption={onAddCustomOption}
-        onMultiSelectChange={onMultiSelectChange}
       />
     </div>
   );

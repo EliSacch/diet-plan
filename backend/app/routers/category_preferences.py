@@ -1,10 +1,25 @@
 from fastapi import APIRouter
 
 from app.auth.deps import CurrentUser, DbSession
-from app.category_preferences.service import set_category_preference
+from app.category_preferences.service import (
+    list_category_preferences,
+    set_category_preference,
+)
 from app.schemas.category_preference import CategoryPreference
 
 router = APIRouter(prefix="/api", tags=["category-preferences"])
+
+
+@router.get("/category-preferences", response_model=list[CategoryPreference])
+def get_category_preferences(
+    user: CurrentUser, db: DbSession
+) -> list[CategoryPreference]:
+    """List categories that allow more than one choice.
+
+    A category that is not listed allows one choice. The setting is per
+    category name and applies to every meal on every day.
+    """
+    return list_category_preferences(db, user.id)
 
 
 @router.put("/category-preferences", response_model=CategoryPreference)

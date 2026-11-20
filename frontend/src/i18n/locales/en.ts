@@ -60,6 +60,7 @@ export const en = {
     PAGE_NOT_FOUND: "Page not found",
     PAGE_NOT_FOUND_MESSAGE: "This page doesn't exist.",
     PLAN: "My plan",
+    PLAN_OPTIONS: "Plan options",
     PLAN_THIS_DAY: "Plan this day",
     PREVIOUS_DAY: "Previous day",
     PROFILE: "Profile",

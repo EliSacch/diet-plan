@@ -62,6 +62,7 @@ export const it = {
     PAGE_NOT_FOUND: "Pagina non trovata",
     PAGE_NOT_FOUND_MESSAGE: "Questa pagina non esiste.",
     PLAN: "Il mio piano",
+    PLAN_OPTIONS: "Opzioni del piano",
     PLAN_THIS_DAY: "Pianifica questo giorno",
     PREVIOUS_DAY: "Giorno precedente",
     PROFILE: "Profilo",
