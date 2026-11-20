@@ -11,15 +11,23 @@ import Button from "./Button";
 
 import "./ConfirmModal.css";
 
+type ConfirmModalVariant = "primary" | "danger";
+
 type ConfirmModalProps = {
   open: boolean;
   title: string;
   children: ReactNode;
   confirmLabel: string;
   cancelLabel: string;
+  variant?: ConfirmModalVariant;
   onConfirm: () => void;
   onCancel: () => void;
 };
+
+const buttonVariants = {
+  primary: { confirm: "primary", cancel: "secondary" },
+  danger: { confirm: "danger", cancel: "danger-secondary" },
+} as const;
 
 export default function ConfirmModal({
   open,
@@ -27,12 +35,14 @@ export default function ConfirmModal({
   children,
   confirmLabel,
   cancelLabel,
+  variant = "primary",
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const messageId = useId();
+  const buttons = buttonVariants[variant];
 
   useEffect(() => {
     const dialog = dialogRef.current as HTMLDialogElement;
@@ -71,10 +81,12 @@ export default function ConfirmModal({
           {children}
         </div>
         <div className="confirm-modal-actions">
-          <Button variant="secondary" onClick={onCancel}>
+          <Button variant={buttons.cancel} onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button onClick={onConfirm}>{confirmLabel}</Button>
+          <Button variant={buttons.confirm} onClick={onConfirm}>
+            {confirmLabel}
+          </Button>
         </div>
       </div>
     </dialog>

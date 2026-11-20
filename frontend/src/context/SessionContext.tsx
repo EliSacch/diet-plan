@@ -9,8 +9,7 @@ import { useToast } from "../hooks/useToast";
 import { messageForProblem, t } from "../i18n";
 import type { Problem } from "../types/problem";
 import type { Profile } from "../types/profile";
-
-const profileQueryKey = ["profile"] as const;
+import { profileQueryKey } from "../api/queryKeys";
 
 export type Session =
   | { status: "loading" }

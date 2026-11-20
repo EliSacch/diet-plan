@@ -6,6 +6,7 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
 from app.auth.cookies import OAUTH_STATE_COOKIE
+from app.auth.service import touch_session
 from app.core.config import settings
 from app.core.exceptions import AppError
 from app.db.session import get_db
@@ -31,6 +32,7 @@ def get_current_user(request: Request, db: DbSession) -> User:
     user = db.get(User, session.user_id)
     if user is None:
         raise AppError(401, "unauthorized", "Sign in required")
+    touch_session(db, session)
     return user
 
 
