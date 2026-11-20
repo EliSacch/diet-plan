@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        check: [format, coverage]
+        check: [format, coverage, lint]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -50,6 +50,9 @@ jobs:
       - name: Check formatting
         if: matrix.check == 'format'
         run: yarn format --check
+      - name: Check accessibility lint
+        if: matrix.check == 'lint'
+        run: yarn lint
       - name: Run tests with coverage
         if: matrix.check == 'coverage'
         run: yarn vitest run --coverage

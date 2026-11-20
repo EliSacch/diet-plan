@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import { createRoot } from "react-dom/client";
 
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { setLocale } from "../i18n";
@@ -93,6 +94,118 @@ describe("Drawer", () => {
     fireEvent.click(backdrop);
 
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("keeps Tab inside the dialog and restores focus on close", () => {
+    const opener = document.createElement("button");
+    opener.type = "button";
+    opener.textContent = "Open";
+    document.body.appendChild(opener);
+    opener.focus();
+
+    const { unmount, container } = render(
+      <>
+        <button type="button">Outside</button>
+        <Drawer open title="Details" onClose={vi.fn()}>
+          <button type="button">Inside</button>
+        </Drawer>
+        <dialog>Confirm</dialog>
+      </>,
+    );
+
+    const close = screen.getByRole("button", { name: "Close" });
+    const inside = screen.getByRole("button", { name: "Inside" });
+    const outside = container.querySelector("button");
+    expect(document.activeElement).toBe(close);
+    expect(outside?.textContent).toBe("Outside");
+    expect(outside?.hasAttribute("inert")).toBe(true);
+    expect(document.querySelector("dialog")?.hasAttribute("inert")).toBe(false);
+
+    inside.focus();
+    const leave = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    inside.dispatchEvent(leave);
+    expect(leave.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(close);
+
+    const reenter = new KeyboardEvent("keydown", {
+      key: "Tab",
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    close.dispatchEvent(reenter);
+    expect(reenter.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(inside);
+
+    unmount();
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
+
+  it("tabs through one radio in each group and skips hidden or disabled controls", () => {
+    render(
+      <>
+        <button type="button">Outside</button>
+        <Drawer open title="Details" onClose={vi.fn()}>
+          <button type="button" hidden>
+            Hidden
+          </button>
+          <button type="button" tabIndex={-1}>
+            Skipped
+          </button>
+          <button type="button" disabled>
+            Disabled
+          </button>
+          <input aria-label="Note" />
+          <input type="radio" aria-label="Nameless" />
+          <input type="radio" name="a" aria-label="A on" defaultChecked />
+          <input type="radio" name="a" aria-label="A off" />
+          <input type="radio" name="b" aria-label="B first" />
+          <input type="radio" name="b" aria-label="B second" />
+          <input type="radio" name="c" aria-label="C disabled" disabled />
+          <input type="radio" name="c" aria-label="C enabled" />
+          <span hidden>
+            <input type="radio" name="d" aria-label="D hidden" />
+          </span>
+          <input type="radio" name="d" aria-label="D shown" />
+          <input type="radio" name="e" aria-label="E skipped" tabIndex={-1} />
+          <input type="radio" name="e" aria-label="E shown" />
+        </Drawer>
+      </>,
+    );
+
+    const outside = screen.getByRole("button", { name: "Outside" });
+    const ignored = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    outside.dispatchEvent(ignored);
+    expect(ignored.defaultPrevented).toBe(false);
+
+    const close = screen.getByRole("button", { name: "Close" });
+    close.focus();
+    const stay = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    close.dispatchEvent(stay);
+    expect(stay.defaultPrevented).toBe(false);
+
+    const last = screen.getByRole("radio", { name: "E shown" });
+    last.focus();
+    const wrap = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    last.dispatchEvent(wrap);
+    expect(wrap.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(close);
+  });
+
+  it("stops marking ancestors inert when the drawer is not in the document", () => {
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    act(() => {
+      root.render(
+        <Drawer open title="Details" onClose={vi.fn()}>
+          <p>Body</p>
+        </Drawer>,
+      );
+    });
+
+    expect(host.querySelector("[role='dialog']")).toBeTruthy();
+    act(() => root.unmount());
   });
 
   it("uses the current locale for the close button", () => {

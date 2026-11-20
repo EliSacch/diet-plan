@@ -25,7 +25,6 @@ type DayPlannerProps = {
   onDirtyChange?: (dirty: boolean) => void;
   onDeleteCustomOption: (option: CustomOptionValues) => void;
   onAddCustomOption: (option: CustomOptionInput) => Promise<CustomOption>;
-  onMultiSelectChange?: (category: string, multiSelect: boolean) => void;
 };
 
 type Editing = { key: string; target: OptionValues };
@@ -163,7 +162,6 @@ export default function DayPlanner({
   onDirtyChange,
   onDeleteCustomOption,
   onAddCustomOption,
-  onMultiSelectChange,
 }: DayPlannerProps) {
   const baseId = useId();
   const [picks, setPicks] = useState(() => toPicks(choices));
@@ -301,18 +299,6 @@ export default function DayPlanner({
                       <path d="m6 9 6 6 6-6" />
                     </svg>
                   </button>
-                  <label className="day-planner-multi" title={t("ALLOW_MULTIPLE_CHOICES")}>
-                    <input
-                      type="checkbox"
-                      role="switch"
-                      checked={multi}
-                      aria-label={`${t("ALLOW_MULTIPLE_CHOICES")}: ${category.category}`}
-                      onChange={(event) =>
-                        onMultiSelectChange?.(category.category, event.target.checked)
-                      }
-                    />
-                    <span aria-hidden="true">{t("MULTIPLE")}</span>
-                  </label>
                 </h3>
                 <div
                   id={groupId}

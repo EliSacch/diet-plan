@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../api/client";
 import { axiosFailure, axiosResponse } from "../test/http";
 import type { DayOptions } from "../types/day";
-import { useSetCategoryPreference } from "./useCategoryPreferences";
+import { categoryPreferencesQueryKey, useSetCategoryPreference } from "./useCategoryPreferences";
 import { dayOptionsQueryOptions, dayQueryOptions } from "./useDay";
 
 const options: DayOptions = {
@@ -80,9 +80,47 @@ describe("useSetCategoryPreference", () => {
       ],
     });
     expect(client.getQueryData(dayOptionsQueryOptions("2026-11-17").queryKey)).toBeNull();
+    expect(client.getQueryData(categoryPreferencesQueryKey)).toEqual([preference]);
+  });
+
+  it("removes a category from the preferences cache when multiple choices are turned off", async () => {
+    const preference = { category: "Contorni", multi_select: false };
+    vi.spyOn(api, "put").mockResolvedValue(axiosResponse(preference));
+
+    const { client, result } = renderWithClient(() => useSetCategoryPreference());
+    client.setQueryData(categoryPreferencesQueryKey, [
+      { category: "Primi", multi_select: true },
+      { category: "Contorni", multi_select: true },
+    ]);
+
+    await act(async () => {
+      await expect(result.current.mutateAsync(preference)).resolves.toEqual(preference);
+    });
+
+    expect(client.getQueryData(categoryPreferencesQueryKey)).toEqual([
+      { category: "Primi", multi_select: true },
+    ]);
   });
 
   it("rolls the cache back when saving fails", async () => {
+    vi.spyOn(api, "put").mockRejectedValue(axiosFailure(422, { code: "VALIDATION_ERROR" }));
+
+    const { client, result } = renderWithClient(() => useSetCategoryPreference());
+    client.setQueryData(categoryPreferencesQueryKey, [{ category: "Primi", multi_select: true }]);
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({ category: "Contorni", multi_select: true }),
+      ).rejects.toBeInstanceOf(AxiosError);
+    });
+
+    expect(client.getQueryData(dayOptionsQueryOptions("2026-11-16").queryKey)).toEqual(options);
+    expect(client.getQueryData(dayOptionsQueryOptions("2026-11-17").queryKey)).toBeNull();
+    expect(client.getQueryData(categoryPreferencesQueryKey)).toEqual([
+      { category: "Primi", multi_select: true },
+    ]);
+  });
+
+  it("drops an optimistic preferences list when saving fails before one was loaded", async () => {
     vi.spyOn(api, "put").mockRejectedValue(axiosFailure(422, { code: "VALIDATION_ERROR" }));
 
     const { client, result } = renderWithClient(() => useSetCategoryPreference());
@@ -92,8 +130,7 @@ describe("useSetCategoryPreference", () => {
       ).rejects.toBeInstanceOf(AxiosError);
     });
 
-    expect(client.getQueryData(dayOptionsQueryOptions("2026-11-16").queryKey)).toEqual(options);
-    expect(client.getQueryData(dayOptionsQueryOptions("2026-11-17").queryKey)).toBeNull();
+    expect(client.getQueryData(categoryPreferencesQueryKey)).toBeUndefined();
   });
 
   it("ignores a missing mutation context when the optimistic update fails", async () => {
@@ -107,5 +144,6 @@ describe("useSetCategoryPreference", () => {
     });
 
     expect(client.getQueryData(dayOptionsQueryOptions("2026-11-16").queryKey)).toEqual(options);
+    expect(client.getQueryData(categoryPreferencesQueryKey)).toBeUndefined();
   });
 });

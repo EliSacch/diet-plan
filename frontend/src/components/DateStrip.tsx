@@ -78,7 +78,8 @@ export default function DateStrip({
     if (button === null) {
       return;
     }
-    const behavior = hasMountedRef.current ? "smooth" : "instant";
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+    const behavior = hasMountedRef.current && !reduceMotion ? "smooth" : "instant";
     hasMountedRef.current = true;
     button.scrollIntoView({ behavior, inline: "center", block: "nearest" });
   }, [value]);
@@ -120,6 +121,8 @@ export default function DateStrip({
         >
           <Chevron path="m15 6-6 6 6 6" />
         </button>
+        {/* Arrow keys move inside the group. Enter or Space selects the focused day. */}
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
         <div
           className="date-strip-days"
           role="group"

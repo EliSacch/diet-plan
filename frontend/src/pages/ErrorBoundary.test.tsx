@@ -47,7 +47,7 @@ describe("ErrorBoundary", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: en.labels.SOMETHING_WENT_WRONG, level: 2 }),
+      screen.getByRole("heading", { name: en.labels.SOMETHING_WENT_WRONG, level: 1 }),
     ).toBeTruthy();
 
     fail = false;

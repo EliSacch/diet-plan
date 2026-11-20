@@ -15,6 +15,32 @@ from tests.test_days import (
 )
 
 
+def test_lists_categories_that_allow_multiple_choices(client: TestClient) -> None:
+    _signed_in_with_plan(client)
+
+    assert client.get("/api/category-preferences").json() == []
+
+    assert (
+        client.put(
+            "/api/category-preferences",
+            json={"category": "Contorni", "multi_select": True},
+        ).status_code
+        == 200
+    )
+    assert (
+        client.put(
+            "/api/category-preferences",
+            json={"category": "Primi", "multi_select": True},
+        ).status_code
+        == 200
+    )
+
+    assert client.get("/api/category-preferences").json() == [
+        {"category": "Contorni", "multi_select": True},
+        {"category": "Primi", "multi_select": True},
+    ]
+
+
 def test_multi_select_defaults_to_off(client: TestClient) -> None:
     _signed_in_with_plan(client)
 

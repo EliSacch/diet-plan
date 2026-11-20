@@ -211,7 +211,8 @@ describe("Home", () => {
     renderHome();
 
     expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "DietPlan", level: 1 })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: en.labels.HOME, level: 1 })).toBeTruthy();
+    expect(document.title).toBe(`${en.labels.HOME} · Diet Plan`);
     expect(screen.getByText(en.labels.WELCOME_UPLOAD_MEAL_PLAN)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Next day" })).toBeNull();
     expect(get).not.toHaveBeenCalledWith(
@@ -242,7 +243,7 @@ describe("Home", () => {
     renderHome();
 
     expect(await screen.findByText("Pasta 80 g")).toBeTruthy();
-    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.getByRole("heading", { name: en.labels.HOME, level: 1 })).toBeTruthy();
     expect(pressedDay()).toBe("Thursday, November 19");
     expect(screen.getByRole("heading", { level: 2, name: "Pranzo" })).toBeTruthy();
     expect(screen.queryByText("Primi")).toBeNull();
@@ -373,10 +374,11 @@ describe("Home", () => {
     fireEvent.click(within(mondayDrawer).getByRole("radio", { name: "Pasta 80 g" }));
     fireEvent.click(within(mondayDrawer).getByRole("button", { name: "Save" }));
 
-    expect(await screen.findByRole("alert")).toHaveProperty(
-      "textContent",
-      en.errors.VALIDATION_ERROR,
-    );
+    expect(
+      (await screen.findByText(en.errors.VALIDATION_ERROR))
+        .closest("[data-variant]")
+        ?.getAttribute("data-variant"),
+    ).toBe("error");
     expect(
       within(mondayDrawer).getByRole<HTMLInputElement>("radio", { name: "Pasta 80 g" }).checked,
     ).toBe(true);
@@ -553,7 +555,9 @@ describe("Home", () => {
     });
     fireEvent.click(within(drawer).getByRole("button", { name: en.labels.ADD }));
 
-    expect(await screen.findByRole("alert")).toHaveProperty("textContent", message);
+    expect(
+      (await screen.findByText(message)).closest("[data-variant]")?.getAttribute("data-variant"),
+    ).toBe("error");
     expect(within(drawer).getByRole("form", { name: en.labels.ADD_CUSTOM_OPTION })).toBeTruthy();
     await waitFor(() =>
       expect(
@@ -618,53 +622,12 @@ describe("Home", () => {
       ),
     );
 
-    expect(await screen.findByRole("alert")).toHaveProperty("textContent", en.errors.NOT_FOUND);
+    expect(
+      (await screen.findByText(en.errors.NOT_FOUND))
+        .closest("[data-variant]")
+        ?.getAttribute("data-variant"),
+    ).toBe("error");
     expect(within(drawer).getByRole("radio", { name: "Salmone 120 g Custom option" })).toBeTruthy();
-  });
-
-  it("saves a multi-select preference from the planner switch", async () => {
-    mockGet();
-    const put = vi
-      .spyOn(api, "put")
-      .mockResolvedValue(axiosResponse({ category: "Primi", multi_select: true }));
-
-    renderHome("/?date=2026-11-16");
-    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
-
-    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
-    fireEvent.click(
-      await within(drawer).findByRole("switch", {
-        name: `${en.labels.ALLOW_MULTIPLE_CHOICES}: Primi`,
-      }),
-    );
-
-    await waitFor(() =>
-      expect(put).toHaveBeenCalledWith("/api/category-preferences", {
-        category: "Primi",
-        multi_select: true,
-      }),
-    );
-    expect(screen.queryByRole("alert")).toBeNull();
-  });
-
-  it("shows an error toast when saving a multi-select preference fails", async () => {
-    mockGet();
-    vi.spyOn(api, "put").mockRejectedValue(axiosFailure(422, { code: "VALIDATION_ERROR" }));
-
-    renderHome("/?date=2026-11-16");
-    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
-
-    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
-    fireEvent.click(
-      await within(drawer).findByRole("switch", {
-        name: `${en.labels.ALLOW_MULTIPLE_CHOICES}: Primi`,
-      }),
-    );
-
-    expect(await screen.findByRole("alert")).toHaveProperty(
-      "textContent",
-      en.errors.VALIDATION_ERROR,
-    );
   });
 
   it("shows a message in the planner when the plan has no options for the day", async () => {

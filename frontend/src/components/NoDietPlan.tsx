@@ -7,7 +7,7 @@ import "./NoDietPlan.css";
 export default function NoDietPlan({ welcome = false }: { welcome?: boolean }) {
   return (
     <div className="no-diet-plan">
-      {welcome ? <Logo /> : null}
+      {welcome ? <Logo heading={false} /> : null}
       <p>{t(welcome ? "WELCOME_UPLOAD_MEAL_PLAN" : "NO_DIET_PLAN_YET")}</p>
       <UploadDietPlan />
     </div>

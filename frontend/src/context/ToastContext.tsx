@@ -25,19 +25,31 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }
 
+  const notices = toasts.filter((toast) => toast.variant !== "error");
+  const errors = toasts.filter((toast) => toast.variant === "error");
+
+  function renderToast(toast: ToastItem) {
+    return (
+      <Toast
+        key={toast.id}
+        message={toast.message}
+        variant={toast.variant}
+        onDismiss={() => dismiss(toast.id)}
+      />
+    );
+  }
+
   return (
     <ToastContext.Provider value={showToast}>
       {children}
-      <section className="toast-viewport" aria-label={t("NOTIFICATIONS")} aria-live="polite">
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            variant={toast.variant}
-            onDismiss={() => dismiss(toast.id)}
-          />
-        ))}
-      </section>
+      <div className="toast-viewport">
+        <section aria-label={t("NOTIFICATIONS")} aria-live="polite">
+          {notices.map(renderToast)}
+        </section>
+        <section aria-label={t("ERRORS")} aria-live="assertive">
+          {errors.map(renderToast)}
+        </section>
+      </div>
     </ToastContext.Provider>
   );
 }

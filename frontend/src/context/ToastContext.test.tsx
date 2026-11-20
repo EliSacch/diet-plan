@@ -7,6 +7,8 @@ import { ToastProvider } from "./ToastContext";
 
 import { TOAST_DURATION_MS } from "../components/Toast";
 
+import { en } from "../i18n/locales/en";
+
 function Trigger() {
   const showToast = useToast();
   return (
@@ -33,7 +35,10 @@ function renderProvider() {
       <Trigger />
     </ToastProvider>,
   );
-  return screen.getByRole("region", { name: "Notifications" });
+  return {
+    polite: screen.getByRole("region", { name: en.labels.NOTIFICATIONS }),
+    assertive: screen.getByRole("region", { name: en.labels.ERRORS }),
+  };
 }
 
 describe("ToastProvider", () => {
@@ -47,15 +52,17 @@ describe("ToastProvider", () => {
     vi.useRealTimers();
   });
 
-  it("renders an empty polite live region", () => {
-    const region = renderProvider();
+  it("renders an empty polite region and an empty assertive region", () => {
+    const { polite, assertive } = renderProvider();
 
-    expect(region.getAttribute("aria-live")).toBe("polite");
-    expect(region.childElementCount).toBe(0);
+    expect(polite.getAttribute("aria-live")).toBe("polite");
+    expect(assertive.getAttribute("aria-live")).toBe("assertive");
+    expect(polite.childElementCount).toBe(0);
+    expect(assertive.childElementCount).toBe(0);
   });
 
   it("stacks toasts of every variant, defaulting to success", () => {
-    const region = renderProvider();
+    const { polite, assertive } = renderProvider();
 
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     fireEvent.click(screen.getByRole("button", { name: "Fail" }));
@@ -63,58 +70,86 @@ describe("ToastProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Inform" }));
 
     expect(
-      Array.from(region.children, (toast) => [
+      Array.from(polite.children, (toast) => [
         toast.textContent,
         toast.getAttribute("data-variant"),
       ]),
     ).toEqual([
       ["Saved", "success"],
-      ["Failed", "error"],
       ["Careful", "warning"],
       ["Heads up", "info"],
     ]);
-  });
-
-  it("announces only error toasts as alerts", () => {
-    renderProvider();
-
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    fireEvent.click(screen.getByRole("button", { name: "Warn" }));
-    fireEvent.click(screen.getByRole("button", { name: "Fail" }));
-
-    expect(screen.getAllByRole("alert").map((toast) => toast.textContent)).toEqual(["Failed"]);
+    expect(
+      within(assertive).getByText("Failed").closest("[data-variant]")?.getAttribute("data-variant"),
+    ).toBe("error");
+    expect(assertive.querySelector("[role='alert']")).toBeNull();
   });
 
   it("removes only the dismissed toast", () => {
-    const region = renderProvider();
+    const { polite, assertive } = renderProvider();
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     fireEvent.click(screen.getByRole("button", { name: "Fail" }));
 
-    fireEvent.click(within(region).getAllByRole("button", { name: "Dismiss" })[0] as HTMLElement);
+    fireEvent.click(within(polite).getByRole("button", { name: "Dismiss: Saved" }));
 
-    expect(within(region).queryByText("Saved")).toBeNull();
-    expect(within(region).getByText("Failed")).toBeTruthy();
+    expect(within(polite).queryByText("Saved")).toBeNull();
+    expect(within(assertive).getByText("Failed")).toBeTruthy();
   });
 
-  it("dismisses each toast on its own timer", () => {
-    const region = renderProvider();
+  it("dismisses a notice on its timer and keeps an error until dismissed", () => {
+    const { polite, assertive } = renderProvider();
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     act(() => {
       vi.advanceTimersByTime(TOAST_DURATION_MS - 1000);
     });
     fireEvent.click(screen.getByRole("button", { name: "Fail" }));
-    expect(region.childElementCount).toBe(2);
+    expect(polite.childElementCount).toBe(1);
+    expect(assertive.childElementCount).toBe(1);
 
     act(() => {
       vi.advanceTimersByTime(1000);
     });
-    expect(within(region).queryByText("Saved")).toBeNull();
-    expect(within(region).getByText("Failed")).toBeTruthy();
+    expect(within(polite).queryByText("Saved")).toBeNull();
+    expect(within(assertive).getByText("Failed")).toBeTruthy();
 
     act(() => {
       vi.advanceTimersByTime(TOAST_DURATION_MS);
     });
-    expect(region.childElementCount).toBe(0);
+    expect(assertive.childElementCount).toBe(1);
+
+    const error = within(assertive).getByText("Failed").closest(".toast") as HTMLElement;
+    fireEvent.pointerEnter(error);
+    fireEvent.pointerLeave(error);
+    expect(within(assertive).getByText("Failed")).toBeTruthy();
+  });
+
+  it("pauses a notice while the pointer or focus is on it", () => {
+    vi.setSystemTime(new Date("2026-11-20T00:00:00Z"));
+    const { polite } = renderProvider();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    const toast = within(polite).getByText("Saved").closest(".toast") as HTMLElement;
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    fireEvent.pointerEnter(toast);
+    fireEvent.focus(toast);
+    act(() => {
+      vi.advanceTimersByTime(TOAST_DURATION_MS);
+    });
+    expect(within(polite).getByText("Saved")).toBeTruthy();
+
+    fireEvent.pointerLeave(toast);
+    act(() => {
+      vi.advanceTimersByTime(TOAST_DURATION_MS);
+    });
+    expect(within(polite).getByText("Saved")).toBeTruthy();
+
+    fireEvent.blur(toast);
+    act(() => {
+      vi.advanceTimersByTime(TOAST_DURATION_MS - 2000);
+    });
+    expect(within(polite).queryByText("Saved")).toBeNull();
   });
 });

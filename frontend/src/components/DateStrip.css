@@ -109,7 +109,7 @@
   font-weight: 700;
   color: var(--text-h);
   background: color-mix(in srgb, var(--white) 4%, var(--black));
-  border: 2px solid color-mix(in srgb, var(--white) 14%, transparent);
+  border: 2px solid color-mix(in srgb, var(--white) 45%, var(--black));
   border-radius: 50%;
   transition:
     border-color 150ms ease,

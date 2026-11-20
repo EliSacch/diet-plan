@@ -1,8 +1,25 @@
 /* The heading offsets add up the heights of the sticky layers above them. */
+html:has(.plan-sections) {
+  scroll-padding-top: calc(
+    var(--nav-bar-height) + env(safe-area-inset-top) + (98px + 2 * var(--padding-sm)) + 44px +
+      (24px + 2 * var(--padding-xs))
+  );
+  scroll-padding-bottom: calc(40px + 2 * var(--padding-md) + 1px);
+}
+
+@media (max-width: 768px) {
+  html:has(.plan-sections) {
+    scroll-padding-bottom: calc(
+      var(--nav-bar-height) + env(safe-area-inset-bottom) + 40px + 2 * var(--padding-md) + 1px
+    );
+  }
+}
+
 .plan-sections {
   --sticky-top: var(--nav-bar-height);
   --day-picker-height: calc(62px + 2 * var(--padding-md));
   --meal-heading-height: 44px;
+  --category-heading-height: calc(24px + 2 * var(--padding-xs));
 
   align-self: stretch;
   display: flex;

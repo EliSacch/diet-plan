@@ -69,6 +69,7 @@ describe("CustomOptionForm", () => {
     add();
 
     expect(onSubmit).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(input("Name"));
     expect(screen.getByText(en.labels.NAME_REQUIRED)).toBeTruthy();
     expect(screen.getByText(en.labels.AMOUNT_INVALID)).toBeTruthy();
     expect(screen.getByText(en.labels.UNIT_TOO_LONG).id).toBe(
@@ -83,6 +84,12 @@ describe("CustomOptionForm", () => {
     expect(screen.queryByText(en.labels.NAME_REQUIRED)).toBeNull();
     expect(screen.queryByText(en.labels.AMOUNT_INVALID)).toBeNull();
     expect(screen.getByText(en.labels.UNIT_TOO_LONG)).toBeTruthy();
+    expect(document.activeElement).toBe(input("Unit"));
+
+    fill({ name: "Pasta", amount: "0", unit: "g" });
+    add();
+
+    expect(document.activeElement).toBe(input("Amount"));
 
     fill({ name: " ", unit: "g" });
     add();

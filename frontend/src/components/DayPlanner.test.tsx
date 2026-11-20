@@ -120,12 +120,6 @@ function radio(groupName: string, label: string) {
   return option(groupName, label);
 }
 
-function multiSwitch(category: string) {
-  return screen.getByRole<HTMLInputElement>("switch", {
-    name: `Allow multiple choices: ${category}`,
-  });
-}
-
 function toggle(category: string) {
   return screen.getByRole<HTMLButtonElement>("button", { name: new RegExp(`^${category}`) });
 }
@@ -385,13 +379,6 @@ describe("DayPlanner", () => {
     expect(onSave).toHaveBeenCalledWith([]);
   });
 
-  it("defaults the multi-select switch off", () => {
-    renderPlanner();
-
-    expect(multiSwitch("Primi").checked).toBe(false);
-    expect(multiSwitch("Contorni").checked).toBe(false);
-  });
-
   it("saves every chosen option when multi-select is on", () => {
     const { onSave } = renderPlanner({ day: mondayWith({ multi_select: true }) });
     const riso: DayChoice = {
@@ -438,16 +425,6 @@ describe("DayPlanner", () => {
 
     fireEvent.click(saveButton());
     expect(onSave).toHaveBeenCalledWith([{ ...pasta80, amount: 100 }]);
-  });
-
-  it("toggles the multi-select switch without enabling Save", () => {
-    const onMultiSelectChange = vi.fn();
-    renderPlanner({ onMultiSelectChange, choices: [pasta80] });
-
-    fireEvent.click(multiSwitch("Contorni"));
-
-    expect(onMultiSelectChange).toHaveBeenCalledWith("Contorni", true);
-    expect(saveButton().disabled).toBe(true);
   });
 
   it("deselects one of several checkbox picks", () => {

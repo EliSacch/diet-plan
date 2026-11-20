@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { t } from "../i18n";
 import ErrorPage from "./ErrorPage";
 
@@ -7,6 +8,7 @@ import Button from "../components/Button";
 
 export default function ServerError({ onRetry }: { onRetry: () => void }) {
   const navigate = useNavigate();
+  useDocumentTitle(t("SOMETHING_WENT_WRONG"));
 
   function goHome() {
     onRetry();

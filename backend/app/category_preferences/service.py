@@ -7,6 +7,18 @@ from app.models.category_preference import CategoryPreference as CategoryPrefere
 from app.schemas.category_preference import CategoryPreference
 
 
+def list_category_preferences(db: Session, user_id: int) -> list[CategoryPreference]:
+    categories = db.scalars(
+        select(CategoryPreferenceRow.category)
+        .where(CategoryPreferenceRow.user_id == user_id)
+        .order_by(CategoryPreferenceRow.category)
+    )
+    return [
+        CategoryPreference(category=category, multi_select=True)
+        for category in categories
+    ]
+
+
 def multi_select_categories(db: Session, user_id: int) -> set[str]:
     return set(
         db.scalars(
