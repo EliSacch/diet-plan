@@ -106,10 +106,10 @@ def upload_diet_plan(
     Each user can replace a plan at most 3 times per hour. The next request
     returns 429 with code RATE_LIMITED.
     A file that is not a readable diet plan returns 422 with code
-    VALIDATION_ERROR.
+    VALIDATION_ERROR. Failed uploads count toward the hourly limit.
     """
-    document = extract(file.file)
     diet_plan_posts.check(user.id)
+    document = extract(file.file)
     stored = replace_active_plan(
         db,
         user.id,

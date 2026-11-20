@@ -1,3 +1,4 @@
+from hmac import compare_digest
 from secrets import token_urlsafe
 from typing import Annotated
 
@@ -38,7 +39,7 @@ def google_callback(
     google: GoogleClient,
 ) -> RedirectResponse:
     saved = oauth_state(request)
-    if saved is None or saved != state:
+    if saved is None or not compare_digest(saved, state):
         raise AppError(
             400, "oauth_state_invalid", "Google sign-in could not be verified"
         )

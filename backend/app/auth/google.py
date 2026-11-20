@@ -70,6 +70,7 @@ class GoogleOAuth:
             or not isinstance(email, str)
             or not provider_user_id
             or not email
+            or profile.get("email_verified") is not True
         ):
             raise AppError(400, "oauth_failed", "Google sign-in failed")
         return GoogleProfile(provider_user_id=provider_user_id, email=email)

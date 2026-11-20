@@ -1,0 +1,38 @@
+---
+description: Auth, ownership, and security defaults for diet-plan
+alwaysApply: true
+---
+
+# Security
+
+Deny by default. The server is the authority; frontend route guards are UX only.
+
+## Access control
+
+- Data routes take `CurrentUser` from the session cookie. Never trust a client-supplied `user_id`.
+- Queries and mutations filter by session `user_id`. Another user’s id returns the same as missing (usually 404).
+- Every new user-owned resource gets a cross-user isolation test.
+
+## Auth and cookies
+
+- Sessions are server-side rows + HttpOnly cookies (`SameSite=Lax`; `Secure` via `COOKIE_SECURE`, else `not DEBUG`).
+- Do not store tokens in `localStorage` or `sessionStorage`.
+- OAuth redirect targets stay hardcoded (no open redirects). Account link key is Google `sub`.
+- Prefer requiring Google `email_verified` when reading userinfo.
+
+## Inputs and abuse
+
+- Cap request bodies and structural limits (Pydantic / existing diet limits).
+- Rate-limit expensive work **before** it runs (PDF parse, plan replace). Count failures toward the quota when the work is attacker-controlled.
+- No `dangerouslySetInnerHTML`, `eval`, `innerHTML`, shell, or user-controlled fetch URLs.
+
+## Secrets and supply chain
+
+- Secrets only via env / Render `sync: false`. Never commit `.env` or credentials.
+- Keep lockfile installs frozen (`uv sync --frozen`, `yarn install --frozen-lockfile`).
+- Pin GitHub Actions by commit SHA. Prefer digest pins for Docker base/`uv` images and a non-root `USER`.
+
+## Errors and logs
+
+- Unexpected errors return a generic body; do not leak stack traces to clients.
+- Log auth failures, OAuth state mismatches, 401s, and rate limits without secrets or tokens.

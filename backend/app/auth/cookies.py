@@ -12,7 +12,7 @@ def set_session_cookie(response: Response, session_id: str) -> None:
         value=session_id,
         max_age=settings.SESSION_TTL_SECONDS,
         httponly=True,
-        secure=not settings.DEBUG,
+        secure=settings.cookie_secure,
         samesite="lax",
         path="/",
     )
@@ -22,7 +22,7 @@ def clear_session_cookie(response: Response) -> None:
     response.delete_cookie(
         key=settings.SESSION_COOKIE_NAME,
         httponly=True,
-        secure=not settings.DEBUG,
+        secure=settings.cookie_secure,
         samesite="lax",
         path="/",
     )
@@ -34,7 +34,7 @@ def set_state_cookie(response: Response, state: str) -> None:
         value=state,
         max_age=OAUTH_STATE_MAX_AGE,
         httponly=True,
-        secure=not settings.DEBUG,
+        secure=settings.cookie_secure,
         samesite="lax",
         path="/auth/google/callback",
     )
@@ -44,7 +44,7 @@ def clear_state_cookie(response: Response) -> None:
     response.delete_cookie(
         key=OAUTH_STATE_COOKIE,
         httponly=True,
-        secure=not settings.DEBUG,
+        secure=settings.cookie_secure,
         samesite="lax",
         path="/auth/google/callback",
     )
