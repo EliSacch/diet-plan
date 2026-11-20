@@ -33,6 +33,7 @@ export const en = {
     NEXT_DAY: "Next day",
     NO_CHOICES_FOR_DAY: "No meals picked for this day yet.",
     NO_DIET_PLAN_YET: "You haven't uploaded a diet plan yet.",
+    NO_OPTIONS_FOR_DAY: "Your diet plan has no options for this day.",
     NOTIFICATIONS: "Notifications",
     ONLY_ONE_FILE: "Drop one file at a time.",
     PLAN: "My plan",

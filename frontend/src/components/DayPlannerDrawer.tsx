@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { getLocale, t } from "../i18n";
-import type { DayChoice } from "../types/day";
-import type { PlanDay } from "../types/diet-plan";
+import type { DayChoice, DayOptions } from "../types/day";
 import { addDays, parseIsoDate, toIsoDate } from "../utils/date";
 import ConfirmModal from "./ConfirmModal";
 import DayPlanner from "./DayPlanner";
@@ -14,7 +13,7 @@ import "./DayPlannerDrawer.css";
 type DayPlannerDrawerProps = {
   open: boolean;
   date: string;
-  day: PlanDay | undefined;
+  day: DayOptions | null | undefined;
   choices: DayChoice[] | undefined;
   loading?: boolean;
   error?: string | null;
@@ -148,6 +147,8 @@ function OpenDayPlannerDrawer({
     body = <p role="alert">{error}</p>;
   } else if (loading || choices === undefined || day === undefined) {
     body = <Loader label={t("LOADING_YOUR_DAY")} />;
+  } else if (day === null) {
+    body = <p>{t("NO_OPTIONS_FOR_DAY")}</p>;
   } else {
     body = (
       <DayPlanner

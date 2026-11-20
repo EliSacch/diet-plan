@@ -9,8 +9,9 @@ import { api } from "../api/client";
 import { ToastProvider } from "../context/ToastContext";
 import { setLocale } from "../i18n";
 import { axiosFailure, axiosResponse, deferred } from "../test/http";
-import type { Day, DayChoice } from "../types/day";
+import type { Day, DayChoice, DayOptions } from "../types/day";
 import type { PlanDocument } from "../types/diet-plan";
+import { parseIsoDate, weekdayIndex } from "../utils/date";
 import Home from "./Home";
 
 import { en } from "../i18n/locales/en";
@@ -96,16 +97,45 @@ const pasta: DayChoice = {
   unit: "g",
 };
 
+function dayOptionsFrom(source: PlanDocument, date: string): DayOptions | undefined {
+  const planDay = source.days[weekdayIndex(parseIsoDate(date)!)];
+  if (planDay === undefined) {
+    return undefined;
+  }
+  return {
+    day: planDay.day,
+    meals: planDay.meals.map((meal) => ({
+      meal: meal.meal,
+      categories: meal.categories.map((category) => ({
+        ...category,
+        custom_options: [],
+        current: null,
+      })),
+    })),
+  };
+}
+
 function mockGet({
   activePlan = () => Promise.resolve(axiosResponse<PlanDocument>(plan)),
   day = (date: string) => Promise.resolve(axiosResponse<Day>({ date, choices: [] })),
+  options = (date: string) => {
+    const found = dayOptionsFrom(plan, date);
+    return found === undefined
+      ? Promise.reject(axiosFailure(404, { code: "NOT_FOUND" }))
+      : Promise.resolve(axiosResponse(found));
+  },
 }: {
   activePlan?: () => Promise<AxiosResponse>;
   day?: (date: string) => Promise<AxiosResponse>;
+  options?: (date: string) => Promise<AxiosResponse>;
 } = {}) {
   return vi.spyOn(api, "get").mockImplementation((url: string) => {
     if (url === "/api/diet-plans/active") {
       return activePlan();
+    }
+    const [, optionsDate] = /^\/api\/days\/([^/]+)\/options$/.exec(url) ?? [];
+    if (optionsDate !== undefined) {
+      return options(optionsDate);
     }
     const [, date = ""] = /^\/api\/days\/([^/]+)$/.exec(url) ?? [];
     return day(date);
@@ -287,7 +317,7 @@ describe("Home", () => {
     const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
     expect(within(drawer).getByText("Tuesday, November 17")).toBeTruthy();
 
-    fireEvent.click(within(drawer).getByRole("button", { name: /^Secondi/ }));
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Secondi/ }));
     fireEvent.click(within(drawer).getByRole("radio", { name: "Pesce 150 g" }));
     fireEvent.click(within(drawer).getByRole("button", { name: "Save" }));
 
@@ -322,7 +352,7 @@ describe("Home", () => {
     fireEvent.click(screen.getByRole("button", { name: en.labels.EDIT }));
 
     const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
-    fireEvent.click(within(drawer).getByRole("button", { name: /^Secondi/ }));
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Secondi/ }));
     fireEvent.click(within(drawer).getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).toBeNull();
 
@@ -337,7 +367,7 @@ describe("Home", () => {
 
     fireEvent.click(screen.getByRole("button", { name: en.labels.EDIT }));
     const mondayDrawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
-    fireEvent.click(within(mondayDrawer).getByRole("button", { name: /^Primi/ }));
+    fireEvent.click(await within(mondayDrawer).findByRole("button", { name: /^Primi/ }));
     fireEvent.click(within(mondayDrawer).getByRole("radio", { name: "Pasta 80 g" }));
     fireEvent.click(within(mondayDrawer).getByRole("button", { name: "Save" }));
 
@@ -351,6 +381,72 @@ describe("Home", () => {
     expect(
       within(mondayDrawer).getByRole<HTMLButtonElement>("button", { name: "Save" }).disabled,
     ).toBe(false);
+  });
+
+  it("requests the day's options only once the planner opens", async () => {
+    const get = mockGet();
+
+    renderHome();
+
+    expect(await screen.findByText(en.labels.NO_CHOICES_FOR_DAY)).toBeTruthy();
+    expect(get).not.toHaveBeenCalledWith("/api/days/2026-11-17/options", expect.anything());
+
+    fireEvent.click(screen.getByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    expect(within(drawer).getByRole("status", { name: "Loading your day…" })).toBeTruthy();
+    expect(await within(drawer).findByRole("button", { name: /^Secondi/ })).toBeTruthy();
+    expect(get).toHaveBeenCalledWith("/api/days/2026-11-17/options", expect.anything());
+  });
+
+  it("builds the planner from the day's options rather than the plan document", async () => {
+    const tuesday: DayOptions = {
+      day: "Martedì",
+      meals: [
+        {
+          meal: "Merenda",
+          categories: [
+            {
+              category: "Frutta",
+              options: [{ name: "Mela", amount: 150, unit: "g", position: 0 }],
+              custom_options: [],
+              current: null,
+            },
+          ],
+        },
+      ],
+    };
+    mockGet({ options: () => Promise.resolve(axiosResponse(tuesday)) });
+
+    renderHome();
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    expect(await within(drawer).findByRole("button", { name: /^Frutta/ })).toBeTruthy();
+    expect(within(drawer).queryByRole("button", { name: /^Secondi/ })).toBeNull();
+  });
+
+  it("shows a message in the planner when the plan has no options for the day", async () => {
+    mockGet({ options: () => Promise.reject(axiosFailure(404, { code: "NOT_FOUND" })) });
+
+    renderHome();
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    expect(await within(drawer).findByText(en.labels.NO_OPTIONS_FOR_DAY)).toBeTruthy();
+  });
+
+  it("shows the catalog message in the planner when the options request fails", async () => {
+    mockGet({ options: () => Promise.reject(axiosFailure(500, { code: "INTERNAL_ERROR" })) });
+
+    renderHome();
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    expect(await within(drawer).findByRole("alert")).toHaveProperty(
+      "textContent",
+      en.errors.INTERNAL_ERROR,
+    );
   });
 
   it("shows the date strip and a loading indicator while the day is loading", async () => {

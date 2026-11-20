@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { dietPlanErrorMessage, useActiveDietPlan } from "../hooks/useActiveDietPlan";
-import { useDay, useSaveDay } from "../hooks/useDay";
+import { useDay, useDayOptions, useSaveDay } from "../hooks/useDay";
 import { useToast } from "../hooks/useToast";
 import { t } from "../i18n";
 import PageLayout from "../layouts/PageLayout";
@@ -42,6 +42,7 @@ function HomeDay({
   const save = useSaveDay(selectedDate);
   const showToast = useToast();
   const [plannerOpen, setPlannerOpen] = useState(false);
+  const options = useDayOptions(selectedDate, { enabled: plannerOpen });
 
   const dayCount = plan.days.length;
   const isDateDisabled = (candidate: Date) => weekdayIndex(candidate) >= dayCount;
@@ -53,6 +54,13 @@ function HomeDay({
       onSuccess: () => showToast({ message: t("DAY_SAVED") }),
       onError: (error) => showToast({ message: dietPlanErrorMessage(error), variant: "error" }),
     });
+  }
+
+  let plannerError = null;
+  if (day.isError) {
+    plannerError = dietPlanErrorMessage(day.error);
+  } else if (options.isError) {
+    plannerError = dietPlanErrorMessage(options.error);
   }
 
   let content;
@@ -75,10 +83,10 @@ function HomeDay({
       <DayPlannerDrawer
         open={plannerOpen}
         date={selectedDate}
-        day={planDay}
+        day={options.data}
         choices={day.data?.choices}
-        loading={day.isPending}
-        error={day.isError ? dietPlanErrorMessage(day.error) : null}
+        loading={day.isPending || options.isPending}
+        error={plannerError}
         onDateChange={onSelectDate}
         isDateDisabled={isDateDisabled}
         onSave={onSave}
