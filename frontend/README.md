@@ -17,6 +17,7 @@ The frontend is built with React + Typescript
 
 - [Linting and Formatting](#linting-and-formatting)
   - [Linting](#linting)
+  - [Skipping a rule](#skipping-a-rule)
   - [Oxlint Configuration](#oxlint-configuration)
   - [Formatting](#formatting)
 
@@ -29,6 +30,8 @@ The frontend is built with React + Typescript
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
 ## Accessibility
+
+Requirements are in [ACCESSIBILITY.md](ACCESSIBILITY.md). `yarn lint` enforces the jsx-a11y rules and fails CI as `frontend lint` on every pull request.
 
 The day strip on the home page shows 31 days. Only the selected day is a Tab stop. Tab moves to that day, and the next Tab leaves the strip.
 
@@ -103,7 +106,30 @@ yarn vitest run --coverage
 yarn lint
 ```
 
-`yarn lint --fix` applies the fixes Oxlint can make automatically.
+`yarn lint` also runs the accessibility rules from [ACCESSIBILITY.md](ACCESSIBILITY.md). A violation fails the command. `yarn lint --fix` applies the fixes Oxlint can make automatically.
+
+### Skipping a rule
+
+Name the rule in an Oxlint comment. The rest of the file still lints. Put the reason after `--`.
+
+Skip the next line:
+
+```tsx
+// oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- Escape and Close cover the keyboard
+<div onClick={onBackdropClick} />
+```
+
+Inside JSX, use a JSX comment: `{/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- reason */}`. `oxlint-disable-line` skips the line the comment sits on.
+
+Skip a block, then turn the rule back on:
+
+```tsx
+/* oxlint-disable jsx-a11y/click-events-have-key-events -- Escape and Close cover the keyboard */
+<div onClick={onBackdropClick}>...</div>
+/* oxlint-enable jsx-a11y/click-events-have-key-events */
+```
+
+A comment at the top of the file, with no `oxlint-enable`, skips that rule for the whole file. A bare `oxlint-disable` turns every rule off for that span.
 
 ### Oxlint configuration
 

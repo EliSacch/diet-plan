@@ -95,6 +95,52 @@ describe("Drawer", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it("keeps Tab inside the dialog and restores focus on close", () => {
+    const opener = document.createElement("button");
+    opener.type = "button";
+    opener.textContent = "Open";
+    document.body.appendChild(opener);
+    opener.focus();
+
+    const { unmount, container } = render(
+      <>
+        <button type="button">Outside</button>
+        <Drawer open title="Details" onClose={vi.fn()}>
+          <button type="button">Inside</button>
+        </Drawer>
+        <dialog>Confirm</dialog>
+      </>,
+    );
+
+    const close = screen.getByRole("button", { name: "Close" });
+    const inside = screen.getByRole("button", { name: "Inside" });
+    const outside = container.querySelector("button");
+    expect(document.activeElement).toBe(close);
+    expect(outside?.textContent).toBe("Outside");
+    expect(outside?.hasAttribute("inert")).toBe(true);
+    expect(document.querySelector("dialog")?.hasAttribute("inert")).toBe(false);
+
+    inside.focus();
+    const leave = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    inside.dispatchEvent(leave);
+    expect(leave.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(close);
+
+    const reenter = new KeyboardEvent("keydown", {
+      key: "Tab",
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    close.dispatchEvent(reenter);
+    expect(reenter.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(inside);
+
+    unmount();
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
+
   it("uses the current locale for the close button", () => {
     setLocale("it");
     renderDrawer();

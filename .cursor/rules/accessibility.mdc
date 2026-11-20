@@ -1,0 +1,17 @@
+---
+description: Frontend accessibility requirements for UI changes
+globs: frontend/**/*.{tsx,css,html}
+alwaysApply: false
+---
+
+# Accessibility
+
+Follow [frontend/ACCESSIBILITY.md](frontend/ACCESSIBILITY.md). WCAG 2.2 A and AA is the bar. `yarn lint` must pass; it enforces the jsx-a11y rules.
+
+When you change a file listed under Current gaps in that document, close that gap in the same change.
+
+- Set `document.documentElement.lang` from the active locale, and set `document.title` per route.
+- Trap focus in a dialog, close it on Escape, and restore focus to the opener. Keep focused controls clear of sticky bars.
+- Labels, `aria-invalid`, and `aria-describedby` stay wired. On a failed submit, focus the first invalid field. The accessible name contains the visible text.
+- Errors use their own assertive live region. Error toasts stay until dismissed. A busy button is `disabled`.
+- Text contrast stays at or above 4.5:1, and UI boundaries and focus rings at or above 3:1. Honor `prefers-reduced-motion`, including JS scrolling.

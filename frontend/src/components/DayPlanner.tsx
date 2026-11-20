@@ -306,6 +306,7 @@ export default function DayPlanner({
                       type="checkbox"
                       role="switch"
                       checked={multi}
+                      aria-checked={multi}
                       aria-label={`${t("ALLOW_MULTIPLE_CHOICES")}: ${category.category}`}
                       onChange={(event) =>
                         onMultiSelectChange?.(category.category, event.target.checked)

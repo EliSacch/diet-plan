@@ -120,6 +120,8 @@ export default function DateStrip({
         >
           <Chevron path="m15 6-6 6 6 6" />
         </button>
+        {/* Arrow keys move inside the group. Enter or Space selects the focused day. */}
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
         <div
           className="date-strip-days"
           role="group"
