@@ -11,6 +11,7 @@ from app.models.diet import DietOption, DietPlan
 
 logger = logging.getLogger(__name__)
 from app.schemas.diet_plan import (
+    ActiveDietPlan,
     PlanCategory,
     PlanDay,
     PlanDocument,
@@ -19,12 +20,18 @@ from app.schemas.diet_plan import (
 )
 
 
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
 def replace_active_plan(
     db: Session,
     user_id: int,
     document: PlanDocument,
     source_filename: str | None = None,
-) -> PlanDocument:
+) -> ActiveDietPlan:
     try:
         db.execute(
             update(DietPlan)
@@ -94,7 +101,7 @@ def _purge_replaced_plans(db: Session, user_id: int) -> None:
     )
 
 
-def active_plan_document(db: Session, user_id: int) -> PlanDocument:
+def active_plan_document(db: Session, user_id: int) -> ActiveDietPlan:
     plan = db.scalar(
         select(DietPlan).where(
             DietPlan.user_id == user_id,
@@ -108,7 +115,12 @@ def active_plan_document(db: Session, user_id: int) -> PlanDocument:
         .where(DietOption.diet_plan_id == plan.id)
         .order_by(DietOption.id)
     ).all()
-    return _document_from_options(options)
+    document = _document_from_options(options)
+    return ActiveDietPlan(
+        days=document.days,
+        source_filename=plan.source_filename,
+        uploaded_at=_as_utc(plan.uploaded_at),
+    )
 
 
 def _document_from_options(options: Sequence[DietOption]) -> PlanDocument:

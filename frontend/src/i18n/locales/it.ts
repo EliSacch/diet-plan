@@ -15,6 +15,7 @@ export const it = {
     UNKNOWN: "Qualcosa è andato storto.",
   },
   labels: {
+    ACCOUNT: "Account",
     ADD: "Aggiungi",
     ADD_CUSTOM_OPTION: "Aggiungi opzione personalizzata",
     AMOUNT: "Quantità",
@@ -77,10 +78,12 @@ export const it = {
     UNSAVED_CHANGES_MESSAGE: "Le tue scelte non sono ancora state salvate.",
     UNSAVED_CHANGES_TITLE: "Scartare le modifiche non salvate?",
     UPLOAD_COMPLETED: "Completato",
+    UPLOAD_DATE: "Data di caricamento",
     UPLOAD_DIET_PLAN: "Carica piano",
     UPLOAD_FORMAT_HINT: "Solo PDF · Max 1 MB",
     UPLOAD_PROGRESS: "Avanzamento del caricamento",
     UPLOADED: "caricato",
+    UPLOADED_FILE: "File caricato",
     WELCOME_UPLOAD_MEAL_PLAN: "Ti diamo il benvenuto. Carica un piano alimentare per iniziare.",
   },
 } as const satisfies MessageCatalog;

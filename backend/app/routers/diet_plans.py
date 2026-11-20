@@ -10,7 +10,7 @@ from app.diet.service import (
     purge_replaced_plans,
     replace_active_plan,
 )
-from app.schemas.diet_plan import PlanDocument
+from app.schemas.diet_plan import ActiveDietPlan, PlanDocument
 from app.schemas.problem import Problem
 
 router = APIRouter(prefix="/api", tags=["diet-plans"])
@@ -120,6 +120,6 @@ def upload_diet_plan(
     return stored
 
 
-@router.get("/diet-plans/active", response_model=PlanDocument)
-def get_active_diet_plan(user: CurrentUser, db: DbSession) -> PlanDocument:
+@router.get("/diet-plans/active", response_model=ActiveDietPlan)
+def get_active_diet_plan(user: CurrentUser, db: DbSession) -> ActiveDietPlan:
     return active_plan_document(db, user.id)
