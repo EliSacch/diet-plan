@@ -4,6 +4,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, model_validator
 
 from app.diet.limits import MAX_AMOUNT, MAX_LABEL_LENGTH, MAX_NAME_LENGTH, MAX_OPTIONS
+from app.schemas.diet_plan import PlanOption
 
 
 class DayChoice(BaseModel):
@@ -33,3 +34,30 @@ class DayInput(BaseModel):
 class Day(BaseModel):
     date: date
     choices: list[DayChoice]
+
+
+class OptionValues(BaseModel):
+    name: str
+    amount: float | None
+    unit: str | None
+
+
+class CustomOptionValues(OptionValues):
+    id: int
+
+
+class DayOptionsCategory(BaseModel):
+    category: str
+    options: list[PlanOption]
+    custom_options: list[CustomOptionValues]
+    current: OptionValues | None
+
+
+class DayOptionsMeal(BaseModel):
+    meal: str
+    categories: list[DayOptionsCategory]
+
+
+class DayOptions(BaseModel):
+    day: str
+    meals: list[DayOptionsMeal]

@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.models.custom_option import CustomOption
 from app.models.day import DailyChoice
 from app.models.diet import DietOption
 from app.models.user import User
@@ -121,6 +122,57 @@ def _options_url(target_date: date | str = MONDAY) -> str:
     return f"/api/days/{value}/options"
 
 
+def _with_empty_extras(plan_day: object) -> dict[str, object]:
+    day = dict(plan_day)  # type: ignore[call-overload]
+    day["meals"] = [
+        {
+            **meal,
+            "categories": [
+                {**category, "custom_options": [], "current": None}
+                for category in meal["categories"]
+            ],
+        }
+        for meal in day["meals"]
+    ]
+    return day
+
+
+def _category(
+    options: dict[str, object], meal: str, category: str
+) -> dict[str, object]:
+    for meal_entry in options["meals"]:  # type: ignore[union-attr]
+        if meal_entry["meal"] == meal:
+            for category_entry in meal_entry["categories"]:
+                if category_entry["category"] == category:
+                    return category_entry
+    raise AssertionError(f"{meal} / {category} not in options")
+
+
+def _custom_option(
+    user_id: int,
+    *,
+    meal: str = "Pranzo",
+    category: str = "Primi",
+    name: str = "Pasta di farro",
+    amount: float | None = 70,
+    unit: str | None = "g",
+) -> CustomOption:
+    return CustomOption(
+        user_id=user_id,
+        meal=meal,
+        category=category,
+        name=name,
+        amount=amount,
+        unit=unit,
+    )
+
+
+def _signed_in_user(client: TestClient, database: Session) -> User:
+    sign_in(client)
+    assert client.post("/api/diet-plans", json=sample_document()).status_code == 201
+    return database.scalars(select(User).where(User.email == "ada@example.com")).one()
+
+
 def test_options_return_the_matching_weekday_from_the_active_plan(
     client: TestClient,
 ) -> None:
@@ -132,9 +184,9 @@ def test_options_return_the_matching_weekday_from_the_active_plan(
     next_monday = client.get(_options_url(NEXT_MONDAY))
 
     assert monday.status_code == 200
-    assert monday.json() == sample_document()["days"][0]  # type: ignore[index]
+    assert monday.json() == _with_empty_extras(sample_document()["days"][0])  # type: ignore[index]
     assert tuesday.status_code == 200
-    assert tuesday.json() == sample_document()["days"][1]  # type: ignore[index]
+    assert tuesday.json() == _with_empty_extras(sample_document()["days"][1])  # type: ignore[index]
     assert next_monday.json() == monday.json()
 
 
@@ -147,7 +199,7 @@ def test_options_follow_the_newly_active_plan(client: TestClient) -> None:
 
     response = client.get(_options_url(MONDAY))
 
-    assert response.json() == replacement_document()["days"][0]  # type: ignore[index]
+    assert response.json() == _with_empty_extras(replacement_document()["days"][0])  # type: ignore[index]
 
 
 def test_options_without_an_active_plan_are_not_found(client: TestClient) -> None:
@@ -181,6 +233,163 @@ def test_options_reject_an_invalid_date(client: TestClient, target_date: str) ->
     assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/problem+json")
     assert response.json()["code"] == "VALIDATION_ERROR"
+
+
+def test_options_list_the_users_custom_options_for_each_category(
+    client: TestClient, database: Session
+) -> None:
+    ada = _signed_in_user(client, database)
+    farro = _custom_option(ada.id)
+    salad = _custom_option(
+        ada.id,
+        meal="Colazione",
+        category="Contorni",
+        name="Rucola",
+        amount=None,
+        unit=None,
+    )
+    database.add_all([farro, salad])
+    database.commit()
+
+    options = client.get(_options_url(MONDAY)).json()
+
+    assert _category(options, "Pranzo", "Primi")["custom_options"] == [
+        {"id": farro.id, "name": "Pasta di farro", "amount": 70, "unit": "g"}
+    ]
+    assert _category(options, "Colazione", "Contorni")["custom_options"] == [
+        {"id": salad.id, "name": "Rucola", "amount": None, "unit": None}
+    ]
+    assert _category(options, "Colazione", "Bevande")["custom_options"] == []
+
+
+def test_options_offer_a_custom_option_on_any_weekday_with_that_meal_and_category(
+    client: TestClient, database: Session
+) -> None:
+    ada = _signed_in_user(client, database)
+    database.add(_custom_option(ada.id, meal="Cena", category="Secondi"))
+    database.commit()
+
+    monday = client.get(_options_url(MONDAY)).json()
+    tuesday = client.get(_options_url(TUESDAY)).json()
+
+    assert all(
+        category["custom_options"] == []
+        for meal in monday["meals"]
+        for category in meal["categories"]
+    )
+    assert [
+        option["name"]
+        for option in _category(tuesday, "Cena", "Secondi")["custom_options"]
+    ] == ["Pasta di farro"]
+
+
+def test_options_exclude_other_users_custom_options(
+    client: TestClient, database: Session
+) -> None:
+    grace = _user(database, "grace@example.com")
+    database.add(_custom_option(grace.id))
+    database.commit()
+    _signed_in_user(client, database)
+
+    options = client.get(_options_url(MONDAY)).json()
+
+    assert _category(options, "Pranzo", "Primi")["custom_options"] == []
+
+
+def test_options_exclude_custom_options_of_another_meal_or_category(
+    client: TestClient, database: Session
+) -> None:
+    ada = _signed_in_user(client, database)
+    database.add_all(
+        [
+            _custom_option(ada.id, meal="Cena"),
+            _custom_option(ada.id, category="Secondi"),
+        ]
+    )
+    database.commit()
+
+    options = client.get(_options_url(MONDAY)).json()
+
+    assert _category(options, "Pranzo", "Primi")["custom_options"] == []
+
+
+def test_options_return_an_edited_saved_pick_as_current(
+    client: TestClient, database: Session
+) -> None:
+    ada = _signed_in_user(client, database)
+    database.add(_choice(ada.id, name="Pasta", amount=100, unit="g"))
+    database.commit()
+
+    options = client.get(_options_url(MONDAY)).json()
+
+    primi = _category(options, "Pranzo", "Primi")
+    assert primi["current"] == {"name": "Pasta", "amount": 100, "unit": "g"}
+    assert primi["options"] == [
+        {"name": "Pasta", "amount": 80, "unit": "g", "position": 0}
+    ]
+
+
+def test_options_current_is_only_for_that_date(
+    client: TestClient, database: Session
+) -> None:
+    ada = _signed_in_user(client, database)
+    database.add(
+        _choice(ada.id, target_date=NEXT_MONDAY, name="Pasta", amount=100, unit="g")
+    )
+    database.commit()
+
+    options = client.get(_options_url(MONDAY)).json()
+
+    assert _category(options, "Pranzo", "Primi")["current"] is None
+
+
+def test_options_current_is_null_when_the_saved_pick_is_a_diet_option(
+    client: TestClient, database: Session
+) -> None:
+    ada = _signed_in_user(client, database)
+    database.add(_choice(ada.id, name="Pasta", amount=80, unit="g"))
+    database.commit()
+
+    options = client.get(_options_url(MONDAY)).json()
+
+    assert _category(options, "Pranzo", "Primi")["current"] is None
+
+
+def test_options_current_is_null_when_the_saved_pick_is_a_custom_option(
+    client: TestClient, database: Session
+) -> None:
+    ada = _signed_in_user(client, database)
+    database.add_all(
+        [
+            _custom_option(ada.id),
+            _choice(ada.id, name="Pasta di farro", amount=70, unit="g"),
+        ]
+    )
+    database.commit()
+
+    options = client.get(_options_url(MONDAY)).json()
+
+    primi = _category(options, "Pranzo", "Primi")
+    assert primi["current"] is None
+    assert [option["name"] for option in primi["custom_options"]] == ["Pasta di farro"]
+
+
+def test_options_return_a_pick_whose_custom_option_was_deleted_as_current(
+    client: TestClient, database: Session
+) -> None:
+    ada = _signed_in_user(client, database)
+    farro = _custom_option(ada.id)
+    database.add_all(
+        [farro, _choice(ada.id, name="Pasta di farro", amount=70, unit="g")]
+    )
+    database.commit()
+    assert client.delete(f"/api/custom-options/{farro.id}").status_code == 204
+
+    options = client.get(_options_url(MONDAY)).json()
+
+    primi = _category(options, "Pranzo", "Primi")
+    assert primi["custom_options"] == []
+    assert primi["current"] == {"name": "Pasta di farro", "amount": 70, "unit": "g"}
 
 
 def test_options_require_a_session(client: TestClient) -> None:
