@@ -3,8 +3,10 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.custom_options.service import delete_custom_option
 from app.models.custom_option import CustomOption
 from app.models.day import DailyChoice
 from app.models.diet import DietOption
@@ -311,6 +313,25 @@ def test_delete_keeps_a_day_that_picked_the_option(
 
     day = client.get(f"/api/days/{MONDAY.isoformat()}")
     assert day.json()["choices"] == [FARRO]
+
+
+def test_delete_rolls_back_when_the_commit_fails(
+    database: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ada = _user(database)
+    option = _custom_option(ada.id)
+    database.add(option)
+    database.commit()
+
+    def failing_commit() -> None:
+        raise OperationalError("COMMIT", {}, Exception("connection lost"))
+
+    monkeypatch.setattr(database, "commit", failing_commit)
+
+    with pytest.raises(OperationalError):
+        delete_custom_option(database, ada.id, option.id)
+
+    assert database.get(CustomOption, option.id) is not None
 
 
 def test_delete_requires_a_session(client: TestClient) -> None:
