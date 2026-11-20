@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 _BACKEND_ROOTS = {"api", "auth", "docs", "redoc", "openapi.json"}
+_MEDIA_TYPES = {".webmanifest": "application/manifest+json"}
 
 
 def is_backend_path(path: str) -> bool:
@@ -18,7 +19,7 @@ def file_for(static_dir: Path, path: str) -> FileResponse:
     root = static_dir.resolve()
     candidate = (root / path).resolve()
     if candidate.is_relative_to(root) and candidate.is_file():
-        return FileResponse(candidate)
+        return FileResponse(candidate, media_type=_MEDIA_TYPES.get(candidate.suffix))
 
     index = root / "index.html"
     if "." not in Path(path).name and index.is_file():

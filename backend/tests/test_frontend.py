@@ -71,8 +71,13 @@ def test_frontend_is_served_when_static_dir_is_set(tmp_path: Path) -> None:
     register_frontend(app, str(tmp_path))
     client = TestClient(app)
 
+    (tmp_path / "manifest.webmanifest").write_text("{}", encoding="utf-8")
+
     assert client.get("/").text == "<p>app</p>"
     assert client.get("/diet-plan").text == "<p>app</p>"
+    manifest = client.get("/manifest.webmanifest")
+    assert manifest.status_code == 200
+    assert manifest.headers["content-type"].startswith("application/manifest+json")
     assert client.get("/api/health").json() == {"status": "ok"}
     missing = client.get("/api/missing")
     assert missing.status_code == 404
