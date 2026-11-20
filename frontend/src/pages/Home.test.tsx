@@ -110,7 +110,8 @@ function dayOptionsFrom(source: PlanDocument, date: string): DayOptions | undefi
       categories: meal.categories.map((category) => ({
         ...category,
         custom_options: [],
-        current: null,
+        current: [],
+        multi_select: false,
       })),
     })),
   };
@@ -411,7 +412,8 @@ describe("Home", () => {
               category: "Frutta",
               options: [{ name: "Mela", amount: 150, unit: "g", position: 0 }],
               custom_options: [],
-              current: null,
+              current: [],
+              multi_select: false,
             },
           ],
         },

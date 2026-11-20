@@ -23,7 +23,8 @@ export type DayOptionsCategory = {
   category: string;
   options: PlanOption[];
   custom_options: CustomOptionValues[];
-  current: OptionValues | null;
+  current: OptionValues[];
+  multi_select: boolean;
 };
 
 export type DayOptionsMeal = {

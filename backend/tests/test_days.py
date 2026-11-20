@@ -3,7 +3,6 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.custom_option import CustomOption
@@ -106,15 +105,21 @@ def test_choices_store_the_copied_values(database: Session) -> None:
     ]
 
 
-def test_a_day_has_one_choice_per_meal_and_category(database: Session) -> None:
+def test_a_day_can_store_multiple_choices_for_the_same_slot(
+    database: Session,
+) -> None:
     ada = _user(database)
-    database.add(_choice(ada.id))
+    database.add_all(
+        [_choice(ada.id), _choice(ada.id, name="Riso", amount=70)]
+    )
     database.commit()
 
-    database.add(_choice(ada.id, name="Riso", amount=70))
-    with pytest.raises(IntegrityError):
-        database.commit()
-    database.rollback()
+    rows = database.scalars(
+        select(DailyChoice.name)
+        .where(DailyChoice.user_id == ada.id)
+        .order_by(DailyChoice.id)
+    ).all()
+    assert rows == ["Pasta", "Riso"]
 
 
 def _options_url(target_date: date | str = MONDAY) -> str:
@@ -128,7 +133,12 @@ def _with_empty_extras(plan_day: object) -> dict[str, object]:
         {
             **meal,
             "categories": [
-                {**category, "custom_options": [], "current": None}
+                {
+                    **category,
+                    "custom_options": [],
+                    "current": [],
+                    "multi_select": False,
+                }
                 for category in meal["categories"]
             ],
         }
@@ -323,7 +333,8 @@ def test_options_return_an_edited_saved_pick_as_current(
     options = client.get(_options_url(MONDAY)).json()
 
     primi = _category(options, "Pranzo", "Primi")
-    assert primi["current"] == {"name": "Pasta", "amount": 100, "unit": "g"}
+    assert primi["current"] == [{"name": "Pasta", "amount": 100, "unit": "g"}]
+    assert primi["multi_select"] is False
     assert primi["options"] == [
         {"name": "Pasta", "amount": 80, "unit": "g", "position": 0}
     ]
@@ -340,10 +351,10 @@ def test_options_current_is_only_for_that_date(
 
     options = client.get(_options_url(MONDAY)).json()
 
-    assert _category(options, "Pranzo", "Primi")["current"] is None
+    assert _category(options, "Pranzo", "Primi")["current"] == []
 
 
-def test_options_current_is_null_when_the_saved_pick_is_a_diet_option(
+def test_options_current_is_empty_when_the_saved_pick_is_a_diet_option(
     client: TestClient, database: Session
 ) -> None:
     ada = _signed_in_user(client, database)
@@ -352,10 +363,10 @@ def test_options_current_is_null_when_the_saved_pick_is_a_diet_option(
 
     options = client.get(_options_url(MONDAY)).json()
 
-    assert _category(options, "Pranzo", "Primi")["current"] is None
+    assert _category(options, "Pranzo", "Primi")["current"] == []
 
 
-def test_options_current_is_null_when_the_saved_pick_is_a_custom_option(
+def test_options_current_is_empty_when_the_saved_pick_is_a_custom_option(
     client: TestClient, database: Session
 ) -> None:
     ada = _signed_in_user(client, database)
@@ -370,7 +381,7 @@ def test_options_current_is_null_when_the_saved_pick_is_a_custom_option(
     options = client.get(_options_url(MONDAY)).json()
 
     primi = _category(options, "Pranzo", "Primi")
-    assert primi["current"] is None
+    assert primi["current"] == []
     assert [option["name"] for option in primi["custom_options"]] == ["Pasta di farro"]
 
 
@@ -389,7 +400,9 @@ def test_options_return_a_pick_whose_custom_option_was_deleted_as_current(
 
     primi = _category(options, "Pranzo", "Primi")
     assert primi["custom_options"] == []
-    assert primi["current"] == {"name": "Pasta di farro", "amount": 70, "unit": "g"}
+    assert primi["current"] == [
+        {"name": "Pasta di farro", "amount": 70, "unit": "g"}
+    ]
 
 
 def test_options_require_a_session(client: TestClient) -> None:
@@ -607,7 +620,8 @@ def test_an_edited_amount_is_saved_for_that_date_only(
     assert next_monday_primi["options"] == [
         {"name": "Pasta", "amount": 80, "unit": "g", "position": 0}
     ]
-    assert next_monday_primi["current"] is None
+    assert next_monday_primi["current"] == []
+    assert next_monday_primi["multi_select"] is False
     diet_options_after = [
         (row.name, row.amount, row.unit)
         for row in database.scalars(select(DietOption).order_by(DietOption.id))
@@ -672,16 +686,24 @@ def test_an_empty_day_can_be_saved_without_an_active_plan(client: TestClient) ->
     assert response.json() == {"date": "2026-11-17", "choices": []}
 
 
-def test_two_choices_for_the_same_slot_are_rejected(client: TestClient) -> None:
+def test_two_choices_for_the_same_slot_are_saved(client: TestClient) -> None:
+    _signed_in_with_plan(client)
+    riso = {**PASTA, "name": "Riso", "amount": 70}
+
+    response = client.put(_day_url(MONDAY), json={"choices": [PASTA, riso]})
+
+    assert response.status_code == 200
+    assert response.json()["choices"] == [PASTA, riso]
+
+
+def test_the_same_choice_twice_is_rejected(client: TestClient) -> None:
     _signed_in_with_plan(client)
 
-    response = client.put(
-        _day_url(MONDAY), json={"choices": [PASTA, {**PASTA, "name": "Riso"}]}
-    )
+    response = client.put(_day_url(MONDAY), json={"choices": [PASTA, PASTA]})
 
     assert response.status_code == 422
     assert response.json()["code"] == "VALIDATION_ERROR"
-    assert "Pranzo / Primi has more than one choice" in response.json()["detail"]
+    assert "Pranzo / Primi has Pasta twice" in response.json()["detail"]
 
 
 def test_a_saved_choice_can_be_kept_after_the_plan_changes(

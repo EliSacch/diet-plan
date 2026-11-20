@@ -14,8 +14,17 @@ const farro: CustomOptionValues = { id: 7, name: "Pasta di farro", amount: 70, u
 
 function mondayWith({
   custom_options = [],
-  current = null,
-}: { custom_options?: CustomOptionValues[]; current?: OptionValues | null } = {}): DayOptions {
+  current = [],
+  multi_select = false,
+  contorni_multi_select = false,
+  contorni_options = [{ name: "Insalata mista", amount: null, unit: null, position: 0 }],
+}: {
+  custom_options?: CustomOptionValues[];
+  current?: OptionValues[];
+  multi_select?: boolean;
+  contorni_multi_select?: boolean;
+  contorni_options?: DayOptions["meals"][number]["categories"][number]["options"];
+} = {}): DayOptions {
   return {
     day: "Lunedì",
     meals: [
@@ -31,12 +40,14 @@ function mondayWith({
             ],
             custom_options,
             current,
+            multi_select,
           },
           {
             category: "Contorni",
-            options: [{ name: "Insalata mista", amount: null, unit: null, position: 0 }],
+            options: contorni_options,
             custom_options: [],
-            current: null,
+            current: [],
+            multi_select: contorni_multi_select,
           },
         ],
       },
@@ -96,11 +107,25 @@ function renderPlanner(initial: Partial<PlannerProps> = {}) {
 }
 
 function group(name: string) {
-  return within(screen.getByRole("radiogroup", { name }));
+  return within(
+    screen.queryByRole("radiogroup", { name }) ?? screen.getByRole("group", { name }),
+  );
+}
+
+function option(groupName: string, label: string) {
+  const g = group(groupName);
+  return (g.queryByRole("radio", { name: label }) ??
+    g.getByRole("checkbox", { name: label })) as HTMLInputElement;
 }
 
 function radio(groupName: string, label: string) {
-  return group(groupName).getByRole<HTMLInputElement>("radio", { name: label });
+  return option(groupName, label);
+}
+
+function multiSwitch(category: string) {
+  return screen.getByRole<HTMLInputElement>("switch", {
+    name: `Allow multiple choices: ${category}`,
+  });
 }
 
 function toggle(category: string) {
@@ -305,7 +330,7 @@ describe("DayPlanner", () => {
 
   it("shows the current saved pick as an extra selected entry", () => {
     const edited: DayChoice = { ...pasta80, amount: 90 };
-    const current = { name: "Pasta", amount: 90, unit: "g" };
+    const current = [{ name: "Pasta", amount: 90, unit: "g" }];
     renderPlanner({ day: mondayWith({ current }), choices: [edited] });
 
     fireEvent.click(toggle("Primi"));
@@ -341,11 +366,99 @@ describe("DayPlanner", () => {
   });
 
   it("shows the current saved pick once when it is also the pick", () => {
-    renderPlanner({ day: mondayWith({ current: farro }), choices: [farroChoice] });
+    renderPlanner({ day: mondayWith({ current: [farro] }), choices: [farroChoice] });
 
     fireEvent.click(toggle("Primi"));
 
     expect(group("Primi").getAllByRole("radio", { name: "Pasta di farro 70 g" })).toHaveLength(1);
+  });
+
+  it("deselects a radio by clicking it again", () => {
+    const { onSave } = renderPlanner({ choices: [pasta80] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(radio("Primi", "Pasta 80 g"));
+
+    expect(radio("Primi", "Pasta 80 g").checked).toBe(false);
+    expect(toggle("Primi").textContent).toBe("Primi");
+    expect(saveButton().disabled).toBe(false);
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([]);
+  });
+
+  it("defaults the multi-select switch off", () => {
+    renderPlanner();
+
+    expect(multiSwitch("Primi").checked).toBe(false);
+    expect(multiSwitch("Contorni").checked).toBe(false);
+  });
+
+  it("saves every chosen option when multi-select is on", () => {
+    const { onSave } = renderPlanner({ day: mondayWith({ multi_select: true }) });
+    const riso: DayChoice = { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" };
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(option("Primi", "Pasta 80 g"));
+    fireEvent.click(option("Primi", "Riso 70 g"));
+
+    expect(option("Primi", "Pasta 80 g").checked).toBe(true);
+    expect(option("Primi", "Riso 70 g").checked).toBe(true);
+    expect(toggle("Primi").textContent).toBe("PrimiPasta 80 g, Riso 70 g");
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([pasta80, riso]);
+  });
+
+  it("keeps multiple picks after multi-select is turned off and replaces them on the next choice", () => {
+    const { onSave } = renderPlanner({
+      day: mondayWith({ multi_select: true }),
+      choices: [pasta80, { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" }],
+    });
+
+    updatePlanner({ day: mondayWith({ multi_select: false }) });
+    fireEvent.click(toggle("Primi"));
+
+    expect(option("Primi", "Pasta 80 g").checked).toBe(true);
+    expect(option("Primi", "Riso 70 g").checked).toBe(true);
+    expect(option("Primi", "Pasta 80 g").type).toBe("checkbox");
+
+    fireEvent.click(option("Primi", "Pasta 100 g"));
+
+    expect(option("Primi", "Pasta 100 g").checked).toBe(true);
+    expect(option("Primi", "Pasta 80 g").checked).toBe(false);
+    expect(option("Primi", "Riso 70 g").checked).toBe(false);
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([{ ...pasta80, amount: 100 }]);
+  });
+
+  it("toggles the multi-select switch without enabling Save", () => {
+    const onMultiSelectChange = vi.fn();
+    renderPlanner({ onMultiSelectChange, choices: [pasta80] });
+
+    fireEvent.click(multiSwitch("Contorni"));
+
+    expect(onMultiSelectChange).toHaveBeenCalledWith("Contorni", true);
+    expect(saveButton().disabled).toBe(true);
+  });
+
+  it("deselects one of several checkbox picks", () => {
+    const { onSave } = renderPlanner({
+      day: mondayWith({ multi_select: true }),
+      choices: [pasta80, { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" }],
+    });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(option("Primi", "Pasta 80 g"));
+
+    expect(option("Primi", "Pasta 80 g").checked).toBe(false);
+    expect(option("Primi", "Riso 70 g").checked).toBe(true);
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([
+      { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" },
+    ]);
   });
 
   it("labels custom options in the current locale", () => {

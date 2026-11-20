@@ -24,22 +24,26 @@ function slotKey(meal: string, category: string) {
 }
 
 function mealsForDay(day: PlanDay, choices: DayChoice[]): MealChoices[] {
-  const rest = new Map(choices.map((choice) => [slotKey(choice.meal, choice.category), choice]));
+  const rest = new Map<string, DayChoice[]>();
+  for (const choice of choices) {
+    const key = slotKey(choice.meal, choice.category);
+    rest.set(key, [...(rest.get(key) ?? []), choice]);
+  }
 
   const meals: MealChoices[] = [];
   for (const meal of day.meals) {
     const picked: DayChoice[] = [];
     for (const category of meal.categories) {
       const key = slotKey(meal.meal, category.category);
-      const choice = rest.get(key);
-      if (choice !== undefined) {
-        picked.push(choice);
+      const slot = rest.get(key);
+      if (slot !== undefined) {
+        picked.push(...slot);
         rest.delete(key);
       }
     }
-    for (const [key, choice] of rest) {
-      if (choice.meal === meal.meal) {
-        picked.push(choice);
+    for (const [key, slot] of rest) {
+      if (slot[0]?.meal === meal.meal) {
+        picked.push(...slot);
         rest.delete(key);
       }
     }
@@ -49,12 +53,13 @@ function mealsForDay(day: PlanDay, choices: DayChoice[]): MealChoices[] {
   }
 
   const extra = new Map<string, DayChoice[]>();
-  for (const choice of rest.values()) {
-    const list = extra.get(choice.meal);
+  for (const slot of rest.values()) {
+    const meal = slot[0].meal;
+    const list = extra.get(meal);
     if (list === undefined) {
-      extra.set(choice.meal, [choice]);
+      extra.set(meal, [...slot]);
     } else {
-      list.push(choice);
+      list.push(...slot);
     }
   }
   for (const [meal, picked] of extra) {
@@ -84,7 +89,10 @@ export default function DailyChoices({ day, choices, onPlan }: DailyChoicesProps
           <h2 className="daily-choices-meal-title">{meal.meal}</h2>
           <ul className="daily-choices-list">
             {meal.choices.map((choice) => (
-              <li key={choice.category} className="daily-choices-item">
+              <li
+                key={`${choice.category}|${choice.name}|${choice.amount}|${choice.unit}`}
+                className="daily-choices-item"
+              >
                 {optionLabel(choice)}
               </li>
             ))}

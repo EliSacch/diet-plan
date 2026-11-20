@@ -103,6 +103,38 @@ describe("DailyChoices", () => {
     expect(onPlan).toHaveBeenCalledOnce();
   });
 
+  it("lists every choice when a category has more than one", () => {
+    renderChoices([
+      {
+        meal: "Pranzo",
+        category: "Contorni",
+        name: "Insalata mista",
+        amount: null,
+        unit: null,
+      },
+      {
+        meal: "Pranzo",
+        category: "Contorni",
+        name: "Zucchine",
+        amount: 150,
+        unit: "g",
+      },
+      {
+        meal: "Pranzo",
+        category: "Primi",
+        name: "Pasta",
+        amount: 80,
+        unit: "g",
+      },
+    ]);
+
+    expect(screen.getAllByRole("listitem").map((el) => el.textContent)).toEqual([
+      "Pasta 80 g",
+      "Insalata mista",
+      "Zucchine 150 g",
+    ]);
+  });
+
   it("keeps saved picks whose category or meal is no longer in the active plan", () => {
     renderChoices([
       {
