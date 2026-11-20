@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.handlers import register_error_handlers
 from app.diet.extract import register
 from app.diet.plugins.progeo import ProgeoExtractor
+from app.frontend import register_frontend
 from app.routers.auth import router as auth_router
 from app.routers.custom_options import router as custom_options_router
 from app.routers.days import router as days_router
@@ -53,11 +54,9 @@ if __name__ == "__main__":  # pragma: no cover
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
 
 
-@app.get("/", include_in_schema=False)
-def home():
-    return {"message": "API Home"}
-
-
 @app.get("/api/health", include_in_schema=False)
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+register_frontend(app, settings.STATIC_DIR)
