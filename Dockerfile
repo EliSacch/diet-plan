@@ -9,7 +9,7 @@ COPY frontend/ ./
 RUN yarn build
 
 # python:3.13-slim-bookworm + uv:0.13.9 (install only; not copied to runtime)
-FROM python:3.13-slim-bookworm@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72 AS backend
+FROM python:3.15-slim-bookworm@sha256:96599df822d0e1c6bb700014a05c7f3c8cabc6e0f7ff3c4f9f69cee033b4b5d9 AS backend
 COPY --from=ghcr.io/astral-sh/uv@sha256:d3b601f0c7b118bc1753febf7c41cc80981df678445e0254284eecf84db79a7d /uv /uvx /bin/
 WORKDIR /app/backend
 ENV UV_COMPILE_BYTECODE=1 \
@@ -21,7 +21,7 @@ COPY backend/ ./
 RUN chmod +x /app/backend/start.sh
 
 # Runtime: app + venv + static assets only (no uv, no node)
-FROM python:3.13-slim-bookworm@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72 AS runtime
+FROM python:3.15-slim-bookworm@sha256:96599df822d0e1c6bb700014a05c7f3c8cabc6e0f7ff3c4f9f69cee033b4b5d9 AS runtime
 RUN groupadd --gid 1000 app \
     && useradd --uid 1000 --gid app --home-dir /app --shell /usr/sbin/nologin app
 
