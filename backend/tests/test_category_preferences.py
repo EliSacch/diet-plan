@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -111,3 +112,66 @@ def test_category_preferences_require_a_session(client: TestClient) -> None:
 
     assert response.status_code == 401
     assert response.json()["code"] == "UNAUTHORIZED"
+
+
+def test_turning_on_rejects_more_than_the_maximum(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "app.category_preferences.service.MAX_MULTI_SELECT_CATEGORIES", 1
+    )
+    _signed_in_with_plan(client)
+    assert (
+        client.put(
+            "/api/category-preferences",
+            json={"category": "Contorni", "multi_select": True},
+        ).status_code
+        == 200
+    )
+
+    response = client.put(
+        "/api/category-preferences",
+        json={"category": "Primi", "multi_select": True},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "VALIDATION_ERROR"
+    assert (
+        _category(client.get(_options_url(MONDAY)).json(), "Pranzo", "Primi")[
+            "multi_select"
+        ]
+        is False
+    )
+
+
+def test_a_failed_save_keeps_the_previous_preference(
+    client: TestClient, database: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _signed_in_with_plan(client)
+    assert (
+        client.put(
+            "/api/category-preferences",
+            json={"category": "Contorni", "multi_select": True},
+        ).status_code
+        == 200
+    )
+
+    def fail_commit(self: Session) -> None:
+        raise RuntimeError("commit failed")
+
+    monkeypatch.setattr(Session, "commit", fail_commit)
+    with pytest.raises(RuntimeError, match="commit failed"):
+        client.put(
+            "/api/category-preferences",
+            json={"category": "Primi", "multi_select": True},
+        )
+    monkeypatch.undo()
+
+    database.expire_all()
+    assert database.scalars(select(CategoryPreference.category)).all() == ["Contorni"]
+    assert (
+        _category(client.get(_options_url(MONDAY)).json(), "Pranzo", "Primi")[
+            "multi_select"
+        ]
+        is False
+    )

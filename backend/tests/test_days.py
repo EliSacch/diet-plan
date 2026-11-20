@@ -109,9 +109,7 @@ def test_a_day_can_store_multiple_choices_for_the_same_slot(
     database: Session,
 ) -> None:
     ada = _user(database)
-    database.add_all(
-        [_choice(ada.id), _choice(ada.id, name="Riso", amount=70)]
-    )
+    database.add_all([_choice(ada.id), _choice(ada.id, name="Riso", amount=70)])
     database.commit()
 
     rows = database.scalars(
@@ -400,9 +398,7 @@ def test_options_return_a_pick_whose_custom_option_was_deleted_as_current(
 
     primi = _category(options, "Pranzo", "Primi")
     assert primi["custom_options"] == []
-    assert primi["current"] == [
-        {"name": "Pasta di farro", "amount": 70, "unit": "g"}
-    ]
+    assert primi["current"] == [{"name": "Pasta di farro", "amount": 70, "unit": "g"}]
 
 
 def test_options_require_a_session(client: TestClient) -> None:

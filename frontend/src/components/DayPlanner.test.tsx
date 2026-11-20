@@ -107,9 +107,7 @@ function renderPlanner(initial: Partial<PlannerProps> = {}) {
 }
 
 function group(name: string) {
-  return within(
-    screen.queryByRole("radiogroup", { name }) ?? screen.getByRole("group", { name }),
-  );
+  return within(screen.queryByRole("radiogroup", { name }) ?? screen.getByRole("group", { name }));
 }
 
 function option(groupName: string, label: string) {
@@ -396,7 +394,13 @@ describe("DayPlanner", () => {
 
   it("saves every chosen option when multi-select is on", () => {
     const { onSave } = renderPlanner({ day: mondayWith({ multi_select: true }) });
-    const riso: DayChoice = { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" };
+    const riso: DayChoice = {
+      meal: "Pranzo",
+      category: "Primi",
+      name: "Riso",
+      amount: 70,
+      unit: "g",
+    };
 
     fireEvent.click(toggle("Primi"));
     fireEvent.click(option("Primi", "Pasta 80 g"));
@@ -413,7 +417,10 @@ describe("DayPlanner", () => {
   it("keeps multiple picks after multi-select is turned off and replaces them on the next choice", () => {
     const { onSave } = renderPlanner({
       day: mondayWith({ multi_select: true }),
-      choices: [pasta80, { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" }],
+      choices: [
+        pasta80,
+        { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" },
+      ],
     });
 
     updatePlanner({ day: mondayWith({ multi_select: false }) });
@@ -446,7 +453,10 @@ describe("DayPlanner", () => {
   it("deselects one of several checkbox picks", () => {
     const { onSave } = renderPlanner({
       day: mondayWith({ multi_select: true }),
-      choices: [pasta80, { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" }],
+      choices: [
+        pasta80,
+        { meal: "Pranzo", category: "Primi", name: "Riso", amount: 70, unit: "g" },
+      ],
     });
 
     fireEvent.click(toggle("Primi"));

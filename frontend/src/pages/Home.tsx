@@ -89,8 +89,7 @@ function HomeDay({
     setCategoryPreference.mutate(
       { category, multi_select: multiSelect },
       {
-        onError: (error) =>
-          showToast({ message: dietPlanErrorMessage(error), variant: "error" }),
+        onError: (error) => showToast({ message: dietPlanErrorMessage(error), variant: "error" }),
       },
     );
   }

@@ -35,9 +35,7 @@ def set_category_preference(
                     f"At most {MAX_MULTI_SELECT_CATEGORIES} categories can allow "
                     "multiple choices",
                 )
-            db.add(
-                CategoryPreferenceRow(user_id=user_id, category=preference.category)
-            )
+            db.add(CategoryPreferenceRow(user_id=user_id, category=preference.category))
         elif not preference.multi_select and enabled:
             db.execute(
                 delete(CategoryPreferenceRow).where(
