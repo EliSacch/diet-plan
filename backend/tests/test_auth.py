@@ -151,31 +151,43 @@ def test_callback_rejects_a_missing_state(
 
 
 def test_callback_rejects_a_mismatched_state(
-    client: TestClient, database: Session
+    client: TestClient,
+    database: Session,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     google_state(client)
 
-    response = client.get(
-        "/auth/google/callback",
-        params={"code": "code", "state": "other-state"},
-        follow_redirects=False,
-    )
+    with caplog.at_level("WARNING", logger="app.security"):
+        response = client.get(
+            "/auth/google/callback",
+            params={"code": "code", "state": "other-state"},
+            follow_redirects=False,
+        )
 
     assert response.status_code == 400
     assert response.json()["code"] == "OAUTH_STATE_INVALID"
     assert database.scalar(select(func.count()).select_from(User)) == 0
+    assert any(
+        "security_event=app_error" in record.getMessage()
+        and "code=OAUTH_STATE_INVALID" in record.getMessage()
+        and "path=/auth/google/callback" in record.getMessage()
+        and "code=code" not in record.getMessage()
+        for record in caplog.records
+    )
 
 
 def test_callback_signs_in_and_a_second_login_keeps_the_user(
     client: TestClient,
     database: Session,
     scripted: ScriptedGoogleHttp,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    first = client.get(
-        "/auth/google/callback",
-        params={"code": "first", "state": google_state(client)},
-        follow_redirects=False,
-    )
+    with caplog.at_level("INFO", logger="app.security"):
+        first = client.get(
+            "/auth/google/callback",
+            params={"code": "first", "state": google_state(client)},
+            follow_redirects=False,
+        )
     assert first.status_code == 302
     assert urlparse(first.headers["location"]).path == "/"
     session_cookie = _set_cookie(first, settings.SESSION_COOKIE_NAME)
@@ -183,6 +195,12 @@ def test_callback_signs_in_and_a_second_login_keeps_the_user(
     assert "Secure" in session_cookie
     assert "Path=/" in session_cookie
     assert f"Max-Age={settings.SESSION_TTL_SECONDS}" in session_cookie
+    assert any(
+        "security_event=login_success" in record.getMessage()
+        and "user_id=" in record.getMessage()
+        and "path=/auth/google/callback" in record.getMessage()
+        for record in caplog.records
+    )
 
     profile = client.get("/api/profile")
     assert profile.status_code == 200
@@ -274,7 +292,11 @@ def test_profile_rejects_a_session_without_a_user(
     assert response.status_code == 401
 
 
-def test_logout_deletes_the_session(client: TestClient, database: Session) -> None:
+def test_logout_deletes_the_session(
+    client: TestClient,
+    database: Session,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     client.get(
         "/auth/google/callback",
         params={"code": "first", "state": google_state(client)},
@@ -283,13 +305,19 @@ def test_logout_deletes_the_session(client: TestClient, database: Session) -> No
     session = database.scalar(select(UserSession))
     assert session is not None
 
-    response = client.post("/auth/logout")
+    with caplog.at_level("INFO", logger="app.security"):
+        response = client.post("/auth/logout")
 
     assert response.status_code == 204
     assert "Max-Age=0" in _set_cookie(response, settings.SESSION_COOKIE_NAME)
     database.expire_all()
     assert database.get(UserSession, session.id) is None
     assert client.get("/api/profile").status_code == 401
+    assert any(
+        "security_event=logout" in record.getMessage()
+        and f"user_id={session.user_id}" in record.getMessage()
+        for record in caplog.records
+    )
 
 
 def test_logout_clears_a_missing_session(client: TestClient) -> None:
