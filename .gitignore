@@ -2,12 +2,12 @@ backend/.venv
 backend/.env
 __pycache__/
 *.py[cod]
-.coverage
-.coverage.*
+.coverage*
 htmlcov/
 coverage/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 
 
 frontend/node_modules/

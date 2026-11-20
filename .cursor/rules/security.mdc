@@ -24,6 +24,7 @@ Deny by default. The server is the authority; frontend route guards are UX only.
 
 - Cap request bodies and structural limits (Pydantic / existing diet limits).
 - Rate-limit expensive work **before** it runs (PDF parse, plan replace). Count failures toward the quota when the work is attacker-controlled.
+- Keep `SecurityHeadersMiddleware` (CSP, nosniff, frame deny, referrer, HSTS when cookies are Secure). Prefer self-hosted fonts over third-party CDNs.
 - No `dangerouslySetInnerHTML`, `eval`, `innerHTML`, shell, or user-controlled fetch URLs.
 
 ## Secrets and supply chain
