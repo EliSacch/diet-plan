@@ -119,9 +119,7 @@ def test_revoke_other_sessions_keeps_current(
     assert database.scalar(select(func.count()).select_from(UserSession)) == 1
 
 
-def test_revoke_all_sessions_signs_out(
-    client: TestClient, database: Session
-) -> None:
+def test_revoke_all_sessions_signs_out(client: TestClient, database: Session) -> None:
     sign_in(client)
     user = database.scalars(select(User)).one()
     database.add(
@@ -142,9 +140,7 @@ def test_revoke_all_sessions_signs_out(
     assert client.get("/api/profile").status_code == 401
 
 
-def test_delete_other_session(
-    client: TestClient, database: Session
-) -> None:
+def test_delete_other_session(client: TestClient, database: Session) -> None:
     sign_in(client)
     user = database.scalars(select(User)).one()
     other_id = uuid4()

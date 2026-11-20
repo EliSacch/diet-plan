@@ -19,25 +19,28 @@ def test_device_label_parses_common_agents() -> None:
     assert device_label(chrome_mac) == "Chrome on macOS"
     assert device_label(None) == "Unknown device"
     assert device_label("") == "Unknown device"
-    assert device_label("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0") == (
-        "Firefox on Windows"
+    assert device_label(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+    ) == ("Firefox on Windows")
+    assert device_label(
+        "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36"
+    ) == ("Chrome on Android")
+    assert device_label(
+        "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Safari/604.1"
+    ) == ("Safari on iPad")
+    assert device_label(
+        "Mozilla/5.0 (X11; CrOS x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+    ) == ("Chrome on ChromeOS")
+    assert device_label(
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+    ) == ("Chrome on Linux")
+    assert device_label(
+        "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+    ) == ("Edge on Windows")
+    assert (
+        device_label("Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14")
+        == "Opera on Windows"
     )
-    assert device_label("Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36") == (
-        "Chrome on Android"
-    )
-    assert device_label("Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Safari/604.1") == (
-        "Safari on iPad"
-    )
-    assert device_label("Mozilla/5.0 (X11; CrOS x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36") == (
-        "Chrome on ChromeOS"
-    )
-    assert device_label("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36") == (
-        "Chrome on Linux"
-    )
-    assert device_label("Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0") == (
-        "Edge on Windows"
-    )
-    assert device_label("Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14") == "Opera on Windows"
 
 
 def test_approximate_location_for_private_ips(
@@ -97,7 +100,9 @@ def test_lookup_public_location_fails_open(
 def test_lookup_public_location_ignores_error_payloads(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def error_status(url: str, timeout: float, headers: dict[str, str]) -> httpx.Response:
+    def error_status(
+        url: str, timeout: float, headers: dict[str, str]
+    ) -> httpx.Response:
         return httpx.Response(500, request=httpx.Request("GET", url))
 
     monkeypatch.setattr("app.auth.client_meta.httpx.get", error_status)

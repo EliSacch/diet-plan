@@ -23,7 +23,8 @@ def list_sessions(
         sessions=[
             SessionInfo(
                 id=row.id,
-                is_current=current_session_id is not None and row.id == current_session_id,
+                is_current=current_session_id is not None
+                and row.id == current_session_id,
                 device=row.device_label or "Unknown device",
                 location=row.location_label,
                 created_at=as_utc(row.created_at),

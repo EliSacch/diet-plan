@@ -104,5 +104,3 @@ def lookup_public_location(ip: str) -> str | None:
     except (httpx.HTTPError, ValueError, TypeError):
         logger.debug("Could not resolve location for session IP", exc_info=True)
         return None
-
-
