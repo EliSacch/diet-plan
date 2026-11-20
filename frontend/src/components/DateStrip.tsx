@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { getLocale, t } from "../i18n";
 import { addDays, parseIsoDate, todayIso, toIsoDate } from "../utils/date";
@@ -41,6 +41,26 @@ function nextEnabledDate(
     }
   }
   return null;
+}
+
+function onDaysKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+  const buttons = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"),
+  );
+  const current = buttons.indexOf(event.target as HTMLButtonElement);
+  const last = buttons.length - 1;
+  const targets: Partial<Record<string, number>> = {
+    ArrowLeft: Math.max(current - 1, 0),
+    ArrowRight: Math.min(current + 1, last),
+    Home: 0,
+    End: last,
+  };
+  const target = targets[event.key];
+  if (target === undefined) {
+    return;
+  }
+  event.preventDefault();
+  (buttons[target] as HTMLButtonElement).focus();
 }
 
 export default function DateStrip({
@@ -100,7 +120,12 @@ export default function DateStrip({
         >
           <Chevron path="m15 6-6 6 6 6" />
         </button>
-        <div className="date-strip-days" role="group" aria-label={t("DAY")}>
+        <div
+          className="date-strip-days"
+          role="group"
+          aria-label={t("DAY")}
+          onKeyDown={onDaysKeyDown}
+        >
           {dates.map((date) => {
             const iso = toIsoDate(date);
             const isSelected = iso === value;
@@ -113,6 +138,7 @@ export default function DateStrip({
                 aria-label={fullDate.format(date)}
                 aria-pressed={isSelected}
                 aria-current={iso === today ? "date" : undefined}
+                tabIndex={isSelected ? 0 : -1}
                 disabled={isDateDisabled(date)}
                 onClick={() => onChange(iso)}
               >

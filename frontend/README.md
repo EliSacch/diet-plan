@@ -30,6 +30,10 @@ The React Compiler is not enabled on this template because of its impact on dev 
 
 ## Accessibility
 
+The day strip on the home page shows 31 days. Only the selected day is a Tab stop. Tab moves to that day, and the next Tab leaves the strip.
+
+Inside the strip, Left and Right move focus to the previous and next available day, skipping days the plan does not cover. Home and End move to the first and last available day. Enter or Space selects the focused day. Moving focus does not change the selected day.
+
 ## Languages
 
 English in `src/i18n/locales/en.ts` is the source catalog. `MessageCatalog` is derived from its `errors` keys, so every other language file must use the same keys. Italian in `src/i18n/locales/it.ts` is checked with `satisfies MessageCatalog`.
