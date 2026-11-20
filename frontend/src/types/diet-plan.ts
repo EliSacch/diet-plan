@@ -23,3 +23,8 @@ export type PlanDay = {
 export type PlanDocument = {
   days: PlanDay[];
 };
+
+export type ActiveDietPlan = PlanDocument & {
+  source_filename: string | null;
+  uploaded_at: string;
+};

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, model_validator
@@ -53,3 +54,8 @@ class PlanDocument(BaseModel):
         if count > MAX_OPTIONS:
             raise ValueError(f"A document can contain at most {MAX_OPTIONS} options")
         return self
+
+
+class ActiveDietPlan(PlanDocument):
+    source_filename: str | None = None
+    uploaded_at: datetime

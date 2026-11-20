@@ -13,6 +13,7 @@ export const en = {
     UNKNOWN: "Something went wrong.",
   },
   labels: {
+    ACCOUNT: "Account",
     ADD: "Add",
     ADD_CUSTOM_OPTION: "Add custom option",
     AMOUNT: "Amount",
@@ -75,10 +76,12 @@ export const en = {
     UNSAVED_CHANGES_MESSAGE: "Your meal picks haven't been saved yet.",
     UNSAVED_CHANGES_TITLE: "Discard unsaved changes?",
     UPLOAD_COMPLETED: "Completed",
+    UPLOAD_DATE: "Upload date",
     UPLOAD_DIET_PLAN: "Upload diet plan",
     UPLOAD_FORMAT_HINT: "PDF only · Max 1 MB",
     UPLOAD_PROGRESS: "Upload progress",
     UPLOADED: "uploaded",
+    UPLOADED_FILE: "Uploaded file",
     WELCOME_UPLOAD_MEAL_PLAN: "Welcome. Upload a meal plan to get started.",
   },
 } as const;

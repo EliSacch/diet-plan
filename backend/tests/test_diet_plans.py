@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -17,10 +17,20 @@ from app.core.exceptions import AppError
 from app.diet.extract import extract
 from app.diet.limits import MAX_BODY_BYTES, POSTS_PER_HOUR
 from app.diet.plugins.progeo import ProgeoExtractor, _Line, _PlanBuilder, _wrapped_name
-from app.diet.service import purge_replaced_plans
+from app.diet.service import _as_utc, purge_replaced_plans
 from app.models.diet import DietOption, DietPlan
 from app.models.user import User
 from app.schemas.diet_plan import PlanDocument
+
+
+def assert_active_without_file(
+    body: dict[str, object], document: dict[str, object]
+) -> None:
+    assert body["days"] == document["days"]
+    assert body["source_filename"] is None
+    uploaded_at = body["uploaded_at"]
+    assert isinstance(uploaded_at, str)
+    datetime.fromisoformat(uploaded_at)
 
 
 def sign_in(client: TestClient) -> None:
@@ -170,7 +180,8 @@ def test_post_stores_the_document_and_get_returns_it(
 
     assert active.status_code == 200
     body = active.json()
-    assert body == payload
+    assert_active_without_file(body, payload)
+    assert datetime.fromisoformat(str(body["uploaded_at"])) == _as_utc(plan.uploaded_at)
     assert [day["day"] for day in body["days"]] == ["Lunedì", "Martedì"]
     assert [meal["meal"] for meal in body["days"][0]["meals"]] == [
         "Colazione",
@@ -198,7 +209,9 @@ def test_second_post_leaves_one_active_plan(
     database.expire_all()
     plans = database.scalars(select(DietPlan).order_by(DietPlan.id)).all()
     assert [plan.is_active for plan in plans] == [False, True]
-    assert client.get("/api/diet-plans/active").json() == replacement_document()
+    assert_active_without_file(
+        client.get("/api/diet-plans/active").json(), replacement_document()
+    )
 
 
 def test_failed_replace_keeps_the_previous_plan(
@@ -220,6 +233,14 @@ def test_failed_replace_keeps_the_previous_plan(
     assert len(plans) == 1
     assert plans[0].is_active is True
     assert plans[0].extracted_json == PlanDocument.model_validate(payload).model_dump()
+
+
+def test_as_utc_normalizes_naive_and_aware_values() -> None:
+    # SQLite returns naive datetimes, so this case has to stay timezone-unaware.
+    naive = datetime(2026, 3, 15, 9, 5)  # noqa: DTZ001
+    assert _as_utc(naive) == datetime(2026, 3, 15, 9, 5, tzinfo=UTC)
+    offset = datetime(2026, 3, 15, 11, 5, tzinfo=timezone(timedelta(hours=2)))
+    assert _as_utc(offset) == datetime(2026, 3, 15, 9, 5, tzinfo=UTC)
 
 
 def test_get_active_without_a_plan_is_not_found(client: TestClient) -> None:
@@ -599,6 +620,13 @@ def test_upload_reads_the_september_plan(client: TestClient, database: Session) 
     assert oat["unit"] == "g"
     plan = database.scalars(select(DietPlan).where(DietPlan.is_active.is_(True))).one()
     assert plan.source_filename == pdf.name
+    active = client.get("/api/diet-plans/active")
+    assert active.status_code == 200
+    active_body = active.json()
+    assert active_body["source_filename"] == pdf.name
+    assert datetime.fromisoformat(active_body["uploaded_at"]) == _as_utc(
+        plan.uploaded_at
+    )
 
 
 def _pdf(
@@ -651,7 +679,9 @@ def test_upload_rejects_a_file_that_is_not_a_pdf(
     assert rejected.status_code == 422
     assert rejected.headers["content-type"].startswith("application/problem+json")
     assert rejected.json()["code"] == "VALIDATION_ERROR"
-    assert client.get("/api/diet-plans/active").json() == sample_document()
+    assert_active_without_file(
+        client.get("/api/diet-plans/active").json(), sample_document()
+    )
     database.expire_all()
     assert database.scalars(select(DietPlan)).one().source_filename is None
 
@@ -671,7 +701,9 @@ def test_upload_rejects_a_pdf_that_is_not_a_diet_plan(
 
     assert rejected.status_code == 422
     assert rejected.json()["code"] == "VALIDATION_ERROR"
-    assert client.get("/api/diet-plans/active").json() == sample_document()
+    assert_active_without_file(
+        client.get("/api/diet-plans/active").json(), sample_document()
+    )
     database.expire_all()
     plans = database.scalars(select(DietPlan)).all()
     assert len(plans) == 1

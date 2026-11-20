@@ -1,4 +1,4 @@
-import type { PlanDocument } from "../types/diet-plan";
+import type { ActiveDietPlan, PlanDocument } from "../types/diet-plan";
 import { api } from "./client";
 
 type UploadOptions = {
@@ -7,7 +7,7 @@ type UploadOptions = {
 };
 
 export async function getActiveDietPlan(signal: AbortSignal) {
-  const { data } = await api.get<PlanDocument>("/api/diet-plans/active", { signal });
+  const { data } = await api.get<ActiveDietPlan>("/api/diet-plans/active", { signal });
   return data;
 }
 
