@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
 import { getLocale, t } from "../i18n";
-import type { DayChoice, DayOptions } from "../types/day";
+import type { CustomOptionValues, DayChoice, DayOptions } from "../types/day";
 import { addDays, parseIsoDate, toIsoDate } from "../utils/date";
+import { optionLabel } from "../utils/plan";
 import ConfirmModal from "./ConfirmModal";
 import DayPlanner from "./DayPlanner";
 import Drawer from "./Drawer";
@@ -22,6 +23,7 @@ type DayPlannerDrawerProps = {
   onSave: (choices: DayChoice[]) => void;
   saving: boolean;
   onClose: () => void;
+  onDeleteCustomOption: (id: number) => void;
 };
 
 type PendingIntent = { type: "close" } | { type: "date"; isoDate: string } | null;
@@ -67,10 +69,17 @@ function OpenDayPlannerDrawer({
   onSave,
   saving,
   onClose,
+  onDeleteCustomOption,
 }: Omit<DayPlannerDrawerProps, "open">) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [dirty, setDirty] = useState(false);
   const [pendingIntent, setPendingIntent] = useState<PendingIntent>(null);
+  const [pendingDelete, setPendingDelete] = useState<CustomOptionValues | null>(null);
+
+  function confirmDelete() {
+    onDeleteCustomOption((pendingDelete as CustomOptionValues).id);
+    setPendingDelete(null);
+  }
 
   useEffect(() => {
     (bodyRef.current as HTMLDivElement).scrollTop = 0;
@@ -158,6 +167,7 @@ function OpenDayPlannerDrawer({
         onSave={onSave}
         saving={saving}
         onDirtyChange={setDirty}
+        onDeleteCustomOption={setPendingDelete}
       />
     );
   }
@@ -170,7 +180,7 @@ function OpenDayPlannerDrawer({
         onClose={requestClose}
         headerExtras={stepper}
         bodyRef={bodyRef}
-        closeDisabled={pendingIntent !== null}
+        closeDisabled={pendingIntent !== null || pendingDelete !== null}
       >
         <div className="plan-sections">{body}</div>
       </Drawer>
@@ -183,6 +193,19 @@ function OpenDayPlannerDrawer({
         onCancel={() => setPendingIntent(null)}
       >
         <p>{t("UNSAVED_CHANGES_MESSAGE")}</p>
+      </ConfirmModal>
+      <ConfirmModal
+        open={pendingDelete !== null}
+        title={t("DELETE_CUSTOM_OPTION_TITLE")}
+        confirmLabel={t("DELETE")}
+        cancelLabel={t("CANCEL")}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      >
+        <p>
+          <strong>{pendingDelete === null ? "" : optionLabel(pendingDelete)}</strong>
+        </p>
+        <p>{t("DELETE_CUSTOM_OPTION_MESSAGE")}</p>
       </ConfirmModal>
     </>
   );

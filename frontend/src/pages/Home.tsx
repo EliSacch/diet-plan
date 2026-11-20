@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { dietPlanErrorMessage, useActiveDietPlan } from "../hooks/useActiveDietPlan";
+import { useDeleteCustomOption } from "../hooks/useCustomOptions";
 import { useDay, useDayOptions, useSaveDay } from "../hooks/useDay";
 import { useToast } from "../hooks/useToast";
 import { t } from "../i18n";
@@ -40,6 +41,7 @@ function HomeDay({
 }) {
   const day = useDay(selectedDate);
   const save = useSaveDay(selectedDate);
+  const deleteCustomOption = useDeleteCustomOption();
   const showToast = useToast();
   const [plannerOpen, setPlannerOpen] = useState(false);
   const options = useDayOptions(selectedDate, { enabled: plannerOpen });
@@ -52,6 +54,13 @@ function HomeDay({
   function onSave(choices: DayChoice[]) {
     save.mutate(choices, {
       onSuccess: () => showToast({ message: t("DAY_SAVED") }),
+      onError: (error) => showToast({ message: dietPlanErrorMessage(error), variant: "error" }),
+    });
+  }
+
+  function onDeleteCustomOption(id: number) {
+    deleteCustomOption.mutate(id, {
+      onSuccess: () => showToast({ message: t("CUSTOM_OPTION_DELETED") }),
       onError: (error) => showToast({ message: dietPlanErrorMessage(error), variant: "error" }),
     });
   }
@@ -92,6 +101,7 @@ function HomeDay({
         onSave={onSave}
         saving={save.isPending}
         onClose={() => setPlannerOpen(false)}
+        onDeleteCustomOption={onDeleteCustomOption}
       />
     </div>
   );
