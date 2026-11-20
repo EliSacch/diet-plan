@@ -103,20 +103,19 @@ def save_day(
     choices: list[DayChoice],
 ) -> Day:
     try:
-        allowed = _allowed_values(db, user_id, target_date) | _saved_values(
+        allowed = _plan_slots(db, user_id, target_date) | _saved_slots(
             db, user_id, target_date
         )
 
         picked: list[ChoiceValues] = []
         for index, choice in enumerate(choices):
-            values = _values(choice)
-            if values not in allowed:
+            if (choice.meal, choice.category) not in allowed:
                 raise AppError(
                     422,
                     "validation_error",
-                    f"choices.{index}: not an option of the active diet plan",
+                    f"choices.{index}: not a meal and category of the active diet plan",
                 )
-            picked.append(values)
+            picked.append(_values(choice))
 
         db.execute(
             delete(DailyChoice).where(
@@ -153,27 +152,26 @@ def _plan_day(db: Session, user_id: int, target_date: date) -> PlanDay:
     return document.days[weekday]
 
 
-def _allowed_values(db: Session, user_id: int, target_date: date) -> set[ChoiceValues]:
+def _plan_slots(db: Session, user_id: int, target_date: date) -> set[Slot]:
     try:
         plan_day = _plan_day(db, user_id, target_date)
     except AppError:
         return set()
     return {
-        (meal.meal, category.category, option.name, option.amount, option.unit)
+        (meal.meal, category.category)
         for meal in plan_day.meals
         for category in meal.categories
-        for option in category.options
     }
 
 
-def _saved_values(db: Session, user_id: int, target_date: date) -> set[ChoiceValues]:
-    saved = db.scalars(
-        select(DailyChoice).where(
+def _saved_slots(db: Session, user_id: int, target_date: date) -> set[Slot]:
+    saved = db.execute(
+        select(DailyChoice.meal, DailyChoice.category).where(
             DailyChoice.user_id == user_id,
             DailyChoice.date == target_date,
         )
     ).all()
-    return {_values(choice) for choice in saved}
+    return {(meal, category) for meal, category in saved}
 
 
 def _values(row: DailyChoice | DayChoice) -> ChoiceValues:
