@@ -16,7 +16,8 @@
   min-width: 0;
 
   @media (max-width: 768px) {
-    padding-bottom: calc(var(--padding-lg) + 64px + env(safe-area-inset-bottom));
+    padding-top: calc(var(--nav-bar-height) + env(safe-area-inset-top) + var(--padding-lg));
+    padding-bottom: calc(var(--padding-lg) + var(--nav-bar-height) + env(safe-area-inset-bottom));
   }
 }
 

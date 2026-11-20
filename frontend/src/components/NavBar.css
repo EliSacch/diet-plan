@@ -73,21 +73,23 @@
 @media (max-width: 768px) {
   .nav-bar {
     position: fixed;
-    top: auto;
-    bottom: 0;
+    top: 0;
+    bottom: auto;
     left: 0;
-    height: auto;
-    padding: 0 0 env(safe-area-inset-bottom);
-    border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
-    border-bottom: 0;
-  }
-
-  .nav-bar-brand {
-    display: none;
+    justify-content: center;
+    height: calc(var(--nav-bar-height) + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) var(--padding-lg) 0;
   }
 
   .nav-bar nav {
-    flex: 1;
+    position: fixed;
+    z-index: 5;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--bg);
+    border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
   }
 
   .nav-bar ul {

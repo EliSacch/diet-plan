@@ -10,10 +10,6 @@
   height: var(--day-picker-height, auto);
   padding: var(--padding-sm) 0;
   background: var(--bg);
-
-  @media (max-width: 768px) {
-    padding-top: calc(var(--padding-sm) + env(safe-area-inset-top));
-  }
 }
 
 .date-strip-month {
