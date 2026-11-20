@@ -33,6 +33,16 @@ describe("Button", () => {
     expect(button.querySelector(".btn-spinner")).toBeTruthy();
   });
 
+  it("renders filled and outline danger buttons", () => {
+    const { rerender } = render(<Button variant="danger">Delete</Button>);
+    expect(screen.getByRole("button", { name: "Delete" }).className).toBe("btn btn-danger");
+
+    rerender(<Button variant="danger-secondary">Delete</Button>);
+    expect(screen.getByRole("button", { name: "Delete" }).className).toBe(
+      "btn btn-danger-secondary",
+    );
+  });
+
   it("can be disabled and keep an extra class", () => {
     render(
       <Button className="extra" disabled>

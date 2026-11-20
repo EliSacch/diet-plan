@@ -83,7 +83,18 @@ describe("SessionProvider", () => {
 
   it("shows the catalog message when sign out fails", async () => {
     window.history.pushState({}, "", "/profile");
-    vi.spyOn(api, "get").mockResolvedValue(axiosResponse({ id: 1, email: "ada@example.com" }));
+    vi.spyOn(api, "get").mockImplementation((url: string) => {
+      if (url === "/api/profile") {
+        return Promise.resolve(axiosResponse({ id: 1, email: "ada@example.com" }));
+      }
+      if (url === "/api/sessions") {
+        return Promise.resolve(axiosResponse({ sessions: [] }));
+      }
+      if (url === "/api/diet-plans/active") {
+        return Promise.reject(axiosFailure(404, { code: "NOT_FOUND" }));
+      }
+      return Promise.reject(new Error(`Unexpected ${url}`));
+    });
     vi.spyOn(api, "post").mockRejectedValue(axiosFailure(500, { code: "INTERNAL_ERROR" }));
 
     render(<App />);
@@ -97,7 +108,18 @@ describe("SessionProvider", () => {
 
   it("shows an unknown error when sign out rejects with a non-error", async () => {
     window.history.pushState({}, "", "/profile");
-    vi.spyOn(api, "get").mockResolvedValue(axiosResponse({ id: 1, email: "ada@example.com" }));
+    vi.spyOn(api, "get").mockImplementation((url: string) => {
+      if (url === "/api/profile") {
+        return Promise.resolve(axiosResponse({ id: 1, email: "ada@example.com" }));
+      }
+      if (url === "/api/sessions") {
+        return Promise.resolve(axiosResponse({ sessions: [] }));
+      }
+      if (url === "/api/diet-plans/active") {
+        return Promise.reject(axiosFailure(404, { code: "NOT_FOUND" }));
+      }
+      return Promise.reject(new Error(`Unexpected ${url}`));
+    });
     vi.spyOn(api, "post").mockRejectedValue("nope");
 
     render(<App />);

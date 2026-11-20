@@ -8,6 +8,7 @@ import type { ActiveDietPlan } from "../types/diet-plan";
 
 import Button from "../components/Button";
 import ConfirmModal from "../components/ConfirmModal";
+import SessionsSection from "../components/SessionsSection";
 import UploadDietPlan from "../components/UploadDietPlan";
 
 import "./Profile.css";
@@ -95,6 +96,7 @@ export default function Profile() {
           </section>
         ) : null}
         <UploadDietPlan />
+        <SessionsSection />
       </div>
       <ConfirmModal
         open={confirmingSignOut}

@@ -46,7 +46,7 @@ def google_callback(
             400, "oauth_state_invalid", "Google sign-in could not be verified"
         )
     user = find_or_create_user(db, google.fetch_profile(code))
-    session = create_session(db, user)
+    session = create_session(db, user, request)
     log_security_event(
         "login_success",
         request=request,

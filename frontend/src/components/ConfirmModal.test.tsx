@@ -57,6 +57,29 @@ describe("ConfirmModal", () => {
     expect(onCancel).toHaveBeenCalledOnce();
   });
 
+  it("pairs filled confirm with outline cancel for the chosen variant", () => {
+    render(
+      <ConfirmModal
+        open
+        title="Sign out everywhere?"
+        confirmLabel="Sign out everywhere"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => {}}
+        onCancel={() => {}}
+      >
+        <p>You will be signed out on every device.</p>
+      </ConfirmModal>,
+    );
+
+    expect(screen.getByRole("button", { name: "Sign out everywhere" }).className).toContain(
+      "btn-danger",
+    );
+    expect(screen.getByRole("button", { name: "Cancel" }).className).toContain(
+      "btn-danger-secondary",
+    );
+  });
+
   it("cancels on Escape without letting the browser close the dialog itself", () => {
     const { onCancel } = renderModal(true);
     const dialog = screen.getByRole("dialog");

@@ -3,7 +3,7 @@ import { type ButtonHTMLAttributes, type ReactNode } from "react";
 import "./Button.css";
 
 type ButtonProps = {
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "danger" | "danger-secondary";
   loading?: boolean;
   children: ReactNode;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">;

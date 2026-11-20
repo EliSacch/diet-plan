@@ -33,7 +33,7 @@
 }
 
 .btn:hover:not(:disabled) {
-  box-shadow: 0 0 0 1px var(--primary);
+  box-shadow: 0 0 0 1px var(--btn-hover-ring, var(--primary));
 }
 
 .btn:hover:not(:disabled)::after {
@@ -85,6 +85,21 @@
   color: var(--primary);
   background: var(--black);
   border-color: var(--primary);
+}
+
+.btn-danger {
+  --btn-hover-ring: var(--danger);
+
+  color: var(--black);
+  background: var(--danger);
+}
+
+.btn-danger-secondary {
+  --btn-hover-ring: var(--danger);
+
+  color: var(--danger);
+  background: var(--black);
+  border-color: var(--danger);
 }
 
 .btn-spinner {
