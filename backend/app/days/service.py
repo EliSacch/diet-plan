@@ -5,21 +5,74 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppError
 from app.diet.service import active_plan_document
+from app.models.custom_option import CustomOption
 from app.models.day import DailyChoice
-from app.schemas.day import Day, DayChoice
-from app.schemas.diet_plan import PlanDay
+from app.schemas.day import (
+    CustomOptionValues,
+    Day,
+    DayChoice,
+    DayOptions,
+    DayOptionsCategory,
+    DayOptionsMeal,
+    OptionValues,
+)
+from app.schemas.diet_plan import PlanDay, PlanOption
 
 type ChoiceValues = tuple[str, str, str, float | None, str | None]
+type Slot = tuple[str, str]
+type Values = tuple[str, float | None, str | None]
 
 
-def get_day_options(db: Session, user_id: int, target_date: date) -> PlanDay:
-    document = active_plan_document(db, user_id)
-    weekday = target_date.weekday()
-    if weekday >= len(document.days):
-        raise AppError(
-            404, "not_found", "No options for this day in the active diet plan"
+def get_day_options(db: Session, user_id: int, target_date: date) -> DayOptions:
+    plan_day = _plan_day(db, user_id, target_date)
+
+    custom_by_slot: dict[Slot, list[CustomOptionValues]] = {}
+    for row in db.scalars(
+        select(CustomOption)
+        .where(CustomOption.user_id == user_id)
+        .order_by(CustomOption.id)
+    ):
+        custom_by_slot.setdefault((row.meal, row.category), []).append(
+            CustomOptionValues(
+                id=row.id, name=row.name, amount=row.amount, unit=row.unit
+            )
         )
-    return document.days[weekday]
+
+    saved_by_slot: dict[Slot, DailyChoice] = {
+        (row.meal, row.category): row
+        for row in db.scalars(
+            select(DailyChoice).where(
+                DailyChoice.user_id == user_id,
+                DailyChoice.date == target_date,
+            )
+        )
+    }
+
+    meals: list[DayOptionsMeal] = []
+    for meal in plan_day.meals:
+        categories: list[DayOptionsCategory] = []
+        for category in meal.categories:
+            slot = (meal.meal, category.category)
+            custom_options = custom_by_slot.get(slot, [])
+            offered = {_option_values(option) for option in category.options} | {
+                _option_values(option) for option in custom_options
+            }
+            saved = saved_by_slot.get(slot)
+            current = None
+            if saved is not None and _option_values(saved) not in offered:
+                current = OptionValues(
+                    name=saved.name, amount=saved.amount, unit=saved.unit
+                )
+            categories.append(
+                DayOptionsCategory(
+                    category=category.category,
+                    options=category.options,
+                    custom_options=custom_options,
+                    current=current,
+                )
+            )
+        meals.append(DayOptionsMeal(meal=meal.meal, categories=categories))
+    return DayOptions(day=plan_day.day, meals=meals)
 
 
 def get_day(db: Session, user_id: int, target_date: date) -> Day:
@@ -90,9 +143,19 @@ def save_day(
     return get_day(db, user_id, target_date)
 
 
+def _plan_day(db: Session, user_id: int, target_date: date) -> PlanDay:
+    document = active_plan_document(db, user_id)
+    weekday = target_date.weekday()
+    if weekday >= len(document.days):
+        raise AppError(
+            404, "not_found", "No options for this day in the active diet plan"
+        )
+    return document.days[weekday]
+
+
 def _allowed_values(db: Session, user_id: int, target_date: date) -> set[ChoiceValues]:
     try:
-        plan_day = get_day_options(db, user_id, target_date)
+        plan_day = _plan_day(db, user_id, target_date)
     except AppError:
         return set()
     return {
@@ -115,3 +178,9 @@ def _saved_values(db: Session, user_id: int, target_date: date) -> set[ChoiceVal
 
 def _values(row: DailyChoice | DayChoice) -> ChoiceValues:
     return (row.meal, row.category, row.name, row.amount, row.unit)
+
+
+def _option_values(
+    option: PlanOption | CustomOptionValues | DailyChoice,
+) -> Values:
+    return (option.name, option.amount, option.unit)
