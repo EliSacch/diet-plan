@@ -49,10 +49,13 @@ def put_day(
 ) -> Day:
     """Replace the choices saved for a day.
 
-    A partial day is allowed. Each choice must match an option of that weekday
-    in the active diet plan, or a choice already saved for this date. Its name,
-    amount and unit are copied, so later plan changes do not change the saved day.
-    A choice that matches neither, or two choices for the same meal and category,
-    return 422 with code VALIDATION_ERROR.
+    A partial day is allowed. Each choice's meal and category must exist for
+    that weekday in the active diet plan, or already be saved for this date.
+    Its name, amount and unit are free, so a choice can be a plan option, a
+    custom option, or an edited value. They are copied, so later changes to the
+    plan or to custom options do not change the saved day, and saving never
+    changes them either.
+    A choice for any other meal and category, or two choices for the same meal
+    and category, return 422 with code VALIDATION_ERROR.
     """
     return save_day(db, user.id, target_date, day.choices)

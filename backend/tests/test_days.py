@@ -537,18 +537,37 @@ def test_reloading_a_day_returns_the_copied_amount(
 
 
 @pytest.mark.parametrize(
-    ("target_date", "choice"),
+    "choice",
     [
-        (MONDAY, {**PASTA, "amount": 500}),
-        (MONDAY, {**PASTA, "unit": "kg"}),
-        (MONDAY, {**PASTA, "name": "Pizza"}),
-        (MONDAY, FISH),
-        (TUESDAY, PASTA),
-        (WEDNESDAY, PASTA),
-        (MONDAY, {**SALAD, "amount": 1}),
+        {**PASTA, "amount": 500},
+        {**PASTA, "unit": "kg"},
+        {**PASTA, "name": "Pizza"},
+        {**PASTA, "amount": None, "unit": None},
+        {**SALAD, "amount": 1},
     ],
 )
-def test_a_choice_must_match_an_option_of_that_weekday_in_the_active_plan(
+def test_a_choice_can_have_any_values_for_a_meal_and_category_of_the_plan(
+    client: TestClient, choice: dict[str, object]
+) -> None:
+    _signed_in_with_plan(client)
+
+    response = client.put(_day_url(MONDAY), json={"choices": [choice]})
+
+    assert response.status_code == 200
+    assert client.get(_day_url(MONDAY)).json()["choices"] == [choice]
+
+
+@pytest.mark.parametrize(
+    ("target_date", "choice"),
+    [
+        (MONDAY, FISH),
+        (MONDAY, {**PASTA, "category": "Secondi"}),
+        (MONDAY, {**PASTA, "meal": "Cena"}),
+        (TUESDAY, PASTA),
+        (WEDNESDAY, PASTA),
+    ],
+)
+def test_a_choice_must_be_for_a_meal_and_category_of_that_weekday(
     client: TestClient, target_date: date, choice: dict[str, object]
 ) -> None:
     _signed_in_with_plan(client)
@@ -558,9 +577,81 @@ def test_a_choice_must_match_an_option_of_that_weekday_in_the_active_plan(
     assert response.status_code == 422
     assert response.json()["code"] == "VALIDATION_ERROR"
     assert response.json()["detail"] == (
-        "choices.0: not an option of the active diet plan"
+        "choices.0: not a meal and category of the active diet plan"
     )
     assert client.get(_day_url(target_date)).json()["choices"] == []
+
+
+def test_an_edited_amount_is_saved_for_that_date_only(
+    client: TestClient, database: Session
+) -> None:
+    _signed_in_with_plan(client)
+    diet_options_before = [
+        (row.name, row.amount, row.unit)
+        for row in database.scalars(select(DietOption).order_by(DietOption.id))
+    ]
+    assert client.put(_day_url(MONDAY), json={"choices": [PASTA]}).status_code == 200
+    assert (
+        client.put(_day_url(NEXT_MONDAY), json={"choices": [PASTA]}).status_code == 200
+    )
+
+    edited = {**PASTA, "amount": 100}
+    saved = client.put(_day_url(MONDAY), json={"choices": [edited]})
+
+    assert saved.status_code == 200
+    assert saved.json()["choices"] == [edited]
+    assert client.get(_day_url(NEXT_MONDAY)).json()["choices"] == [PASTA]
+    next_monday_primi = _category(
+        client.get(_options_url(NEXT_MONDAY)).json(), "Pranzo", "Primi"
+    )
+    assert next_monday_primi["options"] == [
+        {"name": "Pasta", "amount": 80, "unit": "g", "position": 0}
+    ]
+    assert next_monday_primi["current"] is None
+    diet_options_after = [
+        (row.name, row.amount, row.unit)
+        for row in database.scalars(select(DietOption).order_by(DietOption.id))
+    ]
+    assert diet_options_after == diet_options_before
+
+
+def test_a_custom_option_can_be_saved_as_a_choice(
+    client: TestClient, database: Session
+) -> None:
+    _signed_in_with_plan(client)
+    farro = {**PASTA, "name": "Pasta di farro", "amount": 70}
+    created = client.post(
+        "/api/custom-options",
+        json={
+            key: farro[key] for key in ("meal", "category", "name", "amount", "unit")
+        },
+    )
+    assert created.status_code == 201
+
+    saved = client.put(_day_url(MONDAY), json={"choices": [farro]})
+
+    assert saved.status_code == 200
+    assert saved.json()["choices"] == [farro]
+    assert len(database.scalars(select(CustomOption)).all()) == 1
+    assert "Pasta di farro" not in {
+        row.name for row in database.scalars(select(DietOption))
+    }
+
+
+def test_a_saved_choice_can_be_edited_after_the_plan_drops_its_slot(
+    client: TestClient,
+) -> None:
+    _signed_in_with_plan(client)
+    assert client.put(_day_url(MONDAY), json={"choices": [PASTA]}).status_code == 200
+    assert (
+        client.post("/api/diet-plans", json=replacement_document()).status_code == 201
+    )
+
+    edited = {**PASTA, "amount": 90}
+    saved = client.put(_day_url(MONDAY), json={"choices": [edited]})
+
+    assert saved.status_code == 200
+    assert saved.json()["choices"] == [edited]
 
 
 def test_choices_need_an_active_plan(client: TestClient) -> None:
