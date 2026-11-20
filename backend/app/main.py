@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.config import settings
 from app.core.handlers import register_error_handlers
+from app.core.security_headers import SecurityHeadersMiddleware
 from app.diet.extract import register
 from app.diet.plugins.progeo import ProgeoExtractor
 from app.frontend import register_frontend
@@ -43,6 +44,7 @@ app = FastAPI(
 )
 
 app.add_middleware(BodySizeLimitMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
