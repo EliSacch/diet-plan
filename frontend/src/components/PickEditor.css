@@ -1,0 +1,61 @@
+.pick-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--padding-md);
+  border: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+  border-radius: 12px;
+}
+
+.pick-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.pick-editor-field label {
+  font-size: 0.875em;
+  color: var(--text-h);
+}
+
+.pick-editor-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--padding-sm);
+  font: inherit;
+  color: var(--text-h);
+  background: color-mix(in srgb, var(--white) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--white) 20%, transparent);
+  border-radius: 12px;
+}
+
+.pick-editor-field input:focus-visible {
+  outline-offset: 0;
+  border-color: var(--primary);
+}
+
+.pick-editor-field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.pick-editor-amount {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pick-editor-amount input {
+  max-width: 160px;
+}
+
+.pick-editor-error {
+  font-size: 0.875em;
+  color: var(--danger);
+}
+
+.pick-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}

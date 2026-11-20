@@ -260,6 +260,27 @@ describe("DayPlannerDrawer", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it("treats an applied edit as an unsaved change that can be discarded", () => {
+    const { onClose } = renderDrawer({ choices: [riso] });
+
+    fireEvent.click(screen.getByRole("button", { name: /^Primi/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit selection" }));
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: "60" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: en.labels.UNSAVED_CHANGES_TITLE })).getByRole(
+        "button",
+        { name: "Discard" },
+      ),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
   it("uses the current locale", () => {
     setLocale("it");
     renderDrawer({ date: "2026-11-16" });

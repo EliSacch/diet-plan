@@ -426,6 +426,32 @@ describe("Home", () => {
     expect(within(drawer).queryByRole("button", { name: /^Secondi/ })).toBeNull();
   });
 
+  it("saves an edited amount for the selected day only", async () => {
+    const edited: DayChoice = { ...pesce, amount: 180 };
+    mockGet({
+      day: (date) => Promise.resolve(axiosResponse<Day>({ date, choices: [pesce] })),
+    });
+    const put = vi
+      .spyOn(api, "put")
+      .mockResolvedValue(axiosResponse<Day>({ date: "2026-11-17", choices: [edited] }));
+
+    renderHome();
+    expect(await screen.findByText("Pesce 150 g")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: en.labels.EDIT }));
+
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Secondi/ }));
+    fireEvent.click(within(drawer).getByRole("button", { name: en.labels.EDIT_PICK }));
+    fireEvent.change(within(drawer).getByRole("spinbutton", { name: en.labels.AMOUNT }), {
+      target: { value: "180" },
+    });
+    fireEvent.click(within(drawer).getByRole("button", { name: en.labels.APPLY }));
+    fireEvent.click(within(drawer).getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText(en.labels.DAY_SAVED)).toBeTruthy();
+    expect(put).toHaveBeenCalledExactlyOnceWith("/api/days/2026-11-17", { choices: [edited] });
+  });
+
   it("deletes a custom option from the planner and refreshes the options", async () => {
     const withSalmone = dayOptionsFrom(plan, "2026-11-17")!;
     withSalmone.meals[0]!.categories[0]!.custom_options = [
