@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent } from "react";
+import { useEffect, useRef } from "react";
 
 import { t } from "../i18n";
 
@@ -22,15 +22,67 @@ type ToastProps = {
 };
 
 export default function Toast({ message, variant, onDismiss }: ToastProps) {
-  const dismissAfterTimeout = useEffectEvent(onDismiss);
+  const onDismissRef = useRef(onDismiss);
+  const remaining = useRef(TOAST_DURATION_MS);
+  const startedAt = useRef(0);
+  const timer = useRef<number | undefined>(undefined);
+  const holds = useRef(0);
+  const persistent = variant === "error";
+
+  function clearTimer() {
+    window.clearTimeout(timer.current);
+    timer.current = undefined;
+  }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => dismissAfterTimeout(), TOAST_DURATION_MS);
-    return () => window.clearTimeout(timer);
-  }, []);
+    onDismissRef.current = onDismiss;
+  });
+
+  function arm() {
+    clearTimer();
+    startedAt.current = Date.now();
+    timer.current = window.setTimeout(() => onDismissRef.current(), remaining.current);
+  }
+
+  useEffect(() => {
+    if (persistent) {
+      return;
+    }
+    arm();
+    return clearTimer;
+  }, [persistent]);
+
+  function hold() {
+    if (persistent) {
+      return;
+    }
+    holds.current += 1;
+    if (holds.current !== 1 || timer.current === undefined) {
+      return;
+    }
+    remaining.current = Math.max(0, remaining.current - (Date.now() - startedAt.current));
+    clearTimer();
+  }
+
+  function release() {
+    if (persistent) {
+      return;
+    }
+    holds.current = Math.max(0, holds.current - 1);
+    if (holds.current === 0) {
+      arm();
+    }
+  }
 
   return (
-    <div className="toast" data-variant={variant} role={variant === "error" ? "alert" : undefined}>
+    <div
+      className="toast"
+      data-variant={variant}
+      onPointerEnter={hold}
+      onPointerLeave={release}
+      onFocus={hold}
+      onBlur={release}
+    >
       <svg
         className="toast-icon"
         viewBox="0 0 24 24"
@@ -44,7 +96,12 @@ export default function Toast({ message, variant, onDismiss }: ToastProps) {
         <path d={icons[variant]} />
       </svg>
       <p>{message}</p>
-      <button type="button" className="toast-dismiss" aria-label={t("DISMISS")} onClick={onDismiss}>
+      <button
+        type="button"
+        className="toast-dismiss"
+        aria-label={`${t("DISMISS")}: ${message}`}
+        onClick={onDismiss}
+      >
         <svg
           viewBox="0 0 24 24"
           fill="none"

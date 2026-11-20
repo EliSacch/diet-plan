@@ -16,6 +16,13 @@ function localeFromBrowser() {
 
 let locale = localeFromBrowser();
 
+function applyLocale(next: string) {
+  locale = next;
+  document.documentElement.lang = next;
+}
+
+applyLocale(locale);
+
 type ErrorCode = Exclude<keyof MessageCatalog["errors"], "UNKNOWN">;
 
 export function getLocale() {
@@ -24,7 +31,7 @@ export function getLocale() {
 
 export function setLocale(next: string) {
   if (catalogs[next]) {
-    locale = next;
+    applyLocale(next);
   }
 }
 

@@ -109,6 +109,7 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scroll-padding-top: calc(44px + 24px + 2 * var(--padding-xs));
   padding: 0 var(--padding-lg);
 
   @media (max-width: 768px) {

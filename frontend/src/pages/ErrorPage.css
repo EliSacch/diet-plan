@@ -17,9 +17,15 @@
   color: var(--primary);
 }
 
-.error-page h2,
+.error-page h1,
 .error-page p {
   margin: 0;
+}
+
+.error-page h1 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
 }
 
 .error-page-actions {

@@ -104,7 +104,8 @@ describe("ActiveDietPlan", () => {
     expect(screen.queryByRole("switch")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: en.labels.PLAN_OPTIONS }));
     expect(screen.getByRole("switch", { name: "Multiple, Primi" })).toHaveProperty("checked", true);
-    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.getByRole("heading", { name: en.labels.PLAN, level: 1 })).toBeTruthy();
+    expect(document.title).toBe(`${en.labels.PLAN} · Diet Plan`);
     expect(screen.queryByLabelText("Upload diet plan")).toBeNull();
   });
 
@@ -171,10 +172,11 @@ describe("ActiveDietPlan", () => {
     fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_OPTIONS }));
     fireEvent.click(screen.getByRole("switch", { name: "Multiple, Primi" }));
 
-    expect(await screen.findByRole("alert")).toHaveProperty(
-      "textContent",
-      en.errors.VALIDATION_ERROR,
-    );
+    expect(
+      (await screen.findByText(en.errors.VALIDATION_ERROR))
+        .closest("[data-variant]")
+        ?.getAttribute("data-variant"),
+    ).toBe("error");
     expect(screen.getByRole("switch", { name: "Multiple, Primi" })).toHaveProperty("checked", true);
   });
 });

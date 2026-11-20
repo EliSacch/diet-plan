@@ -29,10 +29,12 @@ describe("Root", () => {
     render(<App />);
 
     expect(screen.getByRole("status", { name: "Checking your session…" })).toBeTruthy();
+    expect(document.title).toBe(`${en.labels.CHECKING_YOUR_SESSION} · Diet Plan`);
     expect(screen.getByRole("heading", { name: "DietPlan" })).toBeTruthy();
     pending.reject(axiosFailure(401, { code: "UNAUTHORIZED" }));
 
     const link = await screen.findByRole("link", { name: "Sign in with Google" });
+    expect(document.title).toBe(`${en.labels.SIGN_IN_WITH_GOOGLE} · Diet Plan`);
     expect(screen.getByRole("heading", { name: "DietPlan" })).toBeTruthy();
     expect(link.getAttribute("href")).toBe("/auth/google");
     expect(getProfile.mock.calls[0]?.[0]).toBe("/api/profile");
@@ -50,7 +52,8 @@ describe("Root", () => {
     render(<App />);
 
     expect(await screen.findByLabelText("Upload diet plan")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "DietPlan" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: en.labels.HOME, level: 1 })).toBeTruthy();
+    expect(document.title).toBe(`${en.labels.HOME} · Diet Plan`);
     expect(screen.getByText(en.labels.WELCOME_UPLOAD_MEAL_PLAN)).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Sign in with Google" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();

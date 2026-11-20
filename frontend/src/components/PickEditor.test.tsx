@@ -41,7 +41,7 @@ describe("PickEditor", () => {
     expect(screen.getByRole("form", { name: en.labels.EDIT_PICK })).toBeTruthy();
     expect(nameInput().value).toBe("Pasta");
     expect(amountInput().value).toBe("80");
-    expect(screen.getByText("g")).toBeTruthy();
+    expect(screen.getByText("g").id).toBe(amountInput().getAttribute("aria-describedby"));
     expect(document.activeElement).toBe(nameInput());
   });
 
@@ -50,6 +50,7 @@ describe("PickEditor", () => {
 
     expect(amountInput().value).toBe("");
     expect(screen.queryByText("g")).toBeNull();
+    expect(amountInput().getAttribute("aria-describedby")).toBeNull();
   });
 
   it("applies a new amount", () => {
@@ -87,13 +88,14 @@ describe("PickEditor", () => {
     apply();
 
     expect(onApply).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(nameInput());
     expect(nameInput().getAttribute("aria-invalid")).toBe("true");
     expect(amountInput().getAttribute("aria-invalid")).toBe("true");
     expect(screen.getByText(en.labels.NAME_REQUIRED).id).toBe(
       nameInput().getAttribute("aria-describedby"),
     );
-    expect(screen.getByText(en.labels.AMOUNT_INVALID).id).toBe(
-      amountInput().getAttribute("aria-describedby"),
+    expect(amountInput().getAttribute("aria-describedby")).toBe(
+      `${screen.getByText("g").id} ${screen.getByText(en.labels.AMOUNT_INVALID).id}`,
     );
 
     fireEvent.change(nameInput(), { target: { value: "x".repeat(301) } });
@@ -104,11 +106,20 @@ describe("PickEditor", () => {
     expect(screen.getByText(en.labels.NAME_TOO_LONG)).toBeTruthy();
     expect(screen.queryByText(en.labels.AMOUNT_INVALID)).toBeNull();
     expect(amountInput().getAttribute("aria-invalid")).toBe("false");
-    expect(amountInput().getAttribute("aria-describedby")).toBeNull();
+    expect(amountInput().getAttribute("aria-describedby")).toBe(screen.getByText("g").id);
 
     fireEvent.change(nameInput(), { target: { value: "Pasta" } });
     apply();
     expect(onApply).toHaveBeenCalledWith({ name: "Pasta", amount: 90 });
+  });
+
+  it("focuses the amount when it is the first invalid field", () => {
+    renderEditor();
+
+    fireEvent.change(amountInput(), { target: { value: "0" } });
+    apply();
+
+    expect(document.activeElement).toBe(amountInput());
   });
 
   it("cancels without applying", () => {

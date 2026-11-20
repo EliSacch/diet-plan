@@ -44,5 +44,5 @@ export default function ActiveDietPlan() {
     );
   }
 
-  return <PageLayout>{content}</PageLayout>;
+  return <PageLayout title={t("PLAN")}>{content}</PageLayout>;
 }

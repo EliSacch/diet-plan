@@ -29,6 +29,7 @@ describe("Button", () => {
     expect(button.className).toBe("btn btn-secondary");
     expect(button.getAttribute("type")).toBe("submit");
     expect(button.getAttribute("aria-busy")).toBe("true");
+    expect(button.hasAttribute("disabled")).toBe(true);
     expect(button.querySelector(".btn-spinner")).toBeTruthy();
   });
 

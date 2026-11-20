@@ -16,6 +16,7 @@ type PickEditorProps = {
 export default function PickEditor({ pick, onApply, onCancel }: PickEditorProps) {
   const id = useId();
   const nameRef = useRef<HTMLInputElement>(null);
+  const amountRef = useRef<HTMLInputElement>(null);
   const [nameText, setNameText] = useState(pick.name);
   const [amountText, setAmountText] = useState(pick.amount === null ? "" : String(pick.amount));
   const [errors, setErrors] = useState<{ name?: OptionFieldError; amount?: OptionFieldError }>({});
@@ -29,10 +30,19 @@ export default function PickEditor({ pick, onApply, onCancel }: PickEditorProps)
     const parsed = parseOptionFields(nameText, amountText);
     if (parsed.ok) {
       onApply({ name: parsed.name, amount: parsed.amount });
-    } else {
-      setErrors(parsed.errors);
+      return;
     }
+    setErrors(parsed.errors);
+    const target = parsed.errors.name !== undefined ? nameRef : amountRef;
+    target.current?.focus();
   }
+
+  const amountDescribedBy = [
+    pick.unit === null ? undefined : `${id}-amount-unit`,
+    errors.amount === undefined ? undefined : `${id}-amount-error`,
+  ]
+    .filter((item) => item !== undefined)
+    .join(" ");
 
   return (
     <form className="option-form" aria-label={t("EDIT_PICK")} noValidate onSubmit={submit}>
@@ -57,6 +67,7 @@ export default function PickEditor({ pick, onApply, onCancel }: PickEditorProps)
         <label htmlFor={`${id}-amount`}>{t("AMOUNT")}</label>
         <div className="option-form-amount">
           <input
+            ref={amountRef}
             id={`${id}-amount`}
             type="number"
             inputMode="decimal"
@@ -64,10 +75,14 @@ export default function PickEditor({ pick, onApply, onCancel }: PickEditorProps)
             step="any"
             value={amountText}
             aria-invalid={errors.amount !== undefined}
-            aria-describedby={errors.amount === undefined ? undefined : `${id}-amount-error`}
+            aria-describedby={amountDescribedBy === "" ? undefined : amountDescribedBy}
             onChange={(event) => setAmountText(event.target.value)}
           />
-          {pick.unit === null ? null : <span className="option-form-unit">{pick.unit}</span>}
+          {pick.unit === null ? null : (
+            <span id={`${id}-amount-unit`} className="option-form-unit">
+              {pick.unit}
+            </span>
+          )}
         </div>
         {errors.amount === undefined ? null : (
           <p id={`${id}-amount-error`} className="option-form-error">

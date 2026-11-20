@@ -14,6 +14,7 @@ export default function Button({
   className,
   children,
   type = "button",
+  disabled = false,
   ...props
 }: ButtonProps) {
   return (
@@ -21,6 +22,7 @@ export default function Button({
       type={type}
       className={className ? `btn btn-${variant} ${className}` : `btn btn-${variant}`}
       {...props}
+      disabled={loading || disabled}
       aria-busy={loading}
     >
       <span className="btn-label">{children}</span>

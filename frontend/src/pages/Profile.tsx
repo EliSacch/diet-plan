@@ -59,7 +59,7 @@ export default function Profile() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout title={t("PROFILE")}>
       <div className="profile">
         <section className="profile-card profile-account" aria-labelledby={accountId}>
           <div className="profile-identity">
@@ -70,9 +70,7 @@ export default function Profile() {
               <p id={accountId} className="profile-kicker">
                 {t("ACCOUNT")}
               </p>
-              <p className="profile-email" title={session.email}>
-                {session.email}
-              </p>
+              <p className="profile-email">{session.email}</p>
             </div>
           </div>
           <Button variant="secondary" onClick={() => setConfirmingSignOut(true)}>

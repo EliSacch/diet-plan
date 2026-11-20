@@ -24,7 +24,7 @@ A backdrop may use a click handler without a key handler when Escape and a label
 
 - `document.documentElement.lang` matches the active catalog (`en` or `it`).
 - `document.title` names the screen. Sign-in, home, my plan, profile, 404, and 500 do not share one title.
-- Each screen has one `h1` that names the page. Sections use `h2`, then `h3`, without skipping a level.
+- Home, My plan, Profile, 404, and 500 each have one `h1` that names the page. On Home, My plan, and Profile that heading is clipped off screen for sighted users and stays available to screen readers. The sign-in screen uses the DietPlan wordmark as its `h1`. Sections use `h2`, then `h3`, without skipping a level.
 - The main navigation is a `nav` with an accessible name. The current page sets `aria-current="page"`.
 - The current page is not indicated by color alone. Below 768px it still needs a second cue, such as the desktop pill, an underline, or a heavier weight.
 - Decorative images use `alt=""`. Decorative icons use `aria-hidden="true"`. An icon button has an accessible name.
@@ -61,25 +61,10 @@ A backdrop may use a click handler without a key handler when Escape and a label
 ## Color, contrast, and motion
 
 - Text meets 4.5:1 against its background. The current tokens do: body text is about 13.8:1, green is about 8.7:1, warning is about 11.8:1, and danger is about 5.1:1 on the page and 4.9:1 on the upload card.
-- UI boundaries and focus indicators meet 3:1. The unselected day circle border is about 1.4:1 and does not meet this.
+- UI boundaries and focus indicators meet 3:1.
 - Information is not conveyed by color alone.
 - CSS animation and JS motion, including `scrollIntoView({ behavior: "smooth" })`, honor `prefers-reduced-motion`.
 
 ## Current gaps
 
-The requirements above are the bar. These files do not meet them yet. A change that touches one of these files closes its gap in the same change.
-
-| Gap                                                                             | Where                                                                                        |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `lang` stays `en` when the UI is Italian                                        | `index.html`, `src/i18n/index.ts`                                                            |
-| Toasts disappear after 5 seconds, and errors are nested in a polite live region | `src/components/Toast.tsx`, `src/context/ToastContext.tsx`                                   |
-| Invalid fields are not focused on submit                                        | `src/components/CustomOptionForm.tsx`, `src/components/PickEditor.tsx`                       |
-| The amount unit is not associated with the field                                | `src/components/PickEditor.tsx`                                                              |
-| The current nav item is color alone below 768px                                 | `src/components/NavBar.css`                                                                  |
-| Every route shares the title DietPlan                                           | `index.html`, `src/routes/`                                                                  |
-| Sticky headings and the save bar can cover focus                                | `src/styles/plan-sections.css`, `src/components/DayPlanner.css`, `src/components/Drawer.css` |
-| The upload button stays enabled to the keyboard while busy                      | `src/components/UploadDietPlan.tsx`                                                          |
-| Unselected day circles are below 3:1                                            | `src/components/DateStrip.css`                                                               |
-| Home, My plan, and Profile have no `h1`                                         | `src/pages/Home.tsx`, `src/components/DietPlan.tsx`, `src/pages/Profile.tsx`                 |
-| The profile email is truncated, and the full value is only in a tooltip         | `src/pages/Profile.tsx`                                                                      |
-| The date strip smooth-scrolls when reduced motion is requested                  | `src/components/DateStrip.tsx`                                                               |
+The requirements above are the bar. There are no open gaps. A failure of a requirement is added here. A change that touches a listed file closes that gap in the same change.

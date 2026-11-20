@@ -40,6 +40,7 @@ export const en = {
     DRAG_AND_DROP_OR: "Drag & drop your diet plan here or",
     EDIT: "Edit",
     EDIT_PICK: "Edit selection",
+    ERRORS: "Errors",
     FILE_NOT_PDF: "Only PDF files are accepted.",
     FILE_TOO_LARGE: "The file is larger than 1 MB.",
     GO_HOME: "Go home",

@@ -12,6 +12,12 @@
   pointer-events: none;
 }
 
+.toast-viewport section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
 .toast {
   --toast-accent: var(--success);
 

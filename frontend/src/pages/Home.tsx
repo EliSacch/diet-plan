@@ -150,5 +150,5 @@ export default function Home() {
     content = <HomeDay selectedDate={selectedDate} onSelectDate={selectDate} plan={plan.data} />;
   }
 
-  return <PageLayout>{content}</PageLayout>;
+  return <PageLayout title={t("HOME")}>{content}</PageLayout>;
 }

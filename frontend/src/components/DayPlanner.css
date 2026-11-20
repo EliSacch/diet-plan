@@ -172,6 +172,16 @@
   height: 18px;
 }
 
+.drawer-body:has(.day-planner-actions) {
+  scroll-padding-bottom: calc(40px + 2 * var(--padding-md) + 1px);
+}
+
+@media (max-width: 768px) {
+  .drawer-body:has(.day-planner-actions) {
+    scroll-padding-bottom: calc(40px + 2 * var(--padding-md) + env(safe-area-inset-bottom) + 1px);
+  }
+}
+
 .day-planner-actions {
   position: sticky;
   z-index: 4;

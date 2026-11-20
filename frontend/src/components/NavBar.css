@@ -136,6 +136,11 @@
     background: none;
   }
 
+  .nav-bar-link[aria-current="page"] {
+    font-weight: 700;
+    box-shadow: inset 0 -2px 0 var(--primary);
+  }
+
   body:has(.nav-bar) .toast-viewport {
     bottom: calc(64px + env(safe-area-inset-bottom) + var(--spacing-md));
   }

@@ -42,6 +42,7 @@ export const it = {
     DRAG_AND_DROP_OR: "Trascina qui il piano alimentare oppure",
     EDIT: "Modifica",
     EDIT_PICK: "Modifica selezione",
+    ERRORS: "Errori",
     FILE_NOT_PDF: "Sono accettati solo file PDF.",
     FILE_TOO_LARGE: "Il file supera 1 MB.",
     GO_HOME: "Torna alla home",

@@ -13,12 +13,12 @@ type ErrorPageProps = {
 
 export default function ErrorPage({ code, title, message, actions }: ErrorPageProps) {
   return (
-    <SessionLayout>
+    <SessionLayout wordmarkHeading={false}>
       <div className="error-page">
         <p className="error-page-code" aria-hidden="true">
           {code}
         </p>
-        <h2>{title}</h2>
+        <h1>{title}</h1>
         <p>{message}</p>
         <div className="error-page-actions">{actions}</div>
       </div>

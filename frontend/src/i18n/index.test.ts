@@ -28,13 +28,16 @@ describe("messageForProblem", () => {
 
   it("returns the Italian message after setLocale", () => {
     setLocale("it");
+    expect(document.documentElement.lang).toBe("it");
     expect(messageForProblem({ code: "NOT_FOUND" })).toBe(italian.errors.NOT_FOUND);
     setLocale("en");
+    expect(document.documentElement.lang).toBe("en");
   });
 
   it("keeps the current locale when setLocale is given an unknown language", () => {
     setLocale("it");
     setLocale("fr");
+    expect(document.documentElement.lang).toBe("it");
     expect(messageForProblem({ code: "NOT_FOUND" })).toBe(italian.errors.NOT_FOUND);
   });
 });
@@ -75,5 +78,6 @@ describe("localeFromBrowser", () => {
     const { messageForProblem: message } = await import("./index");
 
     expect(message({ code: "NOT_FOUND" })).toBe(en.errors.NOT_FOUND);
+    expect(document.documentElement.lang).toBe("en");
   });
 });

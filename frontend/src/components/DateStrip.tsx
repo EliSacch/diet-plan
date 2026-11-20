@@ -78,7 +78,8 @@ export default function DateStrip({
     if (button === null) {
       return;
     }
-    const behavior = hasMountedRef.current ? "smooth" : "instant";
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+    const behavior = hasMountedRef.current && !reduceMotion ? "smooth" : "instant";
     hasMountedRef.current = true;
     button.scrollIntoView({ behavior, inline: "center", block: "nearest" });
   }, [value]);

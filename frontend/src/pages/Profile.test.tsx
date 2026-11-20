@@ -12,6 +12,8 @@ import Profile from "./Profile";
 
 import App from "../App";
 
+import { en } from "../i18n/locales/en";
+
 import type { AxiosResponse } from "axios";
 
 const uploadedAt = "2026-03-15T09:05:00.000Z";
@@ -80,7 +82,8 @@ describe("Profile", () => {
     const account = await screen.findByRole("region", { name: "Account" });
     expect(within(account).getByText("ada@example.com")).toBeTruthy();
     expect(within(account).getByText("A")).toBeTruthy();
-    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.getByRole("heading", { name: en.labels.PROFILE, level: 1 })).toBeTruthy();
+    expect(document.title).toBe(`${en.labels.PROFILE} · Diet Plan`);
     expect(screen.queryByRole("region", { name: "Uploaded file" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));

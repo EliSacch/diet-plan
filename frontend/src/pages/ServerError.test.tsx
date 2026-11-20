@@ -34,9 +34,10 @@ describe("ServerError", () => {
 
     expect(screen.getByText("500")).toBeTruthy();
     expect(
-      screen.getByRole("heading", { name: en.labels.SOMETHING_WENT_WRONG, level: 2 }),
+      screen.getByRole("heading", { name: en.labels.SOMETHING_WENT_WRONG, level: 1 }),
     ).toBeTruthy();
     expect(screen.getByText(en.labels.SOMETHING_WENT_WRONG_MESSAGE)).toBeTruthy();
+    expect(document.title).toBe(`${en.labels.SOMETHING_WENT_WRONG} · Diet Plan`);
 
     fireEvent.click(screen.getByRole("button", { name: en.labels.TRY_AGAIN }));
     expect(onRetry).toHaveBeenCalledOnce();
@@ -51,7 +52,7 @@ describe("ServerError", () => {
     renderServerError();
 
     expect(
-      screen.getByRole("heading", { name: italian.labels.SOMETHING_WENT_WRONG, level: 2 }),
+      screen.getByRole("heading", { name: italian.labels.SOMETHING_WENT_WRONG, level: 1 }),
     ).toBeTruthy();
     expect(screen.getByText(italian.labels.SOMETHING_WENT_WRONG_MESSAGE)).toBeTruthy();
     expect(screen.getByRole("button", { name: italian.labels.TRY_AGAIN })).toBeTruthy();

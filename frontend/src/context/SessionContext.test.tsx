@@ -35,6 +35,7 @@ describe("SessionProvider", () => {
       "textContent",
       en.errors.INTERNAL_ERROR,
     );
+    expect(document.title).toBe(`${en.labels.SOMETHING_WENT_WRONG} · Diet Plan`);
   });
 
   it("shows the unknown message when a failed response has no problem body", async () => {
@@ -88,9 +89,8 @@ describe("SessionProvider", () => {
     render(<App />);
     await confirmSignOut();
 
-    const toast = await screen.findByRole("alert");
-    expect(toast.textContent).toBe(en.errors.INTERNAL_ERROR);
-    expect(toast.getAttribute("data-variant")).toBe("error");
+    const toast = (await screen.findByText(en.errors.INTERNAL_ERROR)).closest("[data-variant]");
+    expect(toast?.getAttribute("data-variant")).toBe("error");
     expect(screen.getByRole("link", { name: "Profile" }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByText("ada@example.com")).toBeTruthy();
   });
@@ -103,7 +103,11 @@ describe("SessionProvider", () => {
     render(<App />);
     await confirmSignOut();
 
-    expect(await screen.findByRole("alert")).toHaveProperty("textContent", "Unknown error");
+    expect(
+      (await screen.findByText("Unknown error"))
+        .closest("[data-variant]")
+        ?.getAttribute("data-variant"),
+    ).toBe("error");
     expect(screen.getByText("ada@example.com")).toBeTruthy();
   });
 });

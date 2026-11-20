@@ -68,6 +68,27 @@ describe("DateStrip", () => {
     scroll.mockRestore();
   });
 
+  it("scrolls instantly when reduced motion is requested", () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+    const { rerender } = renderStrip({ value: "2026-11-20" });
+
+    rerender(<DateStrip value="2026-12-01" onChange={vi.fn()} />);
+
+    expect(scroll).toHaveBeenLastCalledWith({
+      behavior: "instant",
+      inline: "center",
+      block: "nearest",
+    });
+    scroll.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
   it("steps one day at a time with the previous and next arrows and reports clicked days", () => {
     const { onChange } = renderStrip({ value: "2026-11-19" });
 

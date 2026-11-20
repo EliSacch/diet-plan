@@ -17,6 +17,8 @@ type CustomOptionFormProps = {
 export default function CustomOptionForm({ onSubmit, onCancel }: CustomOptionFormProps) {
   const id = useId();
   const nameRef = useRef<HTMLInputElement>(null);
+  const amountRef = useRef<HTMLInputElement>(null);
+  const unitRef = useRef<HTMLInputElement>(null);
   const [nameText, setNameText] = useState("");
   const [amountText, setAmountText] = useState("");
   const [unitText, setUnitText] = useState("");
@@ -32,7 +34,12 @@ export default function CustomOptionForm({ onSubmit, onCancel }: CustomOptionFor
     const fields = parseOptionFields(nameText, amountText);
     const unit = parseUnit(unitText);
     if (!fields.ok || !unit.ok) {
-      setErrors({ ...(fields.ok ? {} : fields.errors), ...(unit.ok ? {} : { unit: unit.error }) });
+      const next = {
+        ...(fields.ok ? {} : fields.errors),
+        ...(unit.ok ? {} : { unit: unit.error }),
+      };
+      setErrors(next);
+      focusFirstInvalid(next);
       return;
     }
     setErrors({});
@@ -42,6 +49,12 @@ export default function CustomOptionForm({ onSubmit, onCancel }: CustomOptionFor
     } catch {
       setSubmitting(false);
     }
+  }
+
+  function focusFirstInvalid(next: FieldErrors) {
+    const target =
+      next.name !== undefined ? nameRef : next.amount !== undefined ? amountRef : unitRef;
+    target.current?.focus();
   }
 
   function field(
@@ -55,7 +68,7 @@ export default function CustomOptionForm({ onSubmit, onCancel }: CustomOptionFor
       <div className="option-form-field">
         <label htmlFor={inputId}>{label}</label>
         <input
-          ref={key === "name" ? nameRef : undefined}
+          ref={key === "name" ? nameRef : key === "amount" ? amountRef : unitRef}
           id={inputId}
           type={input.type}
           {...(input.type === "number" ? { inputMode: "decimal", min: "0", step: "any" } : {})}

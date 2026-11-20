@@ -30,7 +30,9 @@ describe("NotFound", () => {
     render(<App />);
 
     expect(screen.getByText("404")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: en.labels.PAGE_NOT_FOUND, level: 2 })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: en.labels.PAGE_NOT_FOUND, level: 1 })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "DietPlan" })).toBeNull();
+    expect(document.title).toBe(`${en.labels.PAGE_NOT_FOUND} · Diet Plan`);
     expect(screen.getByText(en.labels.PAGE_NOT_FOUND_MESSAGE)).toBeTruthy();
 
     fireEvent.click(screen.getByRole("link", { name: en.labels.GO_HOME }));
@@ -49,7 +51,7 @@ describe("NotFound", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: italian.labels.PAGE_NOT_FOUND, level: 2 }),
+      screen.getByRole("heading", { name: italian.labels.PAGE_NOT_FOUND, level: 1 }),
     ).toBeTruthy();
     expect(screen.getByText(italian.labels.PAGE_NOT_FOUND_MESSAGE)).toBeTruthy();
     expect(screen.getByRole("link", { name: italian.labels.GO_HOME }).getAttribute("href")).toBe(
