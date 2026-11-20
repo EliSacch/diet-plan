@@ -102,6 +102,38 @@ describe("DateStrip", () => {
     expect(screen.getByRole<HTMLButtonElement>("button", { name: "Next day" }).disabled).toBe(true);
   });
 
+  it("is a single tab stop and moves focus between available days with the keyboard", () => {
+    renderStrip({ value: "2026-11-17", isDateDisabled: (date) => weekdayIndex(date) >= 2 });
+    const press = (key: string) => fireEvent.keyDown(document.activeElement as Element, { key });
+    const focused = () => document.activeElement?.getAttribute("aria-label");
+    const focusable = days().filter((day) => day.tabIndex === 0);
+
+    expect(focusable.map((day) => day.getAttribute("aria-label"))).toEqual([
+      "Tuesday, November 17",
+    ]);
+
+    focusable[0]?.focus();
+    press("ArrowRight");
+    expect(focused()).toBe("Monday, November 23");
+
+    press("ArrowLeft");
+    press("ArrowLeft");
+    expect(focused()).toBe("Monday, November 16");
+
+    press("End");
+    expect(focused()).toBe("Tuesday, December 1");
+    press("ArrowRight");
+    expect(focused()).toBe("Tuesday, December 1");
+
+    press("Home");
+    expect(focused()).toBe("Monday, November 2");
+    press("ArrowLeft");
+    expect(focused()).toBe("Monday, November 2");
+
+    expect(press("Enter")).toBe(true);
+    expect(focused()).toBe("Monday, November 2");
+  });
+
   it("uses the current locale", () => {
     setLocale("it");
     renderStrip({ value: "2026-11-16" });
