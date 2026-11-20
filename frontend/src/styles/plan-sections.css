@@ -11,6 +11,8 @@
 
   @media (max-width: 768px) {
     --sticky-top: calc(var(--nav-bar-height) + env(safe-area-inset-top));
+    /* Pixels, not em: meal headings reuse this length and have a larger font. */
+    --day-picker-height: calc(24px + 2 * var(--padding-sm) + 4px + 2 * var(--padding-xs));
   }
 }
 

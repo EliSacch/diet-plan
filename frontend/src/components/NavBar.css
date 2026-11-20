@@ -21,6 +21,12 @@
   font-family: var(--heading);
   font-size: 20px;
   text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-bar-brand img {
+  /* Safari draws a shadow behind transparent images when the page is in dark mode. */
+  color-scheme: dark;
 }
 
 .nav-bar-diet {
@@ -71,22 +77,35 @@
 }
 
 @media (max-width: 768px) {
+  /* The bar is in the page column, not fixed to a short layout viewport, so a day
+     with little content still pushes it to the bottom of the screen. */
   .nav-bar {
+    display: contents;
+  }
+
+  .nav-bar-brand {
     position: fixed;
+    z-index: 6;
     top: 0;
-    bottom: auto;
+    right: 0;
     left: 0;
     justify-content: center;
+    box-sizing: border-box;
     height: calc(var(--nav-bar-height) + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) var(--padding-lg) 0;
+    background: var(--bg);
+    border-bottom: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
   }
 
   .nav-bar nav {
-    position: fixed;
+    position: sticky;
     z-index: 5;
-    right: 0;
     bottom: 0;
-    left: 0;
+    order: 1;
+    width: 100%;
+    margin-top: auto;
+    box-sizing: border-box;
+    flex-shrink: 0;
     padding-bottom: env(safe-area-inset-bottom);
     background: var(--bg);
     border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
@@ -94,6 +113,7 @@
 
   .nav-bar ul {
     gap: 0;
+    width: 100%;
   }
 
   .nav-bar li {

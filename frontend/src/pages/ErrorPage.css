@@ -1,0 +1,41 @@
+.error-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: min(100%, 28rem);
+  text-align: center;
+}
+
+.error-page-code {
+  margin: 0;
+  font-family: var(--heading);
+  font-size: 64px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -1.92px;
+  color: var(--primary);
+}
+
+.error-page h2,
+.error-page p {
+  margin: 0;
+}
+
+.error-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.error-page-actions .btn {
+  min-width: 160px;
+}
+
+@media (max-width: 1024px) {
+  .error-page-code {
+    font-size: 48px;
+  }
+}

@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { SessionProvider } from "./context/SessionContext";
 import { ToastProvider } from "./context/ToastContext";
 
+import ErrorBoundary from "./pages/ErrorBoundary";
 import AppRoutes from "./routes";
 
 export default function App() {
@@ -16,7 +17,9 @@ export default function App() {
       <ToastProvider>
         <SessionProvider>
           <BrowserRouter>
-            <AppRoutes />
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
           </BrowserRouter>
         </SessionProvider>
       </ToastProvider>

@@ -51,6 +51,13 @@
   box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 75%, transparent);
 }
 
+@media (max-width: 768px) {
+  .day-picker-select select {
+    padding-top: var(--padding-sm);
+    padding-bottom: var(--padding-sm);
+  }
+}
+
 .day-picker-select select option {
   color: var(--text);
   background: var(--black);

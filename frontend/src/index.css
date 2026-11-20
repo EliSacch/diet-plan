@@ -60,9 +60,14 @@
   }
 }
 
+html,
+body,
+#root {
+  min-height: 100dvh;
+}
+
 #root {
   max-width: 100%;
-  min-height: 100svh;
   display: flex;
   box-sizing: border-box;
 }
