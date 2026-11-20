@@ -7,9 +7,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../api/client";
 import { axiosFailure, axiosResponse } from "../test/http";
-import type { Day } from "../types/day";
-import type { PlanDay } from "../types/diet-plan";
-import { dayQueryOptions, useDay, useDayOptions, useSaveDay } from "./useDay";
+import type { Day, DayOptions } from "../types/day";
+import {
+  dayOptionsQueryOptions,
+  dayQueryOptions,
+  isDayOptionsQuery,
+  useDay,
+  useDayOptions,
+  useSaveDay,
+} from "./useDay";
 
 const pasta = {
   meal: "Pranzo",
@@ -19,7 +25,7 @@ const pasta = {
   unit: "g",
 };
 
-const planDay: PlanDay = {
+const planDay: DayOptions = {
   day: "Giovedì",
   meals: [
     {
@@ -28,6 +34,8 @@ const planDay: PlanDay = {
         {
           category: "Primi",
           options: [{ name: "Pasta", amount: 80, unit: "g", position: 0 }],
+          custom_options: [],
+          current: null,
         },
       ],
     },
@@ -82,6 +90,15 @@ describe("useDayOptions", () => {
     expect(get.mock.calls[0]?.[0]).toBe("/api/days/2026-11-19/options");
   });
 
+  it("does not request the options while disabled", () => {
+    const get = vi.spyOn(api, "get");
+
+    const { result } = renderWithClient(() => useDayOptions("2026-11-19", { enabled: false }));
+
+    expect(result.current.fetchStatus).toBe("idle");
+    expect(get).not.toHaveBeenCalled();
+  });
+
   it("returns null when there is no active plan or weekday entry", async () => {
     vi.spyOn(api, "get").mockRejectedValue(axiosFailure(404, { code: "NOT_FOUND" }));
 
@@ -104,6 +121,16 @@ describe("useDayOptions", () => {
   });
 });
 
+describe("isDayOptionsQuery", () => {
+  it("matches only day options query keys", () => {
+    expect(isDayOptionsQuery({ queryKey: dayOptionsQueryOptions("2026-11-19").queryKey })).toBe(
+      true,
+    );
+    expect(isDayOptionsQuery({ queryKey: dayQueryOptions("2026-11-19").queryKey })).toBe(false);
+    expect(isDayOptionsQuery({ queryKey: ["diet-plan", "active"] })).toBe(false);
+  });
+});
+
 describe("useSaveDay", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -119,6 +146,22 @@ describe("useSaveDay", () => {
     expect(put).toHaveBeenCalledWith("/api/days/2026-11-19", { choices: [pasta] });
     expect(client.getQueryData(dayQueryOptions("2026-11-19").queryKey)).toEqual(saved);
     expect(client.getQueryData(dayQueryOptions("2026-11-20").queryKey)).toBeUndefined();
+  });
+
+  it("marks only that date's options as stale after saving", async () => {
+    vi.spyOn(api, "put").mockResolvedValue(
+      axiosResponse<Day>({ date: "2026-11-19", choices: [pasta] }),
+    );
+
+    const { client, result } = renderWithClient(() => useSaveDay("2026-11-19"));
+    client.setQueryData(dayOptionsQueryOptions("2026-11-19").queryKey, planDay);
+    client.setQueryData(dayOptionsQueryOptions("2026-11-20").queryKey, planDay);
+    await act(() => result.current.mutateAsync([pasta]));
+
+    const state = (date: string) =>
+      client.getQueryState(dayOptionsQueryOptions(date).queryKey)?.isInvalidated;
+    expect(state("2026-11-19")).toBe(true);
+    expect(state("2026-11-20")).toBe(false);
   });
 
   it("leaves the cached day alone when the save fails", async () => {

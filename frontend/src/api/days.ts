@@ -1,5 +1,4 @@
-import type { Day, DayChoice } from "../types/day";
-import type { PlanDay } from "../types/diet-plan";
+import type { Day, DayChoice, DayOptions } from "../types/day";
 import { api } from "./client";
 
 export async function getDay(date: string, signal: AbortSignal) {
@@ -8,7 +7,7 @@ export async function getDay(date: string, signal: AbortSignal) {
 }
 
 export async function getDayOptions(date: string, signal: AbortSignal) {
-  const { data } = await api.get<PlanDay>(`/api/days/${date}/options`, { signal });
+  const { data } = await api.get<DayOptions>(`/api/days/${date}/options`, { signal });
   return data;
 }
 

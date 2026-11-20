@@ -4,15 +4,14 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { setLocale } from "../i18n";
-import type { DayChoice } from "../types/day";
-import type { PlanDay } from "../types/diet-plan";
+import type { DayChoice, DayOptions } from "../types/day";
 import { weekdayIndex } from "../utils/date";
 import DayPlannerDrawer from "./DayPlannerDrawer";
 
 import { en } from "../i18n/locales/en";
 import { it as italian } from "../i18n/locales/it";
 
-const monday: PlanDay = {
+const monday: DayOptions = {
   day: "Lunedì",
   meals: [
     {
@@ -24,13 +23,15 @@ const monday: PlanDay = {
             { name: "Pasta", amount: 80, unit: "g", position: 0 },
             { name: "Riso", amount: 70, unit: "g", position: 1 },
           ],
+          custom_options: [],
+          current: null,
         },
       ],
     },
   ],
 };
 
-const tuesday: PlanDay = {
+const tuesday: DayOptions = {
   day: "Martedì",
   meals: [
     {
@@ -39,6 +40,8 @@ const tuesday: PlanDay = {
         {
           category: "Secondi",
           options: [{ name: "Pesce", amount: 150, unit: "g", position: 0 }],
+          custom_options: [],
+          current: null,
         },
       ],
     },
@@ -101,6 +104,13 @@ describe("DayPlannerDrawer", () => {
 
     update({ error: null, day: undefined, date: "not-a-date" });
     expect(screen.getByRole("status")).toBeTruthy();
+  });
+
+  it("says so when the plan has no options for the day", () => {
+    renderDrawer({ day: null });
+
+    expect(screen.getByText(en.labels.NO_OPTIONS_FOR_DAY)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
   });
 
   it("shows the formatted date, steps across days, and skips disabled weekdays", () => {

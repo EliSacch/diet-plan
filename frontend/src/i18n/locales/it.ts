@@ -35,6 +35,7 @@ export const it = {
     NEXT_DAY: "Giorno successivo",
     NO_CHOICES_FOR_DAY: "Nessun pasto scelto per questo giorno.",
     NO_DIET_PLAN_YET: "Non hai ancora caricato un piano alimentare.",
+    NO_OPTIONS_FOR_DAY: "Il tuo piano alimentare non ha opzioni per questo giorno.",
     NOTIFICATIONS: "Notifiche",
     ONLY_ONE_FILE: "Trascina un solo file alla volta.",
     PLAN: "Il mio piano",

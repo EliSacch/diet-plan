@@ -1,4 +1,10 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  type Query,
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 
 import { getDay, getDayOptions, saveDay } from "../api/days";
@@ -29,12 +35,16 @@ export function dayOptionsQueryOptions(date: string) {
   });
 }
 
+export function isDayOptionsQuery(query: Pick<Query, "queryKey">) {
+  return query.queryKey[0] === "days" && query.queryKey[2] === "options";
+}
+
 export function useDay(date: string) {
   return useQuery(dayQueryOptions(date));
 }
 
-export function useDayOptions(date: string) {
-  return useQuery(dayOptionsQueryOptions(date));
+export function useDayOptions(date: string, { enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({ ...dayOptionsQueryOptions(date), enabled });
 }
 
 export function useSaveDay(date: string) {
@@ -43,6 +53,7 @@ export function useSaveDay(date: string) {
     mutationFn: (choices: DayChoice[]) => saveDay(date, choices),
     onSuccess: (day) => {
       queryClient.setQueryData(dayQueryOptions(date).queryKey, day);
+      void queryClient.invalidateQueries({ queryKey: dayOptionsQueryOptions(date).queryKey });
     },
   });
 }

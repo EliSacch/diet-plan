@@ -1,3 +1,5 @@
+import type { PlanOption } from "./diet-plan";
+
 export type DayChoice = {
   meal: string;
   category: string;
@@ -9,4 +11,27 @@ export type DayChoice = {
 export type Day = {
   date: string;
   choices: DayChoice[];
+};
+
+export type OptionValues = Pick<PlanOption, "name" | "amount" | "unit">;
+
+export type CustomOptionValues = OptionValues & {
+  id: number;
+};
+
+export type DayOptionsCategory = {
+  category: string;
+  options: PlanOption[];
+  custom_options: CustomOptionValues[];
+  current: OptionValues | null;
+};
+
+export type DayOptionsMeal = {
+  meal: string;
+  categories: DayOptionsCategory[];
+};
+
+export type DayOptions = {
+  day: string;
+  meals: DayOptionsMeal[];
 };

@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { axiosResponse } from "../test/http";
-import type { Day } from "../types/day";
-import type { PlanDay } from "../types/diet-plan";
+import type { Day, DayOptions } from "../types/day";
 import { api } from "./client";
 import { getDay, getDayOptions, saveDay } from "./days";
 
@@ -16,7 +15,7 @@ const pasta = {
 
 const day: Day = { date: "2026-11-19", choices: [pasta] };
 
-const planDay: PlanDay = {
+const planDay: DayOptions = {
   day: "Giovedì",
   meals: [
     {
@@ -25,6 +24,8 @@ const planDay: PlanDay = {
         {
           category: "Primi",
           options: [{ name: "Pasta", amount: 80, unit: "g", position: 0 }],
+          custom_options: [{ id: 7, name: "Pasta di farro", amount: 70, unit: "g" }],
+          current: { name: "Pasta", amount: 100, unit: "g" },
         },
       ],
     },
