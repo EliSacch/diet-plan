@@ -35,4 +35,4 @@ Deny by default. The server is the authority; frontend route guards are UX only.
 ## Errors and logs
 
 - Unexpected errors return a generic body; do not leak stack traces to clients.
-- Log auth failures, OAuth state mismatches, 401s, and rate limits without secrets or tokens.
+- Log security events via `log_security_event` (auth success/failure, OAuth, 401s, rate limits) with path/method/user_id/code only — never query strings, cookies, or tokens.

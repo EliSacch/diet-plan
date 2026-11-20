@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from app.core.exceptions import AppError
+from app.core.security_log import SECURITY_APP_ERROR_CODES, log_security_event
 from app.schemas.problem import Problem
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,14 @@ def code_for_status(status: int) -> str:
     return DEFAULT_CODES.get(status, "HTTP_ERROR")
 
 
-async def app_error_handler(_request: Request, exc: AppError) -> JSONResponse:
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    if exc.code in SECURITY_APP_ERROR_CODES:
+        log_security_event(
+            "app_error",
+            request=request,
+            code=exc.code,
+            user_id=exc.user_id,
+        )
     return problem_response(exc.status_code, exc.code, exc.detail)
 
 

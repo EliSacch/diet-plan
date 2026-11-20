@@ -17,7 +17,7 @@ class DietPlanPostLimit:
         recent = [hit for hit in self._hits.get(user_id, []) if hit > cutoff]
         if len(recent) >= POSTS_PER_HOUR:
             self._hits[user_id] = recent
-            raise AppError(429, "rate_limited", RATE_LIMIT_DETAIL)
+            raise AppError(429, "rate_limited", RATE_LIMIT_DETAIL, user_id=user_id)
         recent.append(now)
         self._hits[user_id] = recent
 

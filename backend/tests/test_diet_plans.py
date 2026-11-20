@@ -474,19 +474,29 @@ def test_replay_reads_the_original_stream_after_the_body() -> None:
 
 
 def test_post_past_the_hourly_limit_is_rate_limited(
-    client: TestClient, database: Session
+    client: TestClient,
+    database: Session,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     sign_in(client)
     for index in range(POSTS_PER_HOUR):
         created = client.post("/api/diet-plans", json=one_option(f"Item {index}"))
         assert created.status_code == 201
 
-    rejected = client.post("/api/diet-plans", json=one_option("Over the limit"))
+    with caplog.at_level("WARNING", logger="app.security"):
+        rejected = client.post("/api/diet-plans", json=one_option("Over the limit"))
 
     assert rejected.status_code == 429
     assert rejected.json()["code"] == "RATE_LIMITED"
     assert rejected.json()["detail"] == (
         "Too many diet plans were posted. Try again later."
+    )
+    assert any(
+        "security_event=app_error" in record.getMessage()
+        and "code=RATE_LIMITED" in record.getMessage()
+        and "user_id=" in record.getMessage()
+        and "path=/api/diet-plans" in record.getMessage()
+        for record in caplog.records
     )
     active = client.get("/api/diet-plans/active")
     assert active.status_code == 200
