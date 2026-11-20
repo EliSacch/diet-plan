@@ -31,7 +31,7 @@ Deny by default. The server is the authority; frontend route guards are UX only.
 
 - Secrets only via env / Render `sync: false`. Never commit `.env` or credentials.
 - Keep lockfile installs frozen (`uv sync --frozen`, `yarn install --frozen-lockfile`).
-- Pin GitHub Actions by commit SHA. Prefer digest pins for Docker base/`uv` images and a non-root `USER`.
+- Pin GitHub Actions by commit SHA. Docker base/`uv` images use digest pins; runtime runs as non-root and does not ship `uv`.
 
 ## Errors and logs
 
