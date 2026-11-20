@@ -26,6 +26,7 @@ type DayPlannerDrawerProps = {
   onClose: () => void;
   onDeleteCustomOption: (id: number) => void;
   onAddCustomOption: (option: CustomOptionInput) => Promise<CustomOption>;
+  onMultiSelectChange?: (category: string, multiSelect: boolean) => void;
 };
 
 type PendingIntent = { type: "close" } | { type: "date"; isoDate: string } | null;
@@ -73,6 +74,7 @@ function OpenDayPlannerDrawer({
   onClose,
   onDeleteCustomOption,
   onAddCustomOption,
+  onMultiSelectChange,
 }: Omit<DayPlannerDrawerProps, "open">) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [dirty, setDirty] = useState(false);
@@ -172,6 +174,7 @@ function OpenDayPlannerDrawer({
         onDirtyChange={setDirty}
         onDeleteCustomOption={setPendingDelete}
         onAddCustomOption={onAddCustomOption}
+        onMultiSelectChange={onMultiSelectChange}
       />
     );
   }

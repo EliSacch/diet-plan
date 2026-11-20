@@ -3,6 +3,7 @@ from datetime import date
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.category_preferences.service import multi_select_categories
 from app.core.exceptions import AppError
 from app.diet.service import active_plan_document
 from app.models.custom_option import CustomOption
@@ -38,15 +39,18 @@ def get_day_options(db: Session, user_id: int, target_date: date) -> DayOptions:
             )
         )
 
-    saved_by_slot: dict[Slot, DailyChoice] = {
-        (row.meal, row.category): row
-        for row in db.scalars(
-            select(DailyChoice).where(
-                DailyChoice.user_id == user_id,
-                DailyChoice.date == target_date,
-            )
+    saved_by_slot: dict[Slot, list[DailyChoice]] = {}
+    for row in db.scalars(
+        select(DailyChoice)
+        .where(
+            DailyChoice.user_id == user_id,
+            DailyChoice.date == target_date,
         )
-    }
+        .order_by(DailyChoice.id)
+    ):
+        saved_by_slot.setdefault((row.meal, row.category), []).append(row)
+
+    multi_select = multi_select_categories(db, user_id)
 
     meals: list[DayOptionsMeal] = []
     for meal in plan_day.meals:
@@ -57,18 +61,18 @@ def get_day_options(db: Session, user_id: int, target_date: date) -> DayOptions:
             offered = {_option_values(option) for option in category.options} | {
                 _option_values(option) for option in custom_options
             }
-            saved = saved_by_slot.get(slot)
-            current = None
-            if saved is not None and _option_values(saved) not in offered:
-                current = OptionValues(
-                    name=saved.name, amount=saved.amount, unit=saved.unit
-                )
+            current = [
+                OptionValues(name=saved.name, amount=saved.amount, unit=saved.unit)
+                for saved in saved_by_slot.get(slot, [])
+                if _option_values(saved) not in offered
+            ]
             categories.append(
                 DayOptionsCategory(
                     category=category.category,
                     options=category.options,
                     custom_options=custom_options,
                     current=current,
+                    multi_select=category.category in multi_select,
                 )
             )
         meals.append(DayOptionsMeal(meal=meal.meal, categories=categories))

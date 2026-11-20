@@ -19,15 +19,21 @@ class DayInput(BaseModel):
     choices: list[DayChoice] = Field(max_length=MAX_OPTIONS)
 
     @model_validator(mode="after")
-    def one_choice_per_slot(self) -> Self:
-        seen: set[tuple[str, str]] = set()
+    def no_duplicate_choices(self) -> Self:
+        seen: set[tuple[str, str, str, float | None, str | None]] = set()
         for choice in self.choices:
-            slot = (choice.meal, choice.category)
-            if slot in seen:
+            values = (
+                choice.meal,
+                choice.category,
+                choice.name,
+                choice.amount,
+                choice.unit,
+            )
+            if values in seen:
                 raise ValueError(
-                    f"{choice.meal} / {choice.category} has more than one choice"
+                    f"{choice.meal} / {choice.category} has {choice.name} twice"
                 )
-            seen.add(slot)
+            seen.add(values)
         return self
 
 
@@ -50,7 +56,8 @@ class DayOptionsCategory(BaseModel):
     category: str
     options: list[PlanOption]
     custom_options: list[CustomOptionValues]
-    current: OptionValues | None
+    current: list[OptionValues]
+    multi_select: bool
 
 
 class DayOptionsMeal(BaseModel):

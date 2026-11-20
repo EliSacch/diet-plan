@@ -11,6 +11,7 @@ from app.diet.extract import register
 from app.diet.plugins.progeo import ProgeoExtractor
 from app.frontend import register_frontend
 from app.routers.auth import router as auth_router
+from app.routers.category_preferences import router as category_preferences_router
 from app.routers.custom_options import router as custom_options_router
 from app.routers.days import router as days_router
 from app.routers.diet_plans import router as diet_plans_router
@@ -47,6 +48,7 @@ app.include_router(profile_router)
 app.include_router(diet_plans_router)
 app.include_router(days_router)
 app.include_router(custom_options_router)
+app.include_router(category_preferences_router)
 
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
