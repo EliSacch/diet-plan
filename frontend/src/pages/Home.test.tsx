@@ -426,6 +426,66 @@ describe("Home", () => {
     expect(within(drawer).queryByRole("button", { name: /^Secondi/ })).toBeNull();
   });
 
+  it("deletes a custom option from the planner and refreshes the options", async () => {
+    const withSalmone = dayOptionsFrom(plan, "2026-11-17")!;
+    withSalmone.meals[0]!.categories[0]!.custom_options = [
+      { id: 7, name: "Salmone", amount: 120, unit: "g" },
+    ];
+    let optionsResponse = withSalmone;
+    const get = mockGet({ options: () => Promise.resolve(axiosResponse(optionsResponse)) });
+    const remove = vi.spyOn(api, "delete").mockImplementation(() => {
+      optionsResponse = dayOptionsFrom(plan, "2026-11-17")!;
+      return Promise.resolve(axiosResponse(""));
+    });
+
+    renderHome();
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Secondi/ }));
+    fireEvent.click(within(drawer).getByRole("button", { name: "Delete Salmone 120 g" }));
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: en.labels.DELETE_CUSTOM_OPTION_TITLE })).getByRole(
+        "button",
+        { name: "Delete" },
+      ),
+    );
+
+    expect(await screen.findByText(en.labels.CUSTOM_OPTION_DELETED)).toBeTruthy();
+    expect(remove).toHaveBeenCalledWith("/api/custom-options/7");
+    await waitFor(() =>
+      expect(
+        within(drawer).queryByRole("radio", { name: "Salmone 120 g Custom option" }),
+      ).toBeNull(),
+    );
+    expect(get.mock.calls.filter(([url]) => url === "/api/days/2026-11-17/options")).toHaveLength(
+      2,
+    );
+  });
+
+  it("shows an error toast when deleting a custom option fails", async () => {
+    const withSalmone = dayOptionsFrom(plan, "2026-11-17")!;
+    withSalmone.meals[0]!.categories[0]!.custom_options = [
+      { id: 7, name: "Salmone", amount: 120, unit: "g" },
+    ];
+    mockGet({ options: () => Promise.resolve(axiosResponse(withSalmone)) });
+    vi.spyOn(api, "delete").mockRejectedValue(axiosFailure(404, { code: "NOT_FOUND" }));
+
+    renderHome();
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Secondi/ }));
+    fireEvent.click(within(drawer).getByRole("button", { name: "Delete Salmone 120 g" }));
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: en.labels.DELETE_CUSTOM_OPTION_TITLE })).getByRole(
+        "button",
+        { name: "Delete" },
+      ),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveProperty("textContent", en.errors.NOT_FOUND);
+    expect(within(drawer).getByRole("radio", { name: "Salmone 120 g Custom option" })).toBeTruthy();
+  });
+
   it("shows a message in the planner when the plan has no options for the day", async () => {
     mockGet({ options: () => Promise.reject(axiosFailure(404, { code: "NOT_FOUND" })) });
 

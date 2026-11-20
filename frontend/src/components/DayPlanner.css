@@ -86,6 +86,52 @@
   cursor: pointer;
 }
 
+.day-planner-option-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.day-planner-option-row .day-planner-option {
+  flex: 1;
+  min-width: 0;
+}
+
+.day-planner-custom-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--primary);
+}
+
+.day-planner-delete {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.day-planner-delete:hover {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--white) 6%, transparent);
+}
+
+.day-planner-delete svg {
+  width: 20px;
+  height: 20px;
+}
+
 .day-planner-actions {
   position: sticky;
   z-index: 4;
@@ -111,6 +157,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .day-planner-option,
+  .day-planner-delete,
   .day-planner-toggle svg {
     transition: none;
   }

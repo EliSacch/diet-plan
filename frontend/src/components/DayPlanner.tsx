@@ -1,22 +1,26 @@
 import { useEffect, useId, useMemo, useState } from "react";
 
 import { t } from "../i18n";
-import type { DayChoice } from "../types/day";
-import type { PlanDay, PlanOption } from "../types/diet-plan";
+import type {
+  CustomOptionValues,
+  DayChoice,
+  DayOptions,
+  DayOptionsCategory,
+  OptionValues,
+} from "../types/day";
 import { optionLabel } from "../utils/plan";
 import Button from "./Button";
 
 import "./DayPlanner.css";
 
-type OptionValues = Pick<PlanOption, "name" | "amount" | "unit">;
-
 // Renders inside a `.plan-sections` container.
 type DayPlannerProps = {
-  day: PlanDay;
+  day: DayOptions;
   choices: DayChoice[];
   onSave: (choices: DayChoice[]) => void;
   saving: boolean;
   onDirtyChange?: (dirty: boolean) => void;
+  onDeleteCustomOption: (option: CustomOptionValues) => void;
 };
 
 function slotKey(meal: string, category: string) {
@@ -43,8 +47,53 @@ function samePicks(a: Map<string, DayChoice>, b: Map<string, DayChoice>) {
   return true;
 }
 
+// Picks that match no listed option (an edited saved pick, or a deleted custom option) stay selectable.
+function extraOptions(category: DayOptionsCategory, pick: DayChoice | undefined) {
+  const listed: OptionValues[] = [...category.options, ...category.custom_options];
+  const extras: OptionValues[] = category.current === null ? [] : [category.current];
+  if (pick !== undefined && ![...listed, ...extras].some((option) => sameValues(pick, option))) {
+    extras.push({ name: pick.name, amount: pick.amount, unit: pick.unit });
+  }
+  return extras;
+}
+
+function CustomOptionIcon() {
+  return (
+    <svg
+      className="day-planner-custom-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role="img"
+      aria-label={t("CUSTOM_OPTION")}
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </svg>
+  );
+}
+
 // Saved picks whose slot is no longer in the plan are sent back so a save doesn't drop them.
-function orderedChoices(day: PlanDay, picks: Map<string, DayChoice>) {
+function orderedChoices(day: DayOptions, picks: Map<string, DayChoice>) {
   const rest = new Map(picks);
   const ordered: DayChoice[] = [];
   for (const meal of day.meals) {
@@ -66,6 +115,7 @@ export default function DayPlanner({
   onSave,
   saving,
   onDirtyChange,
+  onDeleteCustomOption,
 }: DayPlannerProps) {
   const baseId = useId();
   const [picks, setPicks] = useState(() => toPicks(choices));
@@ -103,6 +153,14 @@ export default function DayPlanner({
             const groupId = `${baseId}-${mealIndex}-${categoryIndex}`;
             const pick = picks.get(key);
             const open = expanded.has(key);
+            const choose = (option: OptionValues) =>
+              select(key, {
+                meal: meal.meal,
+                category: category.category,
+                name: option.name,
+                amount: option.amount,
+                unit: option.unit,
+              });
             return (
               <section key={category.category}>
                 <h3>
@@ -143,15 +201,39 @@ export default function DayPlanner({
                         type="radio"
                         name={groupId}
                         checked={sameValues(pick, option)}
-                        onChange={() =>
-                          select(key, {
-                            meal: meal.meal,
-                            category: category.category,
-                            name: option.name,
-                            amount: option.amount,
-                            unit: option.unit,
-                          })
-                        }
+                        onChange={() => choose(option)}
+                      />
+                      <span>{optionLabel(option)}</span>
+                    </label>
+                  ))}
+                  {category.custom_options.map((option) => (
+                    <div key={`custom-${option.id}`} className="day-planner-option-row">
+                      <label className="day-planner-option">
+                        <input
+                          type="radio"
+                          name={groupId}
+                          checked={sameValues(pick, option)}
+                          onChange={() => choose(option)}
+                        />
+                        <span>{optionLabel(option)}</span> <CustomOptionIcon />
+                      </label>
+                      <button
+                        type="button"
+                        className="day-planner-delete"
+                        aria-label={`${t("DELETE")} ${optionLabel(option)}`}
+                        onClick={() => onDeleteCustomOption(option)}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  ))}
+                  {extraOptions(category, pick).map((option) => (
+                    <label key={`extra-${optionLabel(option)}`} className="day-planner-option">
+                      <input
+                        type="radio"
+                        name={groupId}
+                        checked={sameValues(pick, option)}
+                        onChange={() => choose(option)}
                       />
                       <span>{optionLabel(option)}</span>
                     </label>

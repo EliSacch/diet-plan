@@ -62,6 +62,7 @@ function renderDrawer(initial: Partial<DrawerProps> = {}) {
   const onDateChange = vi.fn();
   const onSave = vi.fn();
   const onClose = vi.fn();
+  const onDeleteCustomOption = vi.fn();
   let props: DrawerProps = {
     open: true,
     date: "2026-11-16",
@@ -71,6 +72,7 @@ function renderDrawer(initial: Partial<DrawerProps> = {}) {
     onSave,
     saving: false,
     onClose,
+    onDeleteCustomOption,
     ...initial,
   };
   const rendered = render(<DayPlannerDrawer {...props} />);
@@ -78,7 +80,7 @@ function renderDrawer(initial: Partial<DrawerProps> = {}) {
     props = { ...props, ...changes };
     rendered.rerender(<DayPlannerDrawer {...props} />);
   };
-  return { onDateChange, onSave, onClose, update, ...rendered };
+  return { onDateChange, onSave, onClose, onDeleteCustomOption, update, ...rendered };
 }
 
 describe("DayPlannerDrawer", () => {
@@ -213,6 +215,49 @@ describe("DayPlannerDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(onClose).toHaveBeenCalledOnce();
     expect(screen.queryByRole("dialog", { name: en.labels.UNSAVED_CHANGES_TITLE })).toBeNull();
+  });
+
+  it("confirms before deleting a custom option and keeps the drawer open meanwhile", () => {
+    const withFarro: DayOptions = {
+      ...monday,
+      meals: [
+        {
+          meal: "Pranzo",
+          categories: [
+            {
+              ...monday.meals[0]!.categories[0]!,
+              custom_options: [{ id: 7, name: "Pasta di farro", amount: 70, unit: "g" }],
+            },
+          ],
+        },
+      ],
+    };
+    const { onClose, onDeleteCustomOption } = renderDrawer({ day: withFarro });
+
+    fireEvent.click(screen.getByRole("button", { name: /^Primi/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete Pasta di farro 70 g" }));
+
+    const confirm = screen.getByRole("dialog", { name: en.labels.DELETE_CUSTOM_OPTION_TITLE });
+    expect(within(confirm).getByText("Pasta di farro 70 g")).toBeTruthy();
+    expect(within(confirm).getByText(en.labels.DELETE_CUSTOM_OPTION_MESSAGE)).toBeTruthy();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.click(within(confirm).getByRole("button", { name: "Cancel" }));
+    expect(onDeleteCustomOption).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: en.labels.DELETE_CUSTOM_OPTION_TITLE })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete Pasta di farro 70 g" }));
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: en.labels.DELETE_CUSTOM_OPTION_TITLE })).getByRole(
+        "button",
+        { name: "Delete" },
+      ),
+    );
+    expect(onDeleteCustomOption).toHaveBeenCalledExactlyOnceWith(7);
+    expect(screen.queryByRole("dialog", { name: en.labels.DELETE_CUSTOM_OPTION_TITLE })).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("uses the current locale", () => {
