@@ -9,6 +9,7 @@ import { api } from "../api/client";
 import { ToastProvider } from "../context/ToastContext";
 import { setLocale } from "../i18n";
 import { axiosFailure, axiosResponse, deferred } from "../test/http";
+import type { CustomOption, CustomOptionInput } from "../types/custom-option";
 import type { Day, DayChoice, DayOptions } from "../types/day";
 import type { PlanDocument } from "../types/diet-plan";
 import { parseIsoDate, weekdayIndex } from "../utils/date";
@@ -450,6 +451,113 @@ describe("Home", () => {
 
     expect(await screen.findByText(en.labels.DAY_SAVED)).toBeTruthy();
     expect(put).toHaveBeenCalledExactlyOnceWith("/api/days/2026-11-17", { choices: [edited] });
+  });
+
+  it("adds a custom option, selects it, and offers it again on another day", async () => {
+    const stored: CustomOption[] = [];
+    mockGet({
+      day: (date) => Promise.resolve(axiosResponse<Day>({ date, choices: [] })),
+      options: (date) => {
+        const found = dayOptionsFrom(plan, date)!;
+        for (const meal of found.meals) {
+          for (const category of meal.categories) {
+            category.custom_options = stored
+              .filter(
+                (option) => option.meal === meal.meal && option.category === category.category,
+              )
+              .map(({ id, name, amount, unit }) => ({ id, name, amount, unit }));
+          }
+        }
+        return Promise.resolve(axiosResponse(found));
+      },
+    });
+    const post = vi.spyOn(api, "post").mockImplementation((_url, body) => {
+      const created = { id: stored.length + 1, ...(body as CustomOptionInput) };
+      stored.push(created);
+      return Promise.resolve(axiosResponse(created));
+    });
+    const farro: DayChoice = {
+      meal: "Pranzo",
+      category: "Primi",
+      name: "Pasta di farro",
+      amount: 70,
+      unit: "g",
+    };
+    const put = vi
+      .spyOn(api, "put")
+      .mockResolvedValue(axiosResponse<Day>({ date: "2026-11-16", choices: [farro] }));
+
+    renderHome("/?date=2026-11-16");
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Primi/ }));
+    fireEvent.click(within(drawer).getByRole("button", { name: en.labels.ADD_CUSTOM_OPTION }));
+    fireEvent.change(within(drawer).getByLabelText(en.labels.NAME), {
+      target: { value: "Pasta di farro" },
+    });
+    fireEvent.change(within(drawer).getByLabelText(en.labels.AMOUNT), {
+      target: { value: "70" },
+    });
+    fireEvent.change(within(drawer).getByLabelText(en.labels.UNIT), { target: { value: "g" } });
+    fireEvent.click(within(drawer).getByRole("button", { name: en.labels.ADD }));
+
+    expect(await screen.findByText(en.labels.CUSTOM_OPTION_ADDED)).toBeTruthy();
+    expect(post).toHaveBeenCalledWith("/api/custom-options", farro);
+    const added = await within(drawer).findByRole<HTMLInputElement>("radio", {
+      name: "Pasta di farro 70 g Custom option",
+    });
+    expect(added.checked).toBe(true);
+
+    fireEvent.click(within(drawer).getByRole("button", { name: "Save" }));
+    expect(await screen.findByText(en.labels.DAY_SAVED)).toBeTruthy();
+    expect(put).toHaveBeenCalledWith("/api/days/2026-11-16", { choices: [farro] });
+    await waitFor(() =>
+      expect(within(drawer).getByRole<HTMLButtonElement>("button", { name: "Save" }).disabled).toBe(
+        true,
+      ),
+    );
+
+    fireEvent.click(within(drawer).getByRole("button", { name: "Next day" }));
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Secondi/ }));
+    expect(within(drawer).queryByRole("img", { name: en.labels.CUSTOM_OPTION })).toBeNull();
+
+    fireEvent.click(within(drawer).getByRole("button", { name: "Next day" }));
+    expect(within(drawer).getByText("Monday, November 23")).toBeTruthy();
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Primi/ }));
+    const offered = within(drawer).getByRole<HTMLInputElement>("radio", {
+      name: "Pasta di farro 70 g Custom option",
+    });
+    expect(offered.checked).toBe(false);
+  });
+
+  it.each([
+    ["a duplicate", axiosFailure(409, { code: "CONFLICT" }), en.labels.CUSTOM_OPTION_EXISTS],
+    [
+      "an invalid option",
+      axiosFailure(422, { code: "VALIDATION_ERROR" }),
+      en.errors.VALIDATION_ERROR,
+    ],
+  ])("keeps the add form open and explains %s", async (_label, failure, message) => {
+    mockGet();
+    vi.spyOn(api, "post").mockRejectedValue(failure);
+
+    renderHome();
+    fireEvent.click(await screen.findByRole("button", { name: en.labels.PLAN_THIS_DAY }));
+    const drawer = screen.getByRole("dialog", { name: en.labels.PLAN_THIS_DAY });
+    fireEvent.click(await within(drawer).findByRole("button", { name: /^Secondi/ }));
+    fireEvent.click(within(drawer).getByRole("button", { name: en.labels.ADD_CUSTOM_OPTION }));
+    fireEvent.change(within(drawer).getByLabelText(en.labels.NAME), {
+      target: { value: "Pesce" },
+    });
+    fireEvent.click(within(drawer).getByRole("button", { name: en.labels.ADD }));
+
+    expect(await screen.findByRole("alert")).toHaveProperty("textContent", message);
+    expect(within(drawer).getByRole("form", { name: en.labels.ADD_CUSTOM_OPTION })).toBeTruthy();
+    await waitFor(() =>
+      expect(
+        within(drawer).getByRole<HTMLButtonElement>("button", { name: en.labels.ADD }).disabled,
+      ).toBe(false),
+    );
   });
 
   it("deletes a custom option from the planner and refreshes the options", async () => {

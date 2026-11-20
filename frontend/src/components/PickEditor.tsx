@@ -5,7 +5,7 @@ import type { OptionValues } from "../types/day";
 import { type OptionFieldError, parseOptionFields } from "../utils/plan";
 import Button from "./Button";
 
-import "./PickEditor.css";
+import "../styles/option-form.css";
 
 type PickEditorProps = {
   pick: OptionValues;
@@ -35,8 +35,8 @@ export default function PickEditor({ pick, onApply, onCancel }: PickEditorProps)
   }
 
   return (
-    <form className="pick-editor" aria-label={t("EDIT_PICK")} noValidate onSubmit={submit}>
-      <div className="pick-editor-field">
+    <form className="option-form" aria-label={t("EDIT_PICK")} noValidate onSubmit={submit}>
+      <div className="option-form-field">
         <label htmlFor={`${id}-name`}>{t("NAME")}</label>
         <input
           ref={nameRef}
@@ -48,14 +48,14 @@ export default function PickEditor({ pick, onApply, onCancel }: PickEditorProps)
           onChange={(event) => setNameText(event.target.value)}
         />
         {errors.name === undefined ? null : (
-          <p id={`${id}-name-error`} className="pick-editor-error">
+          <p id={`${id}-name-error`} className="option-form-error">
             {t(errors.name)}
           </p>
         )}
       </div>
-      <div className="pick-editor-field">
+      <div className="option-form-field">
         <label htmlFor={`${id}-amount`}>{t("AMOUNT")}</label>
-        <div className="pick-editor-amount">
+        <div className="option-form-amount">
           <input
             id={`${id}-amount`}
             type="number"
@@ -67,15 +67,15 @@ export default function PickEditor({ pick, onApply, onCancel }: PickEditorProps)
             aria-describedby={errors.amount === undefined ? undefined : `${id}-amount-error`}
             onChange={(event) => setAmountText(event.target.value)}
           />
-          {pick.unit === null ? null : <span className="pick-editor-unit">{pick.unit}</span>}
+          {pick.unit === null ? null : <span className="option-form-unit">{pick.unit}</span>}
         </div>
         {errors.amount === undefined ? null : (
-          <p id={`${id}-amount-error`} className="pick-editor-error">
+          <p id={`${id}-amount-error`} className="option-form-error">
             {t(errors.amount)}
           </p>
         )}
       </div>
-      <div className="pick-editor-actions">
+      <div className="option-form-actions">
         <Button variant="secondary" onClick={onCancel}>
           {t("CANCEL")}
         </Button>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { getLocale, t } from "../i18n";
+import type { CustomOption, CustomOptionInput } from "../types/custom-option";
 import type { CustomOptionValues, DayChoice, DayOptions } from "../types/day";
 import { addDays, parseIsoDate, toIsoDate } from "../utils/date";
 import { optionLabel } from "../utils/plan";
@@ -24,6 +25,7 @@ type DayPlannerDrawerProps = {
   saving: boolean;
   onClose: () => void;
   onDeleteCustomOption: (id: number) => void;
+  onAddCustomOption: (option: CustomOptionInput) => Promise<CustomOption>;
 };
 
 type PendingIntent = { type: "close" } | { type: "date"; isoDate: string } | null;
@@ -70,6 +72,7 @@ function OpenDayPlannerDrawer({
   saving,
   onClose,
   onDeleteCustomOption,
+  onAddCustomOption,
 }: Omit<DayPlannerDrawerProps, "open">) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [dirty, setDirty] = useState(false);
@@ -168,6 +171,7 @@ function OpenDayPlannerDrawer({
         saving={saving}
         onDirtyChange={setDirty}
         onDeleteCustomOption={setPendingDelete}
+        onAddCustomOption={onAddCustomOption}
       />
     );
   }

@@ -1,4 +1,4 @@
-.pick-editor {
+.option-form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -7,18 +7,18 @@
   border-radius: 12px;
 }
 
-.pick-editor-field {
+.option-form-field {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
 }
 
-.pick-editor-field label {
+.option-form-field label {
   font-size: 0.875em;
   color: var(--text-h);
 }
 
-.pick-editor-field input {
+.option-form-field input {
   box-sizing: border-box;
   width: 100%;
   min-height: 44px;
@@ -30,31 +30,37 @@
   border-radius: 12px;
 }
 
-.pick-editor-field input:focus-visible {
+.option-form-field input:focus-visible {
   outline-offset: 0;
   border-color: var(--primary);
 }
 
-.pick-editor-field input[aria-invalid="true"] {
+.option-form-field input[aria-invalid="true"] {
   border-color: var(--danger);
 }
 
-.pick-editor-amount {
+.option-form-amount {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
 }
 
-.pick-editor-amount input {
+.option-form-amount input {
   max-width: 160px;
 }
 
-.pick-editor-error {
+.option-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.option-form-error {
   font-size: 0.875em;
   color: var(--danger);
 }
 
-.pick-editor-actions {
+.option-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-sm);

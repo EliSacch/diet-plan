@@ -1,10 +1,15 @@
 import type { PlanOption } from "../types/diet-plan";
 
-// Match MAX_NAME_LENGTH and MAX_AMOUNT in the backend.
+// Match MAX_NAME_LENGTH, MAX_AMOUNT and MAX_LABEL_LENGTH in the backend.
 export const MAX_NAME_LENGTH = 300;
 export const MAX_AMOUNT = 100_000;
+export const MAX_UNIT_LENGTH = 200;
 
-export type OptionFieldError = "NAME_REQUIRED" | "NAME_TOO_LONG" | "AMOUNT_INVALID";
+export type OptionFieldError =
+  | "NAME_REQUIRED"
+  | "NAME_TOO_LONG"
+  | "AMOUNT_INVALID"
+  | "UNIT_TOO_LONG";
 
 export type ParsedOptionFields =
   | { ok: true; name: string; amount: number | null }
@@ -42,4 +47,14 @@ export function parseOptionFields(nameText: string, amountText: string): ParsedO
     return { ok: false, errors };
   }
   return { ok: true, name, amount };
+}
+
+export function parseUnit(
+  unitText: string,
+): { ok: true; unit: string | null } | { ok: false; error: OptionFieldError } {
+  const unit = unitText.trim();
+  if (unit.length > MAX_UNIT_LENGTH) {
+    return { ok: false, error: "UNIT_TOO_LONG" };
+  }
+  return { ok: true, unit: unit === "" ? null : unit };
 }
