@@ -24,12 +24,21 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+def api_docs_urls(debug: bool) -> tuple[str | None, str | None, str | None]:
+    if debug:
+        return "/docs", "/redoc", "/openapi.json"
+    return None, None, None
+
+
+_docs_url, _redoc_url, _openapi_url = api_docs_urls(settings.DEBUG)
+
 app = FastAPI(
     title="Diet Plan API",
     description="API for the Diet Plan Application",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
+    openapi_url=_openapi_url,
     lifespan=_lifespan,
 )
 

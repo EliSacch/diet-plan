@@ -24,7 +24,7 @@ from app.models.user import OAuthAccount, User, UserSession
 
 
 class ScriptedGoogleHttp:
-    def __init__(self, profiles: list[dict[str, str]]) -> None:
+    def __init__(self, profiles: list[dict[str, object]]) -> None:
         self.profiles = profiles
         self.index = 0
 
@@ -43,14 +43,18 @@ class RejectingGoogleHttp:
         token_status: int = 200,
         token_body: object | None = None,
         userinfo_status: int = 200,
-        userinfo_body: dict[str, str] | None = None,
+        userinfo_body: dict[str, object] | None = None,
     ) -> None:
         self.token_status = token_status
         self.token_body = (
             {"access_token": "token"} if token_body is None else token_body
         )
         self.userinfo_status = userinfo_status
-        self.userinfo_body = userinfo_body or {"sub": "sub", "email": "ada@example.com"}
+        self.userinfo_body = userinfo_body or {
+            "sub": "sub",
+            "email": "ada@example.com",
+            "email_verified": True,
+        }
 
     def post(self, url: str, data: dict[str, str]) -> httpx.Response:
         return httpx.Response(self.token_status, json=self.token_body)
@@ -83,7 +87,9 @@ def database() -> Generator[Session]:
 
 @pytest.fixture
 def scripted() -> ScriptedGoogleHttp:
-    return ScriptedGoogleHttp([{"sub": "google-sub", "email": "ada@example.com"}])
+    return ScriptedGoogleHttp(
+        [{"sub": "google-sub", "email": "ada@example.com", "email_verified": True}]
+    )
 
 
 @pytest.fixture
@@ -121,6 +127,7 @@ def google_state(client: TestClient) -> str:
     assert "Path=/auth/google/callback" in set_cookie
     assert "Max-Age=600" in set_cookie
     assert "SameSite=lax" in set_cookie
+    assert "Secure" in set_cookie
     return state
 
 
@@ -173,6 +180,7 @@ def test_callback_signs_in_and_a_second_login_keeps_the_user(
     assert urlparse(first.headers["location"]).path == "/"
     session_cookie = _set_cookie(first, settings.SESSION_COOKIE_NAME)
     assert "HttpOnly" in session_cookie
+    assert "Secure" in session_cookie
     assert "Path=/" in session_cookie
     assert f"Max-Age={settings.SESSION_TTL_SECONDS}" in session_cookie
 
@@ -181,7 +189,13 @@ def test_callback_signs_in_and_a_second_login_keeps_the_user(
     body = profile.json()
     assert body["email"] == "ada@example.com"
 
-    scripted.profiles.append({"sub": "google-sub", "email": "ada.new@example.com"})
+    scripted.profiles.append(
+        {
+            "sub": "google-sub",
+            "email": "ada.new@example.com",
+            "email_verified": True,
+        }
+    )
     second = client.get(
         "/auth/google/callback",
         params={"code": "second", "state": google_state(client)},
@@ -324,7 +338,26 @@ def test_fetch_profile_rejects_a_missing_access_token() -> None:
 
 def test_fetch_profile_rejects_a_profile_without_an_email() -> None:
     oauth = GoogleOAuth(  # type: ignore[arg-type]
-        client=RejectingGoogleHttp(userinfo_body={"sub": "google-sub"})
+        client=RejectingGoogleHttp(
+            userinfo_body={"sub": "google-sub", "email_verified": True}
+        )
+    )
+
+    with pytest.raises(AppError) as caught:
+        oauth.fetch_profile("code")
+
+    assert caught.value.code == "OAUTH_FAILED"
+
+
+def test_fetch_profile_rejects_an_unverified_email() -> None:
+    oauth = GoogleOAuth(  # type: ignore[arg-type]
+        client=RejectingGoogleHttp(
+            userinfo_body={
+                "sub": "google-sub",
+                "email": "ada@example.com",
+                "email_verified": False,
+            }
+        )
     )
 
     with pytest.raises(AppError) as caught:
@@ -404,6 +437,23 @@ def test_find_or_create_user_raises_when_the_conflict_row_is_missing(
 
     with pytest.raises(AppError) as caught:
         find_or_create_user(MagicMock(), GoogleProfile("google-sub", "ada@example.com"))
+
+    assert caught.value.status_code == 409
+    assert caught.value.code == "OAUTH_ACCOUNT_CONFLICT"
+
+
+def test_sync_email_raises_when_the_new_address_is_taken(
+    database: Session,
+) -> None:
+    from app.auth.service import sync_email
+
+    database.add(User(email="taken@example.com"))
+    owner = User(email="ada@example.com")
+    database.add(owner)
+    database.commit()
+
+    with pytest.raises(AppError) as caught:
+        sync_email(database, owner, "taken@example.com")
 
     assert caught.value.status_code == 409
     assert caught.value.code == "OAUTH_ACCOUNT_CONFLICT"

@@ -15,7 +15,7 @@ Deny by default. The server is the authority; frontend route guards are UX only.
 
 ## Auth and cookies
 
-- Sessions are server-side rows + HttpOnly cookies (`SameSite=Lax`, `Secure` when not DEBUG).
+- Sessions are server-side rows + HttpOnly cookies (`SameSite=Lax`; `Secure` via `COOKIE_SECURE`, else `not DEBUG`).
 - Do not store tokens in `localStorage` or `sessionStorage`.
 - OAuth redirect targets stay hardcoded (no open redirects). Account link key is Google `sub`.
 - Prefer requiring Google `email_verified` when reading userinfo.

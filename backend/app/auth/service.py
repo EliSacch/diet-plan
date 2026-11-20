@@ -16,7 +16,7 @@ GOOGLE_PROVIDER = "google"
 def find_or_create_user(db: Session, profile: GoogleProfile) -> User:
     user = user_for_google_account(db, profile.provider_user_id)
     if user is not None:
-        return sync_email(user, profile.email)
+        return sync_email(db, user, profile.email)
     try:
         return insert_google_user(db, profile)
     except IntegrityError:
@@ -28,7 +28,7 @@ def find_or_create_user(db: Session, profile: GoogleProfile) -> User:
                 "oauth_account_conflict",
                 "Could not sign in with Google",
             ) from None
-        return sync_email(user, profile.email)
+        return sync_email(db, user, profile.email)
 
 
 def user_for_google_account(db: Session, provider_user_id: str) -> User | None:
@@ -58,9 +58,19 @@ def insert_google_user(db: Session, profile: GoogleProfile) -> User:
     return user
 
 
-def sync_email(user: User, email: str) -> User:
-    if user.email != email:
-        user.email = email
+def sync_email(db: Session, user: User, email: str) -> User:
+    if user.email == email:
+        return user
+    user.email = email
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        raise AppError(
+            409,
+            "oauth_account_conflict",
+            "Could not sign in with Google",
+        ) from None
     return user
 
 

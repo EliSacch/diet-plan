@@ -11,6 +11,9 @@ os.environ.setdefault(
     "GOOGLE_REDIRECT_URI",
     "http://localhost:5173/auth/google/callback",
 )
+# OpenAPI is only mounted when DEBUG is true; keep Secure cookies under TestClient HTTPS.
+os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("COOKIE_SECURE", "true")
 
 from collections.abc import Generator
 
@@ -52,7 +55,9 @@ def database() -> Generator[Session]:
 
 @pytest.fixture
 def scripted() -> ScriptedGoogleHttp:
-    return ScriptedGoogleHttp([{"sub": "google-sub", "email": "ada@example.com"}])
+    return ScriptedGoogleHttp(
+        [{"sub": "google-sub", "email": "ada@example.com", "email_verified": True}]
+    )
 
 
 @pytest.fixture

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     API_PREFIX: str = "/api"
     DEBUG: bool = False
+    COOKIE_SECURE: bool | None = None
     DATABASE_URL: str
     STATIC_DIR: str = ""
     ALLOWED_ORIGINS: Annotated[list[str], NoDecode] = []
@@ -21,6 +22,12 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: str
     SESSION_COOKIE_NAME: str = "session"
     SESSION_TTL_SECONDS: int = 14 * 24 * 60 * 60
+
+    @property
+    def cookie_secure(self) -> bool:
+        if self.COOKIE_SECURE is not None:
+            return self.COOKIE_SECURE
+        return not self.DEBUG
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

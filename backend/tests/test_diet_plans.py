@@ -710,6 +710,27 @@ def test_upload_rejects_a_pdf_that_is_not_a_diet_plan(
     assert plans[0].is_active is True
 
 
+def test_failed_uploads_count_toward_the_hourly_limit(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("app.diet.rate_limit.POSTS_PER_HOUR", 2)
+    sign_in(client)
+    payload = _pdf([("Hello", 72, 72, _BLACK)])
+
+    for _ in range(2):
+        rejected = client.post(
+            "/api/diet-plans/upload",
+            files={"file": ("empty.pdf", payload, "application/pdf")},
+        )
+        assert rejected.status_code == 422
+
+    limited = client.post("/api/diet-plans", json=one_option("Should not store"))
+
+    assert limited.status_code == 429
+    assert limited.json()["code"] == "RATE_LIMITED"
+    assert client.get("/api/diet-plans/active").status_code == 404
+
+
 def test_progeo_skips_chrome_and_keeps_a_wide_wrap_apart() -> None:
     payload = _pdf(
         [
