@@ -132,6 +132,30 @@
   height: 20px;
 }
 
+.day-planner-edit {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-height: 44px;
+  padding: 0 var(--padding-sm);
+  font: inherit;
+  color: var(--primary);
+  background: none;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.day-planner-edit:hover {
+  background: color-mix(in srgb, var(--white) 6%, transparent);
+}
+
+.day-planner-edit svg {
+  width: 18px;
+  height: 18px;
+}
+
 .day-planner-actions {
   position: sticky;
   z-index: 4;

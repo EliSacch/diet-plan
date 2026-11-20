@@ -359,6 +359,118 @@ describe("DayPlanner", () => {
     ).toBeTruthy();
   });
 
+  it("offers to edit only a category that has a pick", () => {
+    renderPlanner({ choices: [pasta80] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(toggle("Contorni"));
+
+    expect(group("Primi").getByRole("button", { name: "Edit selection" })).toBeTruthy();
+    expect(group("Contorni").queryByRole("button", { name: "Edit selection" })).toBeNull();
+  });
+
+  it("saves an edited amount as the pick", () => {
+    const { onSave } = renderPlanner({ choices: [pasta80] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    fireEvent.change(group("Primi").getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: "90" },
+    });
+    fireEvent.click(group("Primi").getByRole("button", { name: "Apply" }));
+
+    expect(group("Primi").queryByRole("form")).toBeNull();
+    expect(radio("Primi", "Pasta 90 g").checked).toBe(true);
+    expect(radio("Primi", "Pasta 80 g").checked).toBe(false);
+    expect(toggle("Primi").textContent).toBe("PrimiPasta 90 g");
+    expect(saveButton().disabled).toBe(false);
+
+    fireEvent.click(saveButton());
+    expect(onSave).toHaveBeenCalledWith([{ ...pasta80, amount: 90 }]);
+  });
+
+  it("saves an edited name and keeps the amount and unit", () => {
+    const { onSave } = renderPlanner({ choices: [pasta80, insalata] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    fireEvent.change(group("Primi").getByRole("textbox", { name: "Name" }), {
+      target: { value: "Pasta integrale" },
+    });
+    fireEvent.click(group("Primi").getByRole("button", { name: "Apply" }));
+    fireEvent.click(saveButton());
+
+    expect(onSave).toHaveBeenCalledWith([{ ...pasta80, name: "Pasta integrale" }, insalata]);
+  });
+
+  it("keeps the pick while the edit has errors", () => {
+    renderPlanner({ choices: [pasta80] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    fireEvent.change(group("Primi").getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: "-1" },
+    });
+    fireEvent.click(group("Primi").getByRole("button", { name: "Apply" }));
+
+    expect(
+      group("Primi").getByText("Enter an amount greater than 0 and up to 100,000."),
+    ).toBeTruthy();
+    expect(radio("Primi", "Pasta 80 g").checked).toBe(true);
+    expect(saveButton().disabled).toBe(true);
+  });
+
+  it("closes the edit without changes on cancel or when another option is picked", () => {
+    renderPlanner({ choices: [pasta80] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    fireEvent.change(group("Primi").getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: "90" },
+    });
+    fireEvent.click(group("Primi").getByRole("button", { name: "Cancel" }));
+
+    expect(group("Primi").queryByRole("form")).toBeNull();
+    expect(radio("Primi", "Pasta 80 g").checked).toBe(true);
+    expect(saveButton().disabled).toBe(true);
+
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    fireEvent.click(radio("Primi", "Riso 70 g"));
+
+    expect(group("Primi").queryByRole("form")).toBeNull();
+    expect(radio("Primi", "Riso 70 g").checked).toBe(true);
+  });
+
+  it("starts a new edit from the current pick", () => {
+    renderPlanner({ choices: [pasta80] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    fireEvent.change(group("Primi").getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: "90" },
+    });
+    fireEvent.click(group("Primi").getByRole("button", { name: "Apply" }));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+
+    expect(group("Primi").getByRole<HTMLInputElement>("spinbutton", { name: "Amount" }).value).toBe(
+      "90",
+    );
+  });
+
+  it("selects the existing option when an edit matches it", () => {
+    renderPlanner({ choices: [pasta80] });
+
+    fireEvent.click(toggle("Primi"));
+    fireEvent.click(group("Primi").getByRole("button", { name: "Edit selection" }));
+    fireEvent.change(group("Primi").getByRole("spinbutton", { name: "Amount" }), {
+      target: { value: "100" },
+    });
+    fireEvent.click(group("Primi").getByRole("button", { name: "Apply" }));
+
+    expect(group("Primi").getAllByRole("radio")).toHaveLength(3);
+    expect(radio("Primi", "Pasta 100 g").checked).toBe(true);
+  });
+
   it("uses the current locale for the button", () => {
     setLocale("it");
     renderPlanner();

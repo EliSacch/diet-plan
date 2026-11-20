@@ -34,7 +34,7 @@
   gap: var(--spacing-md);
 }
 
-.plan-sections h2 {
+.plan-sections-meal > h2 {
   position: sticky;
   z-index: 3;
   top: calc(var(--sticky-top) + var(--day-picker-height));
@@ -46,7 +46,7 @@
   background: var(--bg);
 }
 
-.plan-sections h3 {
+.plan-sections-meal h3 {
   position: sticky;
   z-index: 2;
   top: calc(var(--sticky-top) + var(--day-picker-height) + var(--meal-heading-height));

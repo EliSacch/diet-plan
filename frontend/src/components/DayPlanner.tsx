@@ -10,6 +10,7 @@ import type {
 } from "../types/day";
 import { optionLabel } from "../utils/plan";
 import Button from "./Button";
+import PickEditor from "./PickEditor";
 
 import "./DayPlanner.css";
 
@@ -76,6 +77,22 @@ function CustomOptionIcon() {
   );
 }
 
+function PencilIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
 function TrashIcon() {
   return (
     <svg
@@ -120,6 +137,7 @@ export default function DayPlanner({
   const baseId = useId();
   const [picks, setPicks] = useState(() => toPicks(choices));
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [editing, setEditing] = useState<string | null>(null);
   const saved = useMemo(() => toPicks(choices), [choices]);
   const dirty = !samePicks(picks, saved);
 
@@ -129,6 +147,7 @@ export default function DayPlanner({
 
   function select(key: string, choice: DayChoice) {
     setPicks((current) => new Map(current).set(key, choice));
+    setEditing(null);
   }
 
   function toggle(key: string) {
@@ -238,6 +257,23 @@ export default function DayPlanner({
                       <span>{optionLabel(option)}</span>
                     </label>
                   ))}
+                  {pick !== undefined && editing === key ? (
+                    <PickEditor
+                      pick={pick}
+                      onApply={(values) => choose({ ...pick, ...values })}
+                      onCancel={() => setEditing(null)}
+                    />
+                  ) : null}
+                  {pick !== undefined && editing !== key ? (
+                    <button
+                      type="button"
+                      className="day-planner-edit"
+                      onClick={() => setEditing(key)}
+                    >
+                      <PencilIcon />
+                      <span>{t("EDIT_PICK")}</span>
+                    </button>
+                  ) : null}
                 </div>
               </section>
             );
