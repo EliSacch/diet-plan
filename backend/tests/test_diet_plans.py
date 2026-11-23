@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.exceptions import AppError
 from app.diet.extract import extract
-from app.diet.limits import MAX_BODY_BYTES, POSTS_PER_HOUR
+from app.diet.limits import MAX_BODY_BYTES, MAX_OPTIONS_PER_CATEGORY, POSTS_PER_HOUR
 from app.diet.plugins.progeo import ProgeoExtractor, _Line, _PlanBuilder, _wrapped_name
 from app.diet.service import _as_utc, purge_replaced_plans
 from app.models.diet import DietOption, DietPlan
@@ -330,7 +330,7 @@ def many_options(count: int) -> dict[str, object]:
     categories: list[dict[str, object]] = []
     remaining = count
     while remaining:
-        size = min(50, remaining)
+        size = min(MAX_OPTIONS_PER_CATEGORY, remaining)
         categories.append(
             {
                 "category": f"C{len(categories)}",
@@ -365,12 +365,54 @@ def test_plan_document_rejects_values_outside_the_limits(
     zero_amount = one_option("Tè", amount=0)
     too_many = many_options(2_001)
 
-    for payload in (long_name, zero_amount, too_many):
+    too_many_in_one_category = {
+        "days": [
+            {
+                "day": "Lunedì",
+                "meals": [
+                    {
+                        "meal": "Colazione",
+                        "categories": [
+                            {
+                                "category": "Pane",
+                                "options": [
+                                    {
+                                        "name": f"Toast {index}",
+                                        "amount": 30,
+                                        "unit": "g",
+                                        "position": index,
+                                    }
+                                    for index in range(MAX_OPTIONS_PER_CATEGORY + 1)
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ]
+    }
+
+    for payload in (long_name, zero_amount, too_many, too_many_in_one_category):
         response = client.post("/api/diet-plans", json=payload)
         assert response.status_code == 422
         assert response.json()["code"] == "VALIDATION_ERROR"
 
     assert database.scalars(select(DietPlan)).all() == []
+
+
+def test_plan_document_accepts_a_category_longer_than_the_old_cap(
+    client: TestClient, database: Session
+) -> None:
+    sign_in(client)
+    created = client.post("/api/diet-plans", json=many_options(151))
+
+    assert created.status_code == 201
+    options = created.json()["days"][0]["meals"][0]["categories"][0]["options"]
+    assert len(options) == 151
+    assert options[0]["name"] == "Food 0-0"
+    assert options[-1]["position"] == 150
+    database.expire_all()
+    assert len(database.scalars(select(DietOption)).all()) == 151
 
 
 def test_post_body_over_one_megabyte_is_rejected(client: TestClient) -> None:
@@ -771,6 +813,21 @@ def test_progeo_skips_chrome_and_keeps_a_wide_wrap_apart() -> None:
         ("Primo", None, None, 1),
         ("secondo", None, None, 2),
     ]
+
+
+def test_progeo_rejects_a_category_past_the_option_cap() -> None:
+    builder = _PlanBuilder()
+    builder.ensure_day("Lunedì")
+    builder.start_meal("COLAZIONE")
+    builder.start_category("Pane")
+    for index in range(MAX_OPTIONS_PER_CATEGORY + 1):
+        builder.add_option(f"Toast {index}", "g 30")
+
+    with pytest.raises(AppError) as raised:
+        builder.document()
+
+    assert raised.value.status_code == 422
+    assert raised.value.code == "VALIDATION_ERROR"
 
 
 def test_progeo_ignores_structure_that_has_no_day_or_category() -> None:

@@ -108,23 +108,23 @@ class _PlanBuilder:
         )
 
     def document(self) -> PlanDocument:
-        days: list[PlanDay] = []
-        for day in self.days:
-            meals: list[PlanMeal] = []
-            for meal in day.meals:
-                categories = [
-                    PlanCategory(
-                        category=category.name,
-                        options=category.options,
-                    )
-                    for category in meal.categories
-                    if category.options
-                ]
-                if categories:
-                    meals.append(PlanMeal(meal=meal.name, categories=categories))
-            if meals:
-                days.append(PlanDay(day=day.name, meals=meals))
         try:
+            days: list[PlanDay] = []
+            for day in self.days:
+                meals: list[PlanMeal] = []
+                for meal in day.meals:
+                    categories = [
+                        PlanCategory(
+                            category=category.name,
+                            options=category.options,
+                        )
+                        for category in meal.categories
+                        if category.options
+                    ]
+                    if categories:
+                        meals.append(PlanMeal(meal=meal.name, categories=categories))
+                if meals:
+                    days.append(PlanDay(day=day.name, meals=meals))
             return PlanDocument(days=days)
         except ValidationError as exc:
             raise AppError(422, "validation_error", _UNREADABLE) from exc
