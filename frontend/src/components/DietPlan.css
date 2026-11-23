@@ -30,7 +30,8 @@
   cursor: pointer;
 }
 
-.diet-plan-options svg {
+.diet-plan-options svg,
+.diet-plan-category svg {
   flex: none;
   width: 20px;
   height: 20px;
@@ -38,8 +39,39 @@
   transition: transform 150ms ease;
 }
 
-.diet-plan-options[aria-expanded="true"] svg {
+.diet-plan-options[aria-expanded="true"] svg,
+.diet-plan-category[aria-expanded="true"] svg {
   transform: rotate(180deg);
+}
+
+.diet-plan .plan-sections-meal h3.diet-plan-category-heading {
+  display: flex;
+  padding: 0;
+}
+
+.diet-plan-category {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.diet-plan-category-options {
+  padding-top: var(--padding-sm);
+}
+
+.diet-plan-category-options[hidden] {
+  display: none;
 }
 
 .diet-plan-options-panel {
@@ -123,6 +155,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .diet-plan-options svg,
+  .diet-plan-category svg,
   .diet-plan-multi input,
   .diet-plan-multi input::before {
     transition: none;

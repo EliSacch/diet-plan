@@ -64,6 +64,18 @@ const plan: PlanDocument = {
   ],
 };
 
+function categoryToggle(name: string) {
+  return screen.getByRole<HTMLButtonElement>("button", { name });
+}
+
+function visibleOption(label: string) {
+  const node = screen.queryByText(label);
+  if (node === null || node.closest("[hidden]") !== null) {
+    return null;
+  }
+  return node;
+}
+
 function renderPlan(
   document: PlanDocument = plan,
   props: Partial<ComponentProps<typeof DietPlan>> = {},
@@ -96,26 +108,59 @@ describe("DietPlan", () => {
     expect(
       screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent),
     ).toEqual([en.labels.PLAN_OPTIONS, "Colazione", "Pranzo"]);
+    expect(screen.queryByRole("button", { name: "Colazione" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Pranzo" })).toBeNull();
     expect(screen.getByRole("heading", { level: 3, name: "Bevande" })).toBeTruthy();
-    expect(
-      screen.getByText("Bevanda a base di avena con calcio e vitamine agg. 250 ml"),
-    ).toBeTruthy();
-    expect(screen.getByText("Tè 1")).toBeTruthy();
-    expect(screen.getByText("Insalata mista").textContent).toBe("Insalata mista");
-    expect(screen.getByText("Pasta 80 g")).toBeTruthy();
-    expect(screen.queryByText("Pesce 150 g")).toBeNull();
+    expect(categoryToggle("Bevande").getAttribute("aria-expanded")).toBe("false");
+    expect(categoryToggle("Contorni").getAttribute("aria-expanded")).toBe("false");
+    expect(categoryToggle("Primi").getAttribute("aria-expanded")).toBe("false");
+    expect(visibleOption("Bevanda a base di avena con calcio e vitamine agg. 250 ml")).toBeNull();
+    expect(visibleOption("Pasta 80 g")).toBeNull();
+    expect(visibleOption("Pesce 150 g")).toBeNull();
+
+    fireEvent.click(categoryToggle("Bevande"));
+
+    expect(categoryToggle("Bevande").getAttribute("aria-expanded")).toBe("true");
+    expect(categoryToggle("Contorni").getAttribute("aria-expanded")).toBe("false");
+    expect(visibleOption("Bevanda a base di avena con calcio e vitamine agg. 250 ml")).toBeTruthy();
+    expect(visibleOption("Tè 1")).toBeTruthy();
+    expect(visibleOption("Insalata mista")).toBeNull();
+
+    fireEvent.click(categoryToggle("Contorni"));
+    fireEvent.click(categoryToggle("Primi"));
+
+    expect(categoryToggle("Bevande").getAttribute("aria-expanded")).toBe("true");
+    expect(visibleOption("Insalata mista")?.textContent).toBe("Insalata mista");
+    expect(visibleOption("Pasta 80 g")).toBeTruthy();
+
+    fireEvent.click(categoryToggle("Bevande"));
+
+    expect(categoryToggle("Bevande").getAttribute("aria-expanded")).toBe("false");
+    expect(visibleOption("Bevanda a base di avena con calcio e vitamine agg. 250 ml")).toBeNull();
+    expect(visibleOption("Pasta 80 g")).toBeTruthy();
   });
 
   it("shows the meals of the day picked in the dropdown", () => {
     renderPlan();
 
+    fireEvent.click(categoryToggle("Bevande"));
     fireEvent.change(screen.getByLabelText("Day"), { target: { value: "1" } });
 
     expect(
       screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent),
     ).toEqual([en.labels.PLAN_OPTIONS, "Cena"]);
-    expect(screen.getByText("Pesce 150 g")).toBeTruthy();
-    expect(screen.queryByText("Pasta 80 g")).toBeNull();
+    expect(categoryToggle("Secondi").getAttribute("aria-expanded")).toBe("false");
+    expect(visibleOption("Pesce 150 g")).toBeNull();
+    expect(visibleOption("Pasta 80 g")).toBeNull();
+
+    fireEvent.click(categoryToggle("Secondi"));
+
+    expect(visibleOption("Pesce 150 g")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Day"), { target: { value: "0" } });
+
+    expect(categoryToggle("Bevande").getAttribute("aria-expanded")).toBe("false");
+    expect(visibleOption("Tè 1")).toBeNull();
   });
 
   it("falls back to the first day when the selected day is no longer in the plan", () => {
@@ -131,7 +176,8 @@ describe("DietPlan", () => {
     );
 
     expect(screen.getByLabelText<HTMLSelectElement>("Day").value).toBe("0");
-    expect(screen.getByText("Pasta 80 g")).toBeTruthy();
+    fireEvent.click(categoryToggle("Primi"));
+    expect(visibleOption("Pasta 80 g")).toBeTruthy();
   });
 
   it("renders nothing for a plan without days", () => {
