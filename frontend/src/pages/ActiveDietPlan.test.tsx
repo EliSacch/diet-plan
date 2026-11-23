@@ -100,7 +100,10 @@ describe("ActiveDietPlan", () => {
 
     renderPage();
 
-    expect(await screen.findByText("Pasta 80 g")).toBeTruthy();
+    expect(await screen.findByRole("heading", { level: 2, name: "Pranzo" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Primi" }).getAttribute("aria-expanded")).toBe(
+      "false",
+    );
     expect(screen.queryByRole("switch")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: en.labels.PLAN_OPTIONS }));
     expect(screen.getByRole("switch", { name: "Multiple, Primi" })).toHaveProperty("checked", true);
@@ -121,11 +124,11 @@ describe("ActiveDietPlan", () => {
     renderPage();
 
     expect(await screen.findByText(en.labels.LOADING_YOUR_DIET_PLAN)).toBeTruthy();
-    expect(screen.queryByText("Pasta 80 g")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Pranzo" })).toBeNull();
 
     preferences.resolve(axiosResponse([]));
 
-    expect(await screen.findByText("Pasta 80 g")).toBeTruthy();
+    expect(await screen.findByRole("heading", { level: 2, name: "Pranzo" })).toBeTruthy();
   });
 
   it("shows the catalog message when preferences fail to load", async () => {
